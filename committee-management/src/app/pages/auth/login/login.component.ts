@@ -72,7 +72,7 @@ import { ToastService } from '../../../services/toast.service';
               <div class="dev-avatar">MA</div>
               <div class="dev-info">
                 <span class="dev-name">Muhammad Abdullah</span>
-                <span class="dev-role">Developer</span>
+                <span class="dev-role">Full Stack Developer</span>
               </div>
               <span class="material-icons dev-link-icon">open_in_new</span>
             </a>
@@ -80,7 +80,7 @@ import { ToastService } from '../../../services/toast.service';
               <div class="dev-avatar">AS</div>
               <div class="dev-info">
                 <span class="dev-name">Amna Shakeel</span>
-                <span class="dev-role">Developer</span>
+                <span class="dev-role">Full Stack Developer</span>
               </div>
               <span class="material-icons dev-link-icon">open_in_new</span>
             </a>
