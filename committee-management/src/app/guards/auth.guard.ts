@@ -1,48 +1,41 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { SupabaseService } from '../services/supabase.service';
+import { AuthService } from '../services/auth.service';
 
-// Simple session check — just verifies the user is logged in
-const checkSession = (router: Router, supabase: SupabaseService): Promise<boolean> => {
-  if (sessionStorage.getItem('demo_mode') === 'true') return Promise.resolve(true);
-  return supabase.getSession().then(({ data }) => {
-    if (data?.session) return true;
-    router.navigate(['/auth/login']);
-    return false;
-  }).catch(() => { router.navigate(['/auth/login']); return false; });
+// Wait for auth to initialize, then check currentUser signal
+const checkSession = async (router: Router, auth: AuthService): Promise<boolean> => {
+  if (sessionStorage.getItem('demo_mode') === 'true') return true;
+  await auth.waitForAuth();
+  if (auth.currentUser()) return true;
+  router.navigate(['/auth/login']);
+  return false;
 };
 
-export const authGuard: CanActivateFn = (route, state) => {
-  const router = inject(Router);
-  const supabase = inject(SupabaseService);
-  return checkSession(router, supabase);
+export const authGuard: CanActivateFn = async (route, state) => {
+  return checkSession(inject(Router), inject(AuthService));
 };
 
-// adminGuard = same as authGuard (role redirect handled in login flow)
-export const adminGuard: CanActivateFn = (route, state) => {
-  const router = inject(Router);
-  const supabase = inject(SupabaseService);
-  return checkSession(router, supabase);
+export const adminGuard: CanActivateFn = async (route, state) => {
+  return checkSession(inject(Router), inject(AuthService));
 };
 
-// memberGuard = same as authGuard
-export const memberGuard: CanActivateFn = (route, state) => {
-  const router = inject(Router);
-  const supabase = inject(SupabaseService);
-  return checkSession(router, supabase);
+export const memberGuard: CanActivateFn = async (route, state) => {
+  return checkSession(inject(Router), inject(AuthService));
 };
 
-export const guestGuard: CanActivateFn = (route, state) => {
+export const guestGuard: CanActivateFn = async (route, state) => {
   const router = inject(Router);
-  const supabase = inject(SupabaseService);
+  const auth = inject(AuthService);
 
   if (sessionStorage.getItem('demo_mode') === 'true') {
     router.navigate(['/dashboard']);
     return false;
   }
 
-  return supabase.getSession().then(({ data }) => {
-    if (data?.session) { router.navigate(['/dashboard']); return false; }
-    return true;
-  }).catch(() => true);
+  await auth.waitForAuth();
+  if (auth.currentUser()) {
+    router.navigate(['/dashboard']);
+    return false;
+  }
+  return true;
 };

@@ -14,9 +14,7 @@ export class SupabaseService {
         auth: {
           autoRefreshToken: true,
           persistSession: true,
-          detectSessionInUrl: false,
-          // Disable navigator.locks to prevent lock acquisition errors
-          lock: async (name, acquireTimeout, fn) => fn()
+          detectSessionInUrl: false
         }
       }
     );
