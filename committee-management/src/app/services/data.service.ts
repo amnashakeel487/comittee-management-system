@@ -194,9 +194,46 @@ export class DataService {
         .select('*, members(*)').single());
     }
     if (error) throw new Error(error.message);
+
+    // Auto-generate a scheduled payout for this member's turn
+    if (payoutOrder > 0) {
+      await this.ensurePayoutExists(committeeId, memberId, payoutOrder);
+    }
+
     return { id: data.id, committee_id: data.committee_id, member_id: data.member_id,
       payout_order: data.payout_order, turn_assigned_by: data.turn_assigned_by,
       status: data.status, joined_at: data.joined_at, member: data.members as Member };
+  }
+
+  /** Creates a scheduled payout record if one doesn't already exist */
+  private async ensurePayoutExists(committeeId: string, memberId: string, month: number): Promise<void> {
+    try {
+      // Check if already exists
+      const { data: existing } = await this.supabase.from('payouts')
+        .select('id').eq('committee_id', committeeId).eq('member_id', memberId).eq('month', month).maybeSingle();
+      if (existing) return;
+
+      // Get committee details for amount calculation
+      const { data: committee } = await this.supabase.from('committees')
+        .select('monthly_amount, total_members, start_date').eq('id', committeeId).single();
+      if (!committee) return;
+
+      const payoutAmount = committee.monthly_amount * committee.total_members;
+      const startDate = new Date(committee.start_date);
+      startDate.setMonth(startDate.getMonth() + month - 1);
+      const payoutDate = startDate.toISOString().split('T')[0];
+
+      await this.supabase.from('payouts').insert({
+        committee_id: committeeId,
+        member_id: memberId,
+        month,
+        total_amount: payoutAmount,
+        payout_date: payoutDate,
+        status: 'scheduled'
+      });
+    } catch (e) {
+      console.warn('ensurePayoutExists warning:', e);
+    }
   }
 
   async updatePayoutOrder(id: string, payoutOrder: number): Promise<void> {
@@ -214,16 +251,29 @@ export class DataService {
   // ── PAYMENTS ──────────────────────────────────────────────────
 
   async getPayments(committeeId?: string): Promise<Payment[]> {
-    let q = this.supabase.from('payments')
-      .select('*, members(name), committees!inner(name, created_by)')
+    // Fetch this admin's committee IDs first — avoids unreliable join filtering
+    const { data: myCommittees } = await this.supabase.from('committees')
+      .select('id, name').eq('created_by', this.userId);
+
+    if (!myCommittees?.length) return [];
+
+    const committeeIds = committeeId
+      ? [committeeId]
+      : myCommittees.map((c: any) => c.id);
+
+    const nameMap: Record<string, string> = {};
+    myCommittees.forEach((c: any) => { nameMap[c.id] = c.name; });
+
+    const { data, error } = await this.supabase.from('payments')
+      .select('*, members(name)')
+      .in('committee_id', committeeIds)
       .order('created_at', { ascending: false });
-    if (this.userId) q = q.eq('committees.created_by', this.userId);
-    if (committeeId) q = q.eq('committee_id', committeeId);
-    const { data, error } = await q;
+
     if (error) throw error;
     return (data || []).map((p: any) => ({
       id: p.id, committee_id: p.committee_id, member_id: p.member_id,
-      member_name: p.members?.name || '', committee_name: p.committees?.name || '',
+      member_name: p.members?.name || '',
+      committee_name: nameMap[p.committee_id] || '',
       month: p.month, amount: p.amount, status: p.status,
       payment_date: p.payment_date, screenshot_url: p.screenshot_url,
       notes: p.notes, reviewed_by: p.reviewed_by, reviewed_at: p.reviewed_at,
@@ -281,14 +331,30 @@ export class DataService {
   // ── PAYOUTS ───────────────────────────────────────────────────
 
   async getPayouts(committeeId?: string): Promise<Payout[]> {
-    let q = this.supabase.from('payouts')
-      .select('*, members(name), committees!inner(name, created_by)').order('month');
-    if (this.userId) q = q.eq('committees.created_by', this.userId);
-    if (committeeId) q = q.eq('committee_id', committeeId);
-    const { data, error } = await q;
+    // First get this admin's committee IDs — more reliable than join filtering
+    const { data: myCommittees } = await this.supabase.from('committees')
+      .select('id, name').eq('created_by', this.userId);
+
+    if (!myCommittees?.length) return [];
+
+    const committeeIds = committeeId
+      ? [committeeId]
+      : myCommittees.map((c: any) => c.id);
+
+    const { data, error } = await this.supabase.from('payouts')
+      .select('*, members(name)')
+      .in('committee_id', committeeIds)
+      .order('month');
+
     if (error) throw error;
+
+    // Build a name lookup from the committees we already fetched
+    const nameMap: Record<string, string> = {};
+    myCommittees.forEach((c: any) => { nameMap[c.id] = c.name; });
+
     return (data || []).map((p: any) => ({
-      id: p.id, committee_id: p.committee_id, committee_name: p.committees?.name || '',
+      id: p.id, committee_id: p.committee_id,
+      committee_name: nameMap[p.committee_id] || '',
       member_id: p.member_id, receiver_name: p.members?.name || '',
       month: p.month, total_amount: p.total_amount, status: p.status,
       payout_date: p.payout_date, created_at: p.created_at
@@ -360,10 +426,17 @@ export class DataService {
   }
 
   async getMonthlyCollectionData(): Promise<{ month: string; amount: number }[]> {
+    const { data: myCommittees } = await this.supabase.from('committees')
+      .select('id').eq('created_by', this.userId);
+    if (!myCommittees?.length) return [];
+
+    const ids = myCommittees.map((c: any) => c.id);
     const { data, error } = await this.supabase.from('payments')
-      .select('amount, payment_date, committees!inner(created_by)')
-      .eq('committees.created_by', this.userId).eq('status', 'approved')
+      .select('amount, payment_date')
+      .in('committee_id', ids)
+      .eq('status', 'approved')
       .not('payment_date', 'is', null);
+
     if (error || !data?.length) return [];
     const monthMap: Record<string, number> = {};
     const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
