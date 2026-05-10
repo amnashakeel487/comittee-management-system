@@ -1,0 +1,261 @@
+﻿<div class="members-page">
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Members</h1>
+      <p>Add members here, then assign them to committees from the committee detail page</p>
+    </div>
+    <button class="btn btn-primary" (click)="openAddModal()">
+      <span class="material-icons">person_add</span> Add Member
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-3 member-stats">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#dbeafe"><span class="material-icons" style="color:#2563eb">people</span></div>
+      <div class="stat-value">{{ members().length }}</div>
+      <div class="stat-label">Total Members</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#d1fae5"><span class="material-icons" style="color:#10b981">check_circle</span></div>
+      <div class="stat-value">{{ activeCount() }}</div>
+      <div class="stat-label">Active Members</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fef3c7"><span class="material-icons" style="color:#f59e0b">admin_panel_settings</span></div>
+      <div class="stat-value">{{ adminCount() }}</div>
+      <div class="stat-label">Admins</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="card-header">
+      <h3><span class="material-icons" style="color:var(--primary);vertical-align:middle;margin-right:8px">people</span>Member List</h3>
+      <div class="search-filter">
+        <span class="material-icons">search</span>
+        <input type="text" placeholder="Search members..." (input)="onSearch($event)" class="filter-input">
+      </div>
+    </div>
+
+    <div *ngIf="loading()" class="loading-state"><div class="spinner"></div></div>
+
+    <div class="table-container" *ngIf="!loading()">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Member</th>
+            <th>Phone</th>
+            <th>CNIC</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Credentials</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let member of filteredMembers(); let i = index">
+            <td class="text-muted text-sm">{{ i + 1 }}</td>
+            <td>
+              <div class="member-cell">
+                <div class="avatar avatar-sm" [style.background]="getAvatarColor(member.name)">{{ getInitials(member.name) }}</div>
+                <div>
+                  <div class="member-name">{{ member.name }}</div>
+                  <div class="text-xs text-muted">{{ member.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="text-sm">{{ member.phone }}</td>
+            <td class="text-sm text-muted">{{ member.cnic }}</td>
+            <td>
+              <span class="badge" [ngClass]="member.role === 'admin' ? 'badge-primary' : 'badge-gray'">
+                <span class="material-icons" style="font-size:11px">{{ member.role === 'admin' ? 'admin_panel_settings' : 'person' }}</span>
+                {{ member.role | titlecase }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="member.status === 'active' ? 'badge-success' : 'badge-danger'">
+                {{ member.status | titlecase }}
+              </span>
+            </td>
+            <td>
+              <button *ngIf="hasCredential(member.id)"
+                      class="btn btn-outline btn-sm cred-btn"
+                      (click)="viewCredentials(member)"
+                      title="View login credentials">
+                <span class="material-icons">key</span> View
+              </button>
+              <span *ngIf="!hasCredential(member.id)" class="no-cred-text">—</span>
+            </td>
+            <td>
+              <div class="action-btns">
+                <button class="btn btn-ghost btn-icon" title="Edit" (click)="editMember(member)">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="btn btn-ghost btn-icon" title="Remove" (click)="deleteMember(member)">
+                  <span class="material-icons" style="color:var(--danger)">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredMembers().length === 0">
+            <td colspan="8">
+              <div class="empty-state">
+                <span class="material-icons empty-icon">people</span>
+                <h3>No members yet</h3>
+                <p>Add members here, then assign them to committees from the committee detail page</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" *ngIf="showModal()" (click)="closeModal()">
+    <div class="modal modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <div class="modal-icon"><span class="material-icons">person_add</span></div>
+          <div>
+            <h3>{{ editingMember() ? 'Edit Member' : 'Add New Member' }}</h3>
+            <p class="modal-subtitle">{{ editingMember() ? 'Update member information' : 'Create a new member account' }}</p>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-icon" (click)="closeModal()"><span class="material-icons">close</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="required-label"><span class="material-icons label-icon">person</span>Full Name *</label>
+            <input type="text" class="form-control" placeholder="e.g. Amna Khan" [(ngModel)]="memberForm.name">
+          </div>
+          <div class="form-group">
+            <label class="required-label"><span class="material-icons label-icon">phone</span>Phone Number *</label>
+            <input type="tel" class="form-control" placeholder="0300-1234567" [(ngModel)]="memberForm.phone">
+          </div>
+          <div class="form-group">
+            <label class="required-label"><span class="material-icons label-icon">email</span>Email Address *</label>
+            <input type="email" class="form-control" placeholder="member@example.com" [(ngModel)]="memberForm.email">
+            <span class="form-hint">Used for member portal login</span>
+          </div>
+          <div class="form-group">
+            <label class="required-label"><span class="material-icons label-icon">badge</span>CNIC *</label>
+            <input type="text" class="form-control" placeholder="35202-1234567-8" [(ngModel)]="memberForm.cnic">
+          </div>
+          <div class="form-group">
+            <label><span class="material-icons label-icon">admin_panel_settings</span>Role</label>
+            <select class="form-control" [(ngModel)]="memberForm.role">
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+        <div class="info-box" *ngIf="!editingMember()">
+          <span class="material-icons">info</span>
+          <p>A <strong>login password</strong> will be auto-generated and saved. You can view it anytime from the <strong>Key icon</strong> in the member list.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveMember()" [disabled]="saving()">
+          <span class="material-icons">{{ saving() ? 'hourglass_empty' : (editingMember() ? 'save' : 'person_add') }}</span>
+          {{ saving() ? 'Saving...' : (editingMember() ? 'Update Member' : 'Add Member') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Credentials Modal -->
+  <div class="modal-overlay" *ngIf="showCredentialsModal()" (click)="closeCredentialsModal()">
+    <div class="modal credentials-modal" (click)="$event.stopPropagation()">
+
+      <!-- Green header -->
+      <div class="cred-header">
+        <div class="cred-header-left">
+          <div class="cred-header-icon"><span class="material-icons">key</span></div>
+          <div>
+            <h3>Login Credentials</h3>
+            <p>{{ viewingCredentials()?.name }}</p>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-icon close-cred-btn" (click)="closeCredentialsModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="viewingCredentials() as creds">
+
+        <!-- Info row -->
+        <div class="cred-info-row">
+          <span class="material-icons">groups</span>
+          <span>Share these credentials with <strong>{{ creds.name }}</strong> to access the Member Portal</span>
+        </div>
+
+        <!-- Credentials Box -->
+        <div class="credentials-box">
+
+          <!-- Email -->
+          <div class="cred-item">
+            <div class="cred-label">
+              <span class="material-icons">email</span> Email Address
+            </div>
+            <div class="cred-value-row">
+              <span class="cred-value">{{ creds.email }}</span>
+              <button class="copy-btn" (click)="copyToClipboard(creds.email, 'email')" [class.copied]="copiedField() === 'email'">
+                <span class="material-icons">{{ copiedField() === 'email' ? 'check' : 'content_copy' }}</span>
+                {{ copiedField() === 'email' ? 'Copied!' : 'Copy' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="cred-divider"></div>
+
+          <!-- Password -->
+          <div class="cred-item">
+            <div class="cred-label">
+              <span class="material-icons">lock</span> Password
+              <button class="show-pwd-btn" (click)="showPassword.update(v => !v)">
+                <span class="material-icons">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+                {{ showPassword() ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+            <div class="cred-value-row">
+              <span class="cred-value password-value">
+                {{ showPassword() ? creds.password : '••••••••••' }}
+              </span>
+              <button class="copy-btn" (click)="copyToClipboard(creds.password, 'password')" [class.copied]="copiedField() === 'password'">
+                <span class="material-icons">{{ copiedField() === 'password' ? 'check' : 'content_copy' }}</span>
+                {{ copiedField() === 'password' ? 'Copied!' : 'Copy' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Added date -->
+        <div class="cred-date">
+          <span class="material-icons">schedule</span>
+          Credentials created: {{ creds.createdAt | date:'MMM d, yyyy, h:mm a' }}
+        </div>
+
+        <!-- Warning -->
+        <div class="warning-box">
+          <span class="material-icons">security</span>
+          <p>These credentials are stored locally on this device. Share them securely with the member.</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="copyBoth()">
+          <span class="material-icons">{{ copiedField() === 'both' ? 'check' : 'content_copy' }}</span>
+          {{ copiedField() === 'both' ? 'Copied!' : 'Copy Both' }}
+        </button>
+        <button class="btn btn-primary" (click)="closeCredentialsModal()">
+          <span class="material-icons">done</span> Done
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

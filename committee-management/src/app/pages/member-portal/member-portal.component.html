@@ -1,0 +1,81 @@
+<div class="member-layout" [class.sidebar-collapsed]="sidebarCollapsed()">
+
+  <!-- ── SIDEBAR ─────────────────────────────────────────────── -->
+  <aside class="member-sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><span class="material-icons">account_balance</span></div>
+      <div class="logo-text" *ngIf="!sidebarCollapsed()">
+        <span class="logo-name">CommitteeHub</span>
+        <span class="logo-tag">Member Portal</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button *ngFor="let item of navItems"
+              class="nav-item"
+              [class.active]="currentPage() === item.page"
+              (click)="setPage(item.page)"
+              [title]="sidebarCollapsed() ? item.label : ''">
+        <span class="material-icons nav-icon">{{ item.icon }}</span>
+        <span class="nav-label" *ngIf="!sidebarCollapsed()">{{ item.label }}</span>
+        <span class="nav-badge" *ngIf="item.page === 'notifications' && unreadCount() > 0 && !sidebarCollapsed()">
+          {{ unreadCount() }}
+        </span>
+        <span class="nav-badge-dot" *ngIf="item.page === 'notifications' && unreadCount() > 0 && sidebarCollapsed()"></span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer" *ngIf="!sidebarCollapsed()">
+      <div class="sidebar-user">
+        <div class="avatar avatar-sm user-av">{{ getInitials() }}</div>
+        <div class="user-info">
+          <span class="user-name">{{ auth.currentUser()?.name }}</span>
+          <span class="user-role">Member</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-icon logout-btn" (click)="logout()" title="Logout">
+        <span class="material-icons">logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ────────────────────────────────────────── -->
+  <div class="member-main">
+    <!-- Navbar -->
+    <header class="member-navbar">
+      <button class="btn btn-ghost btn-icon" (click)="toggleSidebar()">
+        <span class="material-icons">{{ sidebarCollapsed() ? 'menu_open' : 'menu' }}</span>
+      </button>
+      <h2 class="page-title">
+        {{ currentPage() === 'dashboard' ? 'Dashboard' :
+           currentPage() === 'committees' ? 'My Committees' :
+           currentPage() === 'browse' ? 'Browse Committees' :
+           currentPage() === 'payments' ? 'Submit Payment' :
+           currentPage() === 'history' ? 'Payment History' :
+           currentPage() === 'notifications' ? 'Notifications' : 'My Profile' }}
+      </h2>
+      <div class="navbar-right">
+        <button class="btn btn-ghost btn-icon notif-btn" (click)="setPage('notifications')">
+          <span class="material-icons">notifications</span>
+          <span class="notif-dot" *ngIf="unreadCount() > 0">{{ unreadCount() }}</span>
+        </button>
+        <div class="nav-avatar" (click)="setPage('profile')">
+          <div class="avatar avatar-sm user-av">{{ getInitials() }}</div>
+          <span class="nav-user-name">{{ auth.currentUser()?.name }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="member-content">
+      <app-member-dashboard *ngIf="currentPage() === 'dashboard'" (navigate)="setPage($event)"></app-member-dashboard>
+      <app-member-committees *ngIf="currentPage() === 'committees'"></app-member-committees>
+      <app-member-browse-committees *ngIf="currentPage() === 'browse'"></app-member-browse-committees>
+      <app-member-payments *ngIf="currentPage() === 'payments'"></app-member-payments>
+      <app-member-history *ngIf="currentPage() === 'history'"></app-member-history>
+      <app-member-notifications *ngIf="currentPage() === 'notifications'"></app-member-notifications>
+      <app-member-profile *ngIf="currentPage() === 'profile'"></app-member-profile>
+    </main>
+  </div>
+</div>
+<app-toast-container></app-toast-container>

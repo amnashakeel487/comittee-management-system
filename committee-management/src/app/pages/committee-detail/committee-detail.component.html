@@ -1,0 +1,344 @@
+<div class="detail-page">
+  <a routerLink="/committees" class="btn btn-ghost btn-sm back-btn">
+    <span class="material-icons">arrow_back</span> Back to Committees
+  </a>
+
+  <div *ngIf="loading()" class="loading-center"><div class="spinner"></div></div>
+
+  <ng-container *ngIf="!loading() && committee()">
+
+    <!-- ── HEADER CARD ─────────────────────────────────────── -->
+    <div class="card header-card">
+      <div class="header-top">
+        <div class="header-icon"><span class="material-icons">groups</span></div>
+        <div class="header-info">
+          <div class="header-title-row">
+            <h1>{{ committee()!.name }}</h1>
+            <span class="badge" [ngClass]="{
+              'badge-success': committee()!.status === 'active',
+              'badge-warning': committee()!.status === 'pending',
+              'badge-gray': committee()!.status === 'completed'
+            }">{{ committee()!.status | titlecase }}</span>
+            <button *ngIf="committee()!.status === 'pending'"
+                    class="btn btn-success btn-sm" (click)="activateCommittee()" [disabled]="activating()">
+              <span class="material-icons">play_circle</span>
+              {{ activating() ? 'Activating...' : 'Activate' }}
+            </button>
+            <button *ngIf="committee()!.status === 'active'"
+                    class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success)"
+                    (click)="markComplete()" [disabled]="activating()">
+              <span class="material-icons">check_circle</span> Mark Complete
+            </button>
+          </div>
+          <p class="header-desc" *ngIf="committee()!.description">{{ committee()!.description }}</p>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-item"><span class="material-icons">payments</span><div><b>PKR {{ committee()!.monthly_amount | number }}</b><span>Monthly</span></div></div>
+        <div class="stat-item"><span class="material-icons">people</span><div><b>{{ committee()!.total_members }}</b><span>Total Members</span></div></div>
+        <div class="stat-item"><span class="material-icons">calendar_month</span><div><b>{{ committee()!.duration_months }} months</b><span>Duration</span></div></div>
+        <div class="stat-item"><span class="material-icons">account_balance_wallet</span><div><b>PKR {{ (committee()!.monthly_amount * committee()!.total_members) | number }}</b><span>Total Pool</span></div></div>
+        <div class="stat-item"><span class="material-icons">event_available</span><div><b>{{ assignedCount() }} / {{ totalSlots() }}</b><span>Turns Assigned</span></div></div>
+      </div>
+
+      <div class="progress-section" *ngIf="committee()!.status !== 'pending'">
+        <div class="progress-row">
+          <span class="text-sm text-muted">Progress</span>
+          <span class="text-sm font-semibold text-primary">{{ getProgress() }}%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" [style.width.%]="getProgress()"></div></div>
+        <span class="text-xs text-muted">Month {{ committee()!.current_month || 0 }} of {{ committee()!.duration_months }}</span>
+      </div>
+    </div>
+
+    <!-- ── COMMITTEE MEMBERS ───────────────────────────────── -->
+    <div class="card members-card">
+      <div class="card-header">
+        <h3>
+          <span class="material-icons" style="color:var(--primary);vertical-align:middle;margin-right:8px">people</span>
+          Committee Members
+          <span class="member-count-badge">{{ enrolledMembers().length }}</span>
+        </h3>
+        <button class="btn btn-primary btn-sm" (click)="openAddMemberModal()"
+                [disabled]="availableMembersToAdd().length === 0">
+          <span class="material-icons">person_add</span>
+          Add Member
+        </button>
+      </div>
+
+      <!-- Empty state -->
+      <div class="members-empty" *ngIf="enrolledMembers().length === 0">
+        <span class="material-icons" style="font-size:40px;color:#cbd5e1;display:block;margin-bottom:8px">group_add</span>
+        <p>No members added yet. Click <strong>Add Member</strong> to enroll members in this committee.</p>
+      </div>
+
+      <!-- Members list -->
+      <div class="enrolled-members-list" *ngIf="enrolledMembers().length > 0">
+        <div *ngFor="let cm of committeeMembers()" class="enrolled-member-row">
+          <div class="avatar avatar-sm" [style.background]="getAvatarColor(cm.member?.name || '')">
+            {{ getInitials(cm.member?.name || '') }}
+          </div>
+          <div class="enrolled-member-info">
+            <span class="enrolled-member-name">{{ cm.member?.name }}</span>
+            <span class="enrolled-member-email text-xs text-muted">{{ cm.member?.email }}</span>
+          </div>
+          <span class="enrolled-member-status" *ngIf="cm.payout_order > 0">
+            <span class="material-icons" style="color:var(--success);font-size:16px">check_circle</span>
+            Month {{ cm.payout_order }} assigned
+          </span>
+          <span class="enrolled-member-status text-muted" *ngIf="cm.payout_order === 0">
+            <span class="material-icons" style="font-size:16px">radio_button_unchecked</span>
+            Not assigned
+          </span>
+          <button class="btn btn-ghost btn-icon remove-btn"
+                  (click)="removeEnrolledMember(cm)"
+                  [disabled]="removingMemberId() === cm.member_id"
+                  title="Remove from committee">
+            <span class="material-icons">{{ removingMemberId() === cm.member_id ? 'hourglass_empty' : 'person_remove' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="no-members-to-add" *ngIf="availableMembersToAdd().length === 0 && enrolledMembers().length > 0">
+        <span class="material-icons" style="font-size:14px;color:var(--success)">check_circle</span>
+        All available members have been added to this committee.
+      </div>
+    </div>
+
+    <!-- ── PAYOUT SCHEDULE ─────────────────────────────────── -->
+    <div class="card schedule-card">
+      <div class="card-header">
+        <h3>
+          <span class="material-icons" style="color:var(--primary);vertical-align:middle;margin-right:8px">format_list_numbered</span>
+          Monthly Payout Schedule
+        </h3>
+        <div class="schedule-legend">
+          <span class="legend-item assigned"><span class="material-icons">check_circle</span> Assigned</span>
+          <span class="legend-item empty"><span class="material-icons">radio_button_unchecked</span> Not Assigned</span>
+        </div>
+      </div>
+
+      <!-- Info banner -->
+      <div class="schedule-info">
+        <span class="material-icons">info</span>
+        <p>For each month, select which committee member receives the payout. Use the <strong>dropdown</strong> to assign manually or click <strong>Spin Wheel</strong> to randomly pick from unassigned members.</p>
+      </div>
+
+      <!-- No members enrolled warning -->
+      <div class="schedule-info" style="background:#fef3c7;border-color:#f59e0b" *ngIf="enrolledMembers().length === 0">
+        <span class="material-icons" style="color:#f59e0b">warning</span>
+        <p>Add members to this committee first before assigning payout slots.</p>
+      </div>
+
+      <!-- Month slots -->
+      <div class="slots-container">
+        <div *ngFor="let slot of payoutSlots()" class="month-slot"
+             [class.slot-assigned]="slot.assigned"
+             [class.slot-current]="slot.month === (committee()!.current_month || 0) + 1">
+
+          <!-- Month label -->
+          <div class="slot-month">
+            <div class="month-num" [class.current-month]="slot.month === (committee()!.current_month || 0) + 1">
+              {{ slot.month }}
+            </div>
+            <div class="month-label">
+              Month {{ slot.month }}
+              <span class="current-badge" *ngIf="slot.month === (committee()!.current_month || 0) + 1">Current</span>
+            </div>
+          </div>
+
+          <!-- Assigned member display -->
+          <div class="slot-member" *ngIf="slot.assigned">
+            <div class="avatar avatar-sm" [style.background]="getAvatarColor(slot.assigned.member?.name || '')">
+              {{ getInitials(slot.assigned.member?.name || '') }}
+            </div>
+            <div class="slot-member-info">
+              <span class="slot-member-name">{{ slot.assigned.member?.name }}</span>
+              <span class="slot-member-email text-xs text-muted">{{ slot.assigned.member?.email }}</span>
+            </div>
+            <span class="assign-method" [class.spin-method]="slot.assigned.turn_assigned_by === 'spin'">
+              <span class="material-icons">{{ slot.assigned.turn_assigned_by === 'spin' ? 'casino' : 'edit_note' }}</span>
+              {{ slot.assigned.turn_assigned_by === 'spin' ? 'Spin' : 'Manual' }}
+            </span>
+            <span class="payout-amount">PKR {{ (committee()!.monthly_amount * committee()!.total_members) | number }}</span>
+            <button class="btn btn-ghost btn-icon remove-btn" (click)="removeSlotAssignment(slot)" title="Remove">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          <!-- Empty slot — assign controls -->
+          <div class="slot-empty" *ngIf="!slot.assigned">
+            <div class="slot-controls" *ngIf="enrolledMembers().length > 0">
+              <!-- Dropdown — only shows enrolled members not yet assigned -->
+              <select class="slot-select" (change)="assignManually(slot, $any($event.target).value)"
+                      [disabled]="slot.saving">
+                <option value="">— Select member —</option>
+                <option *ngFor="let m of unassignedMembers()" [value]="m.id">{{ m.name }}</option>
+              </select>
+
+              <!-- OR divider -->
+              <span class="or-divider">or</span>
+
+              <!-- Spin Wheel button -->
+              <button class="btn btn-spin btn-sm" (click)="openSpinForMonth(slot.month)"
+                      [disabled]="slot.saving || unassignedMembers().length === 0">
+                <span class="material-icons">casino</span>
+                Spin
+              </button>
+            </div>
+
+            <div class="saving-indicator" *ngIf="slot.saving">
+              <div class="spinner" style="width:20px;height:20px;border-width:2px"></div>
+              <span>Assigning...</span>
+            </div>
+
+            <span class="no-members-hint" *ngIf="enrolledMembers().length === 0 && !slot.saving">
+              <span class="material-icons">info</span> Add members to committee first
+            </span>
+
+            <span class="no-members-hint" *ngIf="enrolledMembers().length > 0 && unassignedMembers().length === 0 && !slot.saving">
+              <span class="material-icons">info</span> All enrolled members assigned
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="schedule-summary">
+        <div class="summary-item">
+          <span class="material-icons" style="color:var(--success)">check_circle</span>
+          <span>{{ assignedCount() }} months assigned</span>
+        </div>
+        <div class="summary-item">
+          <span class="material-icons" style="color:var(--gray-400)">radio_button_unchecked</span>
+          <span>{{ totalSlots() - assignedCount() }} months remaining</span>
+        </div>
+        <div class="summary-item">
+          <span class="material-icons" style="color:var(--primary)">people</span>
+          <span>{{ unassignedMembers().length }} members not yet assigned</span>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <div *ngIf="!loading() && !committee()" class="card" style="padding:60px;text-align:center">
+    <span class="material-icons" style="font-size:56px;color:#cbd5e1;display:block;margin-bottom:16px">search_off</span>
+    <h3>Committee not found</h3>
+    <a routerLink="/committees" class="btn btn-primary" style="margin-top:16px">Back</a>
+  </div>
+</div>
+
+<!-- ── ADD MEMBER TO COMMITTEE MODAL ────────────────────────── -->
+<div class="modal-overlay" *ngIf="showAddMemberModal()" (click)="closeAddMemberModal()">
+  <div class="modal" (click)="$event.stopPropagation()" style="max-width:480px">
+    <div class="modal-header">
+      <h3>
+        <span class="material-icons" style="vertical-align:middle;margin-right:8px;color:var(--primary)">person_add</span>
+        Add Member to Committee
+      </h3>
+      <button class="btn btn-ghost btn-icon" (click)="closeAddMemberModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding:24px">
+      <p class="text-sm text-muted" style="margin-bottom:16px">
+        Select a member to enroll in <strong>{{ committee()!.name }}</strong>.
+        Only members not already in this committee are shown.
+      </p>
+
+      <div class="form-group">
+        <label class="form-label">Select Member</label>
+        <select class="form-control" [(ngModel)]="selectedMemberIdToAdd">
+          <option value="">— Choose a member —</option>
+          <option *ngFor="let m of availableMembersToAdd()" [value]="m.id">
+            {{ m.name }} ({{ m.email }})
+          </option>
+        </select>
+      </div>
+
+      <div class="no-members-hint" *ngIf="availableMembersToAdd().length === 0" style="margin-top:12px">
+        <span class="material-icons">info</span>
+        All members are already in this committee. Go to
+        <a routerLink="/members" style="color:var(--primary)">Members</a> to create new members.
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeAddMemberModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="addMemberToCommittee()"
+              [disabled]="!selectedMemberIdToAdd || addingMember()">
+        <span class="material-icons">{{ addingMember() ? 'hourglass_empty' : 'person_add' }}</span>
+        {{ addingMember() ? 'Adding...' : 'Add Member' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SPIN WHEEL MODAL ──────────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="showSpinModal()" (click)="closeSpinModal()">
+  <div class="modal spin-modal" (click)="$event.stopPropagation()">
+    <div class="spin-modal-header">
+      <div class="spin-header-left">
+        <span class="material-icons spin-icon">casino</span>
+        <div>
+          <h3>Spin Wheel — Month {{ spinningForMonth() }}</h3>
+          <p>Randomly select who gets the payout for Month {{ spinningForMonth() }}</p>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-icon close-spin" (click)="closeSpinModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body spin-body">
+      <div class="wheel-wrap">
+        <div class="wheel-pointer">▼</div>
+        <canvas #wheelCanvas width="300" height="300" class="wheel-canvas"></canvas>
+      </div>
+
+      <!-- Result -->
+      <div class="spin-result" *ngIf="spinResult() && !isSpinning()">
+        <div class="result-avatar" [style.background]="getAvatarColor(spinResult()!.name)">
+          {{ getInitials(spinResult()!.name) }}
+        </div>
+        <div class="result-text">
+          <h3>🎉 {{ spinResult()!.name }}</h3>
+          <p>Selected for <strong>Month {{ spinningForMonth() }}</strong> payout</p>
+          <p class="result-amount">PKR {{ (committee()!.monthly_amount * committee()!.total_members) | number }}</p>
+        </div>
+      </div>
+
+      <!-- Available members -->
+      <div class="spin-members" *ngIf="!spinResult()">
+        <p class="spin-hint">{{ unassignedMembers().length }} members in the wheel</p>
+        <div class="spin-chips">
+          <span *ngFor="let m of unassignedMembers(); let i = index"
+                class="spin-chip" [style.background]="getWheelColor(i)">
+            {{ m.name }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeSpinModal()">Cancel</button>
+      <ng-container *ngIf="!spinResult()">
+        <button class="btn btn-spin btn-lg" (click)="spin()" [disabled]="isSpinning()">
+          <span class="material-icons">{{ isSpinning() ? 'hourglass_empty' : 'casino' }}</span>
+          {{ isSpinning() ? 'Spinning...' : '🎰 SPIN!' }}
+        </button>
+      </ng-container>
+      <ng-container *ngIf="spinResult() && !isSpinning()">
+        <button class="btn btn-outline" (click)="spinAgain()">
+          <span class="material-icons">refresh</span> Spin Again
+        </button>
+        <button class="btn btn-primary" (click)="confirmSpin()">
+          <span class="material-icons">check_circle</span> Confirm & Assign
+        </button>
+      </ng-container>
+    </div>
+  </div>
+</div>

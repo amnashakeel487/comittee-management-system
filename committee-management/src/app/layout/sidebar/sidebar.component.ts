@@ -1,0 +1,311 @@
+import { Component, signal, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
+import { DataService } from '../../services/data.service';
+
+interface NavItem {
+  label: string;
+  icon: string;
+  route: string;
+  badgeSignal?: () => number;
+}
+
+@Component({
+  selector: 'app-sidebar',
+  standalone: true,
+  imports: [CommonModule, RouterLink, RouterLinkActive],
+  template: `
+    <aside class="sidebar" [class.collapsed]="collapsed">
+      <!-- Logo -->
+      <div class="sidebar-logo">
+        <div class="logo-icon">
+          <span class="material-icons">account_balance</span>
+        </div>
+        <div class="logo-text" *ngIf="!collapsed">
+          <span class="logo-name">CommitteeHub</span>
+          <span class="logo-tagline">ROSCA Manager</span>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <span class="nav-section-label" *ngIf="!collapsed">MAIN MENU</span>
+          <a *ngFor="let item of navItems"
+             [routerLink]="item.route"
+             routerLinkActive="active"
+             class="nav-item"
+             [title]="collapsed ? item.label : ''">
+            <span class="material-icons nav-icon">{{ item.icon }}</span>
+            <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+            <span class="nav-badge" *ngIf="item.badgeSignal && item.badgeSignal() > 0 && !collapsed">
+              {{ item.badgeSignal() }}
+            </span>
+          </a>
+        </div>
+
+        <div class="nav-section nav-bottom">
+          <span class="nav-section-label" *ngIf="!collapsed">ACCOUNT</span>
+          <a routerLink="/profile" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Profile' : ''">
+            <span class="material-icons nav-icon">person</span>
+            <span class="nav-label" *ngIf="!collapsed">Profile</span>
+          </a>
+          <button class="nav-item nav-logout" (click)="onLogout()" [title]="collapsed ? 'Logout' : ''">
+            <span class="material-icons nav-icon">logout</span>
+            <span class="nav-label" *ngIf="!collapsed">Logout</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- User Info -->
+      <div class="sidebar-user" *ngIf="!collapsed">
+        <div class="avatar avatar-sm user-avatar">
+          {{ getUserInitials() }}
+        </div>
+        <div class="user-info">
+          <span class="user-name">{{ auth.currentUser()?.name || 'User' }}</span>
+          <span class="user-email">{{ auth.currentUser()?.email || '' }}</span>
+        </div>
+      </div>
+    </aside>
+  `,
+  styles: [`
+    .sidebar {
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: #3E362E;
+      border-right: none;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      transition: width 0.3s ease;
+      overflow: hidden;
+      box-shadow: 4px 0 20px rgba(62,54,46,0.15);
+      color: #FAF7F4;
+    }
+
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed);
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      min-height: var(--navbar-height);
+    }
+
+    .logo-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #865D36, #AC8968);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      .material-icons { color: white; font-size: 20px; }
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .logo-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #FAF7F4;
+      white-space: nowrap;
+    }
+
+    .logo-tagline {
+      font-size: 11px;
+      color: #AC8968;
+      white-space: nowrap;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-section {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #93785B;
+      letter-spacing: 0.08em;
+      padding: 8px 10px 4px;
+      text-transform: uppercase;
+    }
+
+    .nav-bottom {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #C9BAA8;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      white-space: nowrap;
+
+      &:hover {
+        background: rgba(134,93,54,0.25);
+        color: #FAF7F4;
+        .nav-icon { color: #AC8968; }
+      }
+
+      &.active {
+        background: rgba(134,93,54,0.35);
+        color: #FAF7F4;
+        font-weight: 600;
+        border-left: 3px solid #865D36;
+        padding-left: 9px;
+        .nav-icon { color: #AC8968; }
+      }
+    }
+
+    .nav-logout:hover {
+      background: rgba(239,68,68,0.15) !important;
+      color: #fca5a5 !important;
+      .nav-icon { color: #fca5a5 !important; }
+    }
+
+    .nav-icon {
+      font-size: 20px;
+      color: #93785B;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+
+    .nav-label { flex: 1; }
+
+    .nav-badge {
+      background: #865D36;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.15);
+    }
+
+    .user-avatar {
+      background: linear-gradient(135deg, #865D36, #AC8968);
+      font-size: 13px;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #FAF7F4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-email {
+      font-size: 11px;
+      color: #93785B;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  `]
+})
+export class SidebarComponent implements OnInit {
+  @Input() collapsed = false;
+
+  pendingPaymentsCount = signal(0);
+  pendingRequestsCount = signal(0);
+
+  navItems: NavItem[] = [
+    { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
+    { label: 'My Committees', icon: 'groups', route: '/committees' },
+    { label: 'Create Committee', icon: 'add_circle', route: '/committees/create' },
+    { label: 'Members', icon: 'people', route: '/members' },
+    { label: 'Payments', icon: 'payments', route: '/payments', badgeSignal: () => this.pendingPaymentsCount() },
+    { label: 'Join Requests', icon: 'person_add', route: '/join-requests', badgeSignal: () => this.pendingRequestsCount() },
+    { label: 'Payouts', icon: 'account_balance_wallet', route: '/payouts' },
+    { label: 'Reports', icon: 'bar_chart', route: '/reports' },
+  ];
+
+  constructor(public auth: AuthService, private dataService: DataService) {}
+
+  async ngOnInit() {
+    await this.auth.waitForAuth();
+    await this.loadPendingCount();
+  }
+
+  async loadPendingCount() {
+    try {
+      const [payments, requests] = await Promise.all([
+        this.dataService.getPayments(),
+        this.dataService.getPendingJoinRequestsCount()
+      ]);
+      const count = payments.filter(p =>
+        p.status === 'pending' || p.status === 'under_review'
+      ).length;
+      this.pendingPaymentsCount.set(count);
+      this.pendingRequestsCount.set(requests);
+    } catch (e) {
+      // non-critical
+    }
+  }
+
+  getUserInitials(): string {
+    const name = this.auth.currentUser()?.name || 'U';
+    return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  onLogout() {
+    this.auth.logout();
+  }
+}
