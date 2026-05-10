@@ -6,7 +6,6 @@ import { AuthService } from './auth.service';
 export class MemberDataService {
   private _memberRecord = signal<any>(null);
   private _memberships = signal<any[]>([]);
-  private _loaded = false;
 
   constructor(private supabase: SupabaseService, private auth: AuthService) {}
 
@@ -21,7 +20,6 @@ export class MemberDataService {
   }
 
   async getMemberships(): Promise<any[]> {
-    if (this._loaded) return this._memberships();
     const member = await this.getMemberRecord();
     if (!member) return [];
 
@@ -32,7 +30,10 @@ export class MemberDataService {
 
     if (!cmRows) return [];
 
-    const memberships = await Promise.all(cmRows.map(async (cm: any) => {
+    // Filter out rows where the committee was deleted (cascade may leave null)
+    const validRows = cmRows.filter((cm: any) => cm.committees !== null);
+
+    const memberships = await Promise.all(validRows.map(async (cm: any) => {
       const committee = cm.committees;
       const [paymentsRes, payoutsRes, allMembersRes] = await Promise.all([
         this.supabase.client.from('payments').select('*')
@@ -52,7 +53,6 @@ export class MemberDataService {
     }));
 
     this._memberships.set(memberships);
-    this._loaded = true;
     return memberships;
   }
 
@@ -153,5 +153,5 @@ export class MemberDataService {
     }
   }
 
-  invalidateCache() { this._loaded = false; this._memberRecord.set(null); this._memberships.set([]); }
+  invalidateCache() { this._memberRecord.set(null); this._memberships.set([]); }
 }
