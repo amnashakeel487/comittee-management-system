@@ -63,6 +63,29 @@ import { ToastService } from '../../../services/toast.service';
         <div class="auth-footer-text">
           <p>Trusted by 10,000+ committee managers across Pakistan</p>
         </div>
+
+        <!-- Developer Credits -->
+        <div class="dev-credits">
+          <p class="dev-label">Built by</p>
+          <div class="dev-cards">
+            <a href="https://muhammadabdullahcv.vercel.app/#/" target="_blank" rel="noopener" class="dev-card">
+              <div class="dev-avatar">MA</div>
+              <div class="dev-info">
+                <span class="dev-name">Muhammad Abdullah</span>
+                <span class="dev-role">Developer</span>
+              </div>
+              <span class="material-icons dev-link-icon">open_in_new</span>
+            </a>
+            <a href="https://amnashakeel-portfolio.vercel.app/" target="_blank" rel="noopener" class="dev-card">
+              <div class="dev-avatar">AS</div>
+              <div class="dev-info">
+                <span class="dev-name">Amna Shakeel</span>
+                <span class="dev-role">Developer</span>
+              </div>
+              <span class="material-icons dev-link-icon">open_in_new</span>
+            </a>
+          </div>
+        </div>
       </div>
 
       <!-- Right Panel - Login Form -->
@@ -291,6 +314,82 @@ import { ToastService } from '../../../services/toast.service';
         font-size: 13px;
         color: rgba(255,255,255,0.5);
       }
+    }
+
+    .dev-credits {
+      position: relative;
+      z-index: 1;
+      margin-top: 20px;
+    }
+
+    .dev-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 10px;
+    }
+
+    .dev-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dev-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+
+      &:hover {
+        background: rgba(255,255,255,0.15);
+        border-color: rgba(255,255,255,0.3);
+        transform: translateY(-1px);
+      }
+    }
+
+    .dev-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .dev-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dev-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .dev-role {
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+    }
+
+    .dev-link-icon {
+      font-size: 14px;
+      color: rgba(255,255,255,0.4);
     }
 
     .auth-right {
