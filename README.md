@@ -3,12 +3,18 @@
 A modern, full-stack web application for managing money-saving committees (ROSCA - Rotating Savings and Credit Association).
 # Website Link:
 https://comittee-manager.vercel.app/auth/login
+
+
+
 Admin Credentials: 
 email: amnashakeel606@gmail.com
 password: 123456
+
+
+
 Member credentials:
 email: aliza@gmail.com
-password: 
+password: 123456
 # ScreenShots:
 
 # Admin Pannel
