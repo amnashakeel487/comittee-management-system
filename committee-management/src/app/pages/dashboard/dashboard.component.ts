@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DataService } from '../../services/data.service';
@@ -528,7 +528,7 @@ import { DashboardStats, Payment, Payout } from '../../models';
     .badge-info { background: #EDE0D4; color: #4E3D2E; }
   `]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   loading = signal(true);
   stats = signal<DashboardStats | null>(null);
   recentPayments = signal<Payment[]>([]);
@@ -538,11 +538,26 @@ export class DashboardComponent implements OnInit {
   releasingId = signal<string | null>(null);
 
   private avatarColors = ['#2563eb', '#7c3aed', '#db2777', '#059669', '#d97706', '#dc2626'];
+  private visibilityHandler = () => {
+    if (document.visibilityState === 'visible' && this.auth.currentUser()) {
+      this.loadData(false); // silent refresh — no loading spinner
+    }
+  };
 
   constructor(private dataService: DataService, private auth: AuthService) {}
 
   async ngOnInit() {
     await this.auth.waitForAuth();
+    await this.loadData(true);
+    document.addEventListener('visibilitychange', this.visibilityHandler);
+  }
+
+  ngOnDestroy() {
+    document.removeEventListener('visibilitychange', this.visibilityHandler);
+  }
+
+  private async loadData(showSpinner: boolean) {
+    if (showSpinner) this.loading.set(true);
     try {
       const [statsData, payments, committees, chart, payouts] = await Promise.all([
         this.dataService.getDashboardStats(),
@@ -563,13 +578,14 @@ export class DashboardComponent implements OnInit {
             : 0
         }))
       );
-      // Show scheduled payouts sorted by month (soonest first)
       const scheduled = payouts
         .filter(p => p.status === 'scheduled')
         .sort((a, b) => a.month - b.month);
       this.upcomingPayouts.set(scheduled);
+    } catch (e) {
+      console.error('Dashboard load error:', e);
     } finally {
-      this.loading.set(false);
+      if (showSpinner) this.loading.set(false);
     }
   }
 

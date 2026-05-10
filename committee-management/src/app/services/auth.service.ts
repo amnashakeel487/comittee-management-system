@@ -17,7 +17,7 @@ export class AuthService {
     this.initAuth();
   }
 
-  /** Wait for the initial session restore to complete before reading currentUser */
+  /** Wait for the initial session restore to complete */
   waitForAuth(): Promise<void> {
     return this._authReady;
   }
@@ -30,37 +30,32 @@ export class AuthService {
       });
     }
 
-    // Safety timeout — if session check hangs for >5s, resolve anyway
-    const safetyTimer = setTimeout(() => {
-      if (!this._initialized) {
-        this._initialized = true;
-        this._authReadyResolve();
+    // Use getSession for the initial check — fast and reliable
+    this.supabase.getSession().then(async ({ data }) => {
+      if (data?.session?.user) {
+        await this.loadUserProfile(data.session.user);
+        sessionStorage.removeItem('demo_mode');
       }
-    }, 5000);
+      this._resolve();
+    }).catch(() => this._resolve());
 
-    // Listen to ALL auth state changes — this fires immediately with
-    // INITIAL_SESSION on page load, and TOKEN_REFRESHED when tab regains focus
+    // onAuthStateChange handles token refresh when tab regains focus
+    // but we do NOT use it to resolve _authReady (getSession handles that)
     this.supabase.onAuthStateChange(async (event, session) => {
-      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
-        if (session?.user) {
-          await this.loadUserProfile(session.user);
-          sessionStorage.removeItem('demo_mode');
-        }
-        // Resolve on first INITIAL_SESSION
-        if (!this._initialized) {
-          this._initialized = true;
-          clearTimeout(safetyTimer);
-          this._authReadyResolve();
-        }
+      if (event === 'TOKEN_REFRESHED' && session?.user) {
+        // Silently refresh the user profile in background — no loading state
+        this.loadUserProfile(session.user).catch(() => {});
       } else if (event === 'SIGNED_OUT') {
         this.currentUser.set(null);
-        if (!this._initialized) {
-          this._initialized = true;
-          clearTimeout(safetyTimer);
-          this._authReadyResolve();
-        }
       }
     });
+  }
+
+  private _resolve() {
+    if (!this._initialized) {
+      this._initialized = true;
+      this._authReadyResolve();
+    }
   }
 
   // ── Get real role from DB ─────────────────────────────────────
