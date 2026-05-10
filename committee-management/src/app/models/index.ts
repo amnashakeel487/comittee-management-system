@@ -40,6 +40,7 @@ export interface Member {
   role: 'admin' | 'member';
   payout_order: number;
   status: 'active' | 'inactive';
+  login_password?: string;
   created_by?: string;
   created_at?: string;
 }

@@ -80,13 +80,13 @@
               </span>
             </td>
             <td>
-              <button *ngIf="hasCredential(member.id)"
+              <button *ngIf="hasCredential(member)"
                       class="btn btn-outline btn-sm cred-btn"
                       (click)="viewCredentials(member)"
                       title="View login credentials">
                 <span class="material-icons">key</span> View
               </button>
-              <span *ngIf="!hasCredential(member.id)" class="no-cred-text">—</span>
+              <span *ngIf="!hasCredential(member)" class="no-cred-text">—</span>
             </td>
             <td>
               <div class="action-btns">

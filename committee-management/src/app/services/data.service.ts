@@ -125,7 +125,8 @@ export class DataService {
         address: input.address || null, cnic: input.cnic || null,
         role: 'member',   // ← always member in members table
         payout_order: input.payout_order || 1,
-        status: 'active', created_by: this.userId
+        status: 'active', created_by: this.userId,
+        login_password: input.password || null
       }).select().single();
 
     if (error) { console.error('createMember:', error); throw new Error(error.message); }

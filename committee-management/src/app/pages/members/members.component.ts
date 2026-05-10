@@ -39,8 +39,7 @@ export class MembersComponent implements OnInit {
     payout_order: 1
   };
 
-  private readonly STORAGE_KEY = "committeehub_member_credentials";
-  private avatarColors = ["#2563eb", "#7c3aed", "#db2777", "#059669", "#d97706", "#dc2626"];
+  private readonly avatarColors = ["#2563eb", "#7c3aed", "#db2777", "#059669", "#d97706", "#dc2626"];
 
   constructor(private dataService: DataService, private toast: ToastService, private auth: AuthService) {}
 
@@ -57,28 +56,23 @@ export class MembersComponent implements OnInit {
 
   // ── Credential Storage ──────────────────────────────────────
 
-  private saveCredential(memberId: string, name: string, email: string, password: string) {
-    const all = this.getAllCredentials();
-    all[memberId] = { memberId, name, email, password, createdAt: new Date().toISOString() };
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(all));
+  getCredential(member: Member): StoredCredential | null {
+    if (!member.login_password) return null;
+    return {
+      memberId: member.id,
+      name: member.name,
+      email: member.email,
+      password: member.login_password,
+      createdAt: member.created_at || new Date().toISOString()
+    };
   }
 
-  private getAllCredentials(): Record<string, StoredCredential> {
-    try {
-      return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || "{}");
-    } catch { return {}; }
-  }
-
-  getCredential(memberId: string): StoredCredential | null {
-    return this.getAllCredentials()[memberId] || null;
-  }
-
-  hasCredential(memberId: string): boolean {
-    return !!this.getCredential(memberId);
+  hasCredential(member: Member): boolean {
+    return !!member.login_password;
   }
 
   viewCredentials(member: Member) {
-    const cred = this.getCredential(member.id);
+    const cred = this.getCredential(member);
     if (!cred) {
       this.toast.warning("No saved credentials for this member. Credentials are only saved when a member is first added.");
       return;
@@ -146,8 +140,6 @@ export class MembersComponent implements OnInit {
       } else {
         const generatedPassword = this.generatePassword();
         const newMember = await this.dataService.createMember({ ...this.memberForm, password: generatedPassword });
-        // Save credentials to localStorage for later viewing
-        this.saveCredential(newMember.id, newMember.name, newMember.email, generatedPassword);
         this.members.update(list => [...list, newMember]);
         this.filteredMembers.update(list => [...list, newMember]);
         // Show credentials modal immediately
@@ -170,10 +162,6 @@ export class MembersComponent implements OnInit {
       await this.dataService.deleteMember(member.id);
       this.members.update(list => list.filter(m => m.id !== member.id));
       this.filteredMembers.update(list => list.filter(m => m.id !== member.id));
-      // Remove stored credentials
-      const all = this.getAllCredentials();
-      delete all[member.id];
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(all));
       this.toast.success("Member removed");
     } catch { this.toast.error("Failed to remove member"); }
   }
