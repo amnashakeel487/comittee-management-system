@@ -4,9 +4,9 @@ A modern, full-stack web application for managing money-saving committees (ROSCA
 # Website Link:
 https://comittee-manager.vercel.app/auth/login
 
-#ScreenShots:
+# ScreenShots:
 
-#Admin Pannel
+# Admin Pannel
 <img width="1906" height="892" alt="image" src="https://github.com/user-attachments/assets/2b8c67fe-322d-44c4-87bd-8fb460aae817" />
 <img width="1913" height="908" alt="image" src="https://github.com/user-attachments/assets/a4091682-4469-4ef7-9fc7-3da9f5a2385a" />
 <img width="1910" height="897" alt="image" src="https://github.com/user-attachments/assets/2ef18b0b-5e34-4df2-aced-af9bef5ef210" />
@@ -23,7 +23,7 @@ https://comittee-manager.vercel.app/auth/login
 <img width="1918" height="909" alt="image" src="https://github.com/user-attachments/assets/48286aee-d3f3-45ae-b7b7-62c1b0d1346d" />
 <img width="1915" height="908" alt="image" src="https://github.com/user-attachments/assets/0b553a24-9492-44c4-8cb6-c1ee2be4e079" />
 
-#Member Portal
+# Member Portal
 <img width="1919" height="909" alt="image" src="https://github.com/user-attachments/assets/04ccfa06-6422-45eb-9824-db452020c06e" />
 <img width="1919" height="908" alt="image" src="https://github.com/user-attachments/assets/931a880d-b565-4fad-a182-0511fe4311f1" />
 <img width="1919" height="918" alt="image" src="https://github.com/user-attachments/assets/4dfb365c-bed1-4d61-bfaf-32bd8a2354aa" />
