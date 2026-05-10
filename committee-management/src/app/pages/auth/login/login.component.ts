@@ -66,7 +66,7 @@ import { ToastService } from '../../../services/toast.service';
 
         <!-- Developer Credits -->
         <div class="dev-credits">
-          <p class="dev-label">Built by</p>
+          <p class="dev-label">Designed & Developed by</p>
           <div class="dev-cards">
             <a href="https://muhammadabdullahcv.vercel.app/#/" target="_blank" rel="noopener" class="dev-card">
               <div class="dev-avatar">MA</div>
