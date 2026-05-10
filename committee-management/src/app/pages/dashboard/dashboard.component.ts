@@ -69,34 +69,66 @@ import { DashboardStats, Payment, Payout } from '../../models';
               </h3>
               <a routerLink="/payouts" class="btn btn-ghost btn-sm">View All</a>
             </div>
-            <div class="card-body" *ngIf="stats()?.upcomingPayout as payout">
-              <div class="payout-highlight">
-                <div class="payout-avatar">
-                  {{ getInitials(payout.receiver_name || '') }}
+
+            <!-- Has payouts -->
+            <ng-container *ngIf="upcomingPayouts().length > 0">
+              <!-- Next payout highlight -->
+              <div class="card-body">
+                <div class="next-payout-label">
+                  <span class="material-icons" style="font-size:14px;color:var(--primary)">arrow_forward</span>
+                  Next Up
                 </div>
-                <div class="payout-info">
-                  <h2 class="payout-amount">PKR {{ (payout.total_amount || 0) | number }}</h2>
-                  <p class="payout-receiver">{{ payout.receiver_name }}</p>
-                  <p class="payout-meta">
-                    <span class="material-icons" style="font-size:14px;vertical-align:middle">calendar_today</span>
-                    {{ payout.payout_date | date:'MMMM d, yyyy' }}
-                  </p>
-                  <p class="payout-committee">
-                    <span class="material-icons" style="font-size:14px;vertical-align:middle">groups</span>
-                    {{ payout.committee_name }}
-                  </p>
+                <div class="payout-highlight">
+                  <div class="payout-avatar">
+                    {{ getInitials(upcomingPayouts()[0].receiver_name || '') }}
+                  </div>
+                  <div class="payout-info">
+                    <h2 class="payout-amount">PKR {{ (upcomingPayouts()[0].total_amount || 0) | number }}</h2>
+                    <p class="payout-receiver">{{ upcomingPayouts()[0].receiver_name }}</p>
+                    <p class="payout-meta">
+                      <span class="material-icons" style="font-size:14px;vertical-align:middle">calendar_today</span>
+                      {{ upcomingPayouts()[0].payout_date | date:'MMMM d, yyyy' }}
+                    </p>
+                    <p class="payout-committee">
+                      <span class="material-icons" style="font-size:14px;vertical-align:middle">groups</span>
+                      {{ upcomingPayouts()[0].committee_name }} — Month {{ upcomingPayouts()[0].month }}
+                    </p>
+                  </div>
+                </div>
+                <div class="payout-actions">
+                  <button class="btn btn-primary"
+                          (click)="releasePayout(upcomingPayouts()[0])"
+                          [disabled]="releasingId() === upcomingPayouts()[0].id">
+                    <span class="material-icons">
+                      {{ releasingId() === upcomingPayouts()[0].id ? 'hourglass_empty' : 'send' }}
+                    </span>
+                    {{ releasingId() === upcomingPayouts()[0].id ? 'Releasing...' : 'Mark Payout Done' }}
+                  </button>
+                  <a routerLink="/payouts" class="btn btn-outline">
+                    <span class="material-icons">visibility</span> View All
+                  </a>
                 </div>
               </div>
-              <div class="payout-actions">
-                <button class="btn btn-primary">
-                  <span class="material-icons">send</span> Release Payout
-                </button>
-                <button class="btn btn-outline">
-                  <span class="material-icons">visibility</span> View Details
-                </button>
+
+              <!-- Queue: remaining payouts -->
+              <div class="payout-queue" *ngIf="upcomingPayouts().length > 1">
+                <div class="queue-label">
+                  <span class="material-icons" style="font-size:14px">schedule</span>
+                  Coming up ({{ upcomingPayouts().length - 1 }} more)
+                </div>
+                <div *ngFor="let p of upcomingPayouts().slice(1, 4)" class="queue-item">
+                  <div class="queue-avatar">{{ getInitials(p.receiver_name || '') }}</div>
+                  <div class="queue-info">
+                    <span class="queue-name">{{ p.receiver_name }}</span>
+                    <span class="queue-meta">{{ p.committee_name }} · Month {{ p.month }}</span>
+                  </div>
+                  <span class="queue-amount">PKR {{ p.total_amount | number }}</span>
+                </div>
               </div>
-            </div>
-            <div class="card-body empty-payout" *ngIf="!stats()?.upcomingPayout">
+            </ng-container>
+
+            <!-- Empty -->
+            <div class="card-body empty-payout" *ngIf="upcomingPayouts().length === 0">
               <div class="empty-state">
                 <span class="material-icons empty-icon">account_balance_wallet</span>
                 <p>No upcoming payouts</p>
@@ -418,6 +450,81 @@ import { DashboardStats, Payment, Payout } from '../../models';
       min-height: 200px;
     }
 
+    .next-payout-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    .payout-queue {
+      border-top: 1px solid var(--gray-200);
+      padding: 16px 24px;
+    }
+
+    .queue-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .queue-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--gray-100);
+      &:last-child { border-bottom: none; }
+    }
+
+    .queue-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--primary-50);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .queue-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .queue-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    .queue-meta {
+      font-size: 11px;
+      color: var(--gray-500);
+    }
+
+    .queue-amount {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
     .badge-info { background: #EDE0D4; color: #4E3D2E; }
   `]
 })
@@ -427,20 +534,22 @@ export class DashboardComponent implements OnInit {
   recentPayments = signal<Payment[]>([]);
   chartData = signal<{ month: string; amount: number }[]>([]);
   committeeProgress = signal<any[]>([]);
+  upcomingPayouts = signal<Payout[]>([]);
+  releasingId = signal<string | null>(null);
 
   private avatarColors = ['#2563eb', '#7c3aed', '#db2777', '#059669', '#d97706', '#dc2626'];
 
   constructor(private dataService: DataService, private auth: AuthService) {}
 
   async ngOnInit() {
-    // Wait for session to be restored before fetching data
     await this.auth.waitForAuth();
     try {
-      const [statsData, payments, committees, chart] = await Promise.all([
+      const [statsData, payments, committees, chart, payouts] = await Promise.all([
         this.dataService.getDashboardStats(),
         this.dataService.getPayments(),
         this.dataService.getCommittees(),
-        this.dataService.getMonthlyCollectionData()
+        this.dataService.getMonthlyCollectionData(),
+        this.dataService.getPayouts()
       ]);
 
       this.stats.set(statsData);
@@ -454,8 +563,33 @@ export class DashboardComponent implements OnInit {
             : 0
         }))
       );
+      // Show scheduled payouts sorted by month (soonest first)
+      const scheduled = payouts
+        .filter(p => p.status === 'scheduled')
+        .sort((a, b) => a.month - b.month);
+      this.upcomingPayouts.set(scheduled);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async releasePayout(payout: Payout) {
+    if (this.releasingId()) return;
+    this.releasingId.set(payout.id);
+    try {
+      const updated = await this.dataService.releasePayout(payout.id);
+      // Remove from upcoming list
+      this.upcomingPayouts.update(list => list.filter(p => p.id !== updated.id));
+      // Update stats
+      const s = this.stats();
+      if (s) {
+        const next = this.upcomingPayouts()[0] || null;
+        this.stats.set({ ...s, upcomingPayout: next || undefined });
+      }
+    } catch (e) {
+      console.error('Release failed', e);
+    } finally {
+      this.releasingId.set(null);
     }
   }
 
