@@ -70,13 +70,57 @@ export class CommitteeDetailComponent implements OnInit {
         this.dataService.getMembers().catch(() => [])
       ]);
       this.committee.set(committee);
-      this.committeeMembers.set(members);
+
+      // Auto-enroll admin as Turn #1 if committee has no members yet
+      let finalMembers = members;
+      if (committee && members.length === 0) {
+        finalMembers = await this.autoEnrollAdmin(committee, allMembers);
+      }
+
+      this.committeeMembers.set(finalMembers);
       this.allMembers.set(allMembers);
-      this.buildPayoutSlots(committee, members);
+      this.buildPayoutSlots(committee, finalMembers);
     } catch (e: any) {
       this.toast.error('Failed to load: ' + (e?.message || ''));
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  /** Auto-enroll the admin who created the committee as Turn #1 member */
+  private async autoEnrollAdmin(committee: Committee, allMembers: Member[]): Promise<CommitteeMember[]> {
+    try {
+      const currentUser = this.auth.currentUser();
+      if (!currentUser) return [];
+
+      // Find the admin's member record by email
+      let adminMember = allMembers.find(m => m.email === currentUser.email);
+
+      // If admin has no member record yet, create one
+      if (!adminMember) {
+        adminMember = await this.dataService.createMember({
+          name: currentUser.name || 'Admin',
+          email: currentUser.email || '',
+          phone: currentUser.phone || '0000000000',
+          cnic: currentUser.cnic || '00000-0000000-0',
+          role: 'admin',
+          payout_order: 1,
+          status: 'active'
+        });
+        // Add to allMembers list
+        this.allMembers.update(list => [...list, adminMember!]);
+      }
+
+      // Assign admin to Turn #1 — this also auto-generates the payout record
+      const cm = await this.dataService.assignMemberToCommittee(
+        adminMember.id, committee.id, 1, 'manual'
+      );
+
+      this.toast.success(`You've been added as Turn #1 — Month 1 payout scheduled for you`);
+      return [cm];
+    } catch (e: any) {
+      console.warn('Auto-enroll admin warning:', e?.message);
+      return [];
     }
   }
 
