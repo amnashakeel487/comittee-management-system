@@ -672,10 +672,12 @@ export class LoginComponent {
 
     this.loading.set(true);
     try {
-      // Pass selectedRole — backend validates it against DB
       const result = await this.auth.login(this.email, this.password, this.selectedRole());
       if (result.success) {
-        if (result.role === 'member') {
+        if (result.role === 'super_admin') {
+          this.toast.success('Welcome, Super Admin!');
+          this.router.navigate(['/super-admin']);
+        } else if (result.role === 'member') {
           this.toast.success('Welcome to your Member Portal!');
           this.router.navigate(['/member-portal']);
         } else {

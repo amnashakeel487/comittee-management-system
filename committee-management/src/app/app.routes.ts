@@ -1,8 +1,11 @@
 ﻿import { Routes } from "@angular/router";
-import { authGuard, adminGuard, memberGuard, guestGuard } from "./guards/auth.guard";
+import { authGuard, adminGuard, memberGuard, guestGuard, superAdminGuard } from "./guards/auth.guard";
 
 export const routes: Routes = [
-  { path: "", redirectTo: "/dashboard", pathMatch: "full" },
+  // Public landing page — no auth required
+  { path: "", loadComponent: () => import("./pages/landing/landing.component").then(m => m.LandingComponent) },
+
+  // Auth routes
   {
     path: "auth",
     children: [
@@ -12,11 +15,22 @@ export const routes: Routes = [
       { path: "", redirectTo: "login", pathMatch: "full" }
     ]
   },
+
+  // Super Admin
+  {
+    path: "super-admin",
+    canActivate: [superAdminGuard],
+    loadComponent: () => import("./pages/super-admin/super-admin.component").then(m => m.SuperAdminComponent)
+  },
+
+  // Member portal
   {
     path: "member-portal",
     canActivate: [authGuard],
     loadComponent: () => import("./pages/member-portal/member-portal.component").then(m => m.MemberPortalComponent)
   },
+
+  // Admin dashboard
   {
     path: "",
     canActivate: [adminGuard],
@@ -34,5 +48,6 @@ export const routes: Routes = [
       { path: "profile", loadComponent: () => import("./pages/profile/profile.component").then(m => m.ProfileComponent) }
     ]
   },
-  { path: "**", redirectTo: "/dashboard" }
+
+  { path: "**", redirectTo: "/" }
 ];

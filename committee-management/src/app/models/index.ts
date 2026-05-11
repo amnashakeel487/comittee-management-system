@@ -6,7 +6,7 @@
   address?: string;
   cnic?: string;
   avatar?: string;
-  role?: 'admin' | 'member';
+  role?: 'admin' | 'member' | 'super_admin';
   created_at?: string;
 }
 

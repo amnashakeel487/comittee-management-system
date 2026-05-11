@@ -59,35 +59,23 @@ export class AuthService {
   }
 
   // ── Get real role from DB ─────────────────────────────────────
-  private async getRoleFromDB(userId: string, email: string): Promise<'admin' | 'member'> {
-    // 1. Check profiles table first (most reliable)
+  private async getRoleFromDB(userId: string, email: string): Promise<'admin' | 'member' | 'super_admin'> {
     try {
       const { data: profile } = await this.supabase.client
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-      if (profile?.role) return profile.role as 'admin' | 'member';
+        .from('profiles').select('role').eq('id', userId).single();
+      if (profile?.role) return profile.role as 'admin' | 'member' | 'super_admin';
     } catch (e) {}
-
-    // 2. Check if email exists in members table (created by admin → always member)
     try {
       const { data: member } = await this.supabase.client
-        .from('members')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
+        .from('members').select('id').eq('email', email).maybeSingle();
       if (member) return 'member';
     } catch (e) {}
-
-    // 3. Fallback: check user metadata
     try {
       const { data: userData } = await this.supabase.client.auth.getUser();
       const metaRole = (userData?.user?.user_metadata as any)?.role;
       if (metaRole === 'member') return 'member';
+      if (metaRole === 'super_admin') return 'super_admin';
     } catch (e) {}
-
-    // Default: admin (self-registered users)
     return 'admin';
   }
 
@@ -146,41 +134,31 @@ export class AuthService {
   async login(
     email: string,
     password: string,
-    selectedRole: 'admin' | 'member'
+    selectedRole: 'admin' | 'member' | 'super_admin'
   ): Promise<{ success: boolean; error?: string; role?: string }> {
     this.isLoading.set(true);
     try {
-      // Step 1: Authenticate with Supabase
       const { data, error } = await this.supabase.signIn(email, password);
       if (error) return { success: false, error: error.message };
-
       const user = data.user!;
-
-      // Step 2: Get REAL role from database
       const realRole = await this.getRoleFromDB(user.id, user.email || '');
 
-      // Step 3: STRICT role validation — reject if mismatch
+      // Super admin bypasses role selector check
+      if (realRole === 'super_admin') {
+        await this.loadUserProfile(user);
+        return { success: true, role: 'super_admin' };
+      }
+
       if (selectedRole === 'admin' && realRole !== 'admin') {
-        // Sign out immediately — member tried to login as admin
         await this.supabase.signOut();
-        return {
-          success: false,
-          error: '🚫 Access Denied. You are not registered as Admin. Please select "Member" to login.'
-        };
+        return { success: false, error: '🚫 Access Denied. You are not registered as Admin. Please select "Member" to login.' };
       }
-
       if (selectedRole === 'member' && realRole !== 'member') {
-        // Admin tried to login as member — also reject for clarity
         await this.supabase.signOut();
-        return {
-          success: false,
-          error: '🚫 Access Denied. This account is registered as Admin. Please select "Admin" to login.'
-        };
+        return { success: false, error: '🚫 Access Denied. This account is registered as Admin. Please select "Admin" to login.' };
       }
 
-      // Step 4: Load full profile
       await this.loadUserProfile(user);
-
       return { success: true, role: realRole };
     } catch (e: any) {
       return { success: false, error: e?.message || 'Login failed' };
@@ -232,4 +210,5 @@ export class AuthService {
   isAuthenticated(): boolean { return !!this.currentUser(); }
   isAdmin(): boolean { return this.currentUser()?.role === 'admin'; }
   isMember(): boolean { return this.currentUser()?.role === 'member'; }
+  isSuperAdmin(): boolean { return this.currentUser()?.role === 'super_admin'; }
 }
