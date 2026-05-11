@@ -1,407 +1,387 @@
-<div class="landing">
+﻿<div class="landing">
 
-  <!-- ── NAVBAR ─────────────────────────────────────────────── -->
-  <nav class="navbar">
-    <div class="nav-inner">
-      <div class="nav-brand">
-        <div class="brand-icon"><span class="material-icons">account_balance</span></div>
-        <span class="brand-name">CommitteeHub</span>
-      </div>
-      <div class="nav-links">
-        <a (click)="scrollTo('committees')" class="nav-link">Committees</a>
-        <a (click)="scrollTo('how-it-works')" class="nav-link">How It Works</a>
-        <a (click)="scrollTo('features')" class="nav-link">Features</a>
-        <a (click)="scrollTo('faq')" class="nav-link">FAQ</a>
-      </div>
-      <div class="nav-actions">
-        <a routerLink="/auth/login" class="btn-nav-outline">Admin Login</a>
-        <a routerLink="/auth/register" class="btn-nav-solid">Admin Register</a>
-      </div>
-      <button class="hamburger" (click)="mobileMenuOpen.update(v=>!v)">
-        <span class="material-icons">{{ mobileMenuOpen() ? 'close' : 'menu' }}</span>
-      </button>
+<!-- NAV -->
+<nav id="main-nav" [class.scrolled]="scrolled">
+  <a class="nav-logo" routerLink="/">Committee<span>Hub</span></a>
+  <div class="nav-links">
+    <a (click)="scrollTo('committees')">Committees</a>
+    <a (click)="scrollTo('how')">How It Works</a>
+    <a (click)="scrollTo('features')">Features</a>
+    <a (click)="scrollTo('faq')">FAQ</a>
+  </div>
+  <div class="nav-cta">
+    <a routerLink="/auth/login" class="btn btn-ghost">Admin Login</a>
+    <a routerLink="/auth/register" class="btn btn-primary">Admin Register</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-dots">
+    <div *ngFor="let d of dots" class="dot" [style]="d"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <i class="ti ti-shield-check"></i> Trusted Committee Platform
     </div>
-    <div class="mobile-menu" [class.open]="mobileMenuOpen()">
-      <a (click)="scrollTo('committees')" class="mob-link">Committees</a>
-      <a (click)="scrollTo('how-it-works')" class="mob-link">How It Works</a>
-      <a (click)="scrollTo('features')" class="mob-link">Features</a>
-      <a (click)="scrollTo('faq')" class="mob-link">FAQ</a>
-      <a routerLink="/auth/login" class="mob-link accent">Admin Login</a>
-      <a routerLink="/auth/register" class="mob-link solid">Admin Register</a>
+    <h1 class="hero-title">Smart Committee<br><span class="accent">Management System</span></h1>
+    <p class="hero-sub">Manage committees, payments, members, and monthly turns easily — with full transparency and trust.</p>
+    <div class="hero-btns">
+      <a (click)="scrollTo('committees')" class="btn btn-primary btn-xl">
+        <i class="ti ti-building-community"></i> Explore Committees
+      </a>
+      <a routerLink="/auth/register" class="btn btn-ghost btn-xl">Admin Register</a>
+      <a routerLink="/auth/login" class="btn btn-outline btn-xl">Admin Login</a>
     </div>
-  </nav>
-
-  <!-- ── HERO ───────────────────────────────────────────────── -->
-  <section class="hero">
-    <div class="hero-inner">
-      <div class="hero-badge">
-        <span class="material-icons" style="font-size:14px">verified</span>
-        Trusted Committee Platform
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-num">{{ stats().members }}+</span>
+        <span class="hero-stat-lbl">Active Members</span>
       </div>
-      <h1 class="hero-title">
-        Smart Committee<br>
-        <span class="hero-accent">Management System</span>
-      </h1>
-      <p class="hero-sub">
-        Manage committees, payments, members, and monthly turns easily —<br>
-        with full transparency and trust.
-      </p>
-      <div class="hero-btns">
-        <a (click)="scrollTo('committees')" class="btn-hero-primary">
-          <span class="material-icons">explore</span> Explore Committees
-        </a>
-        <a routerLink="/auth/register" class="btn-hero-outline">
-          <span class="material-icons">person_add</span> Admin Register
-        </a>
-        <a routerLink="/auth/login" class="btn-hero-ghost">
-          <span class="material-icons">login</span> Admin Login
-        </a>
+      <div class="hero-stat">
+        <span class="hero-stat-num">{{ stats().committees }}</span>
+        <span class="hero-stat-lbl">Live Committees</span>
       </div>
-      <div class="stats-bar">
-        <div class="stat-item">
-          <span class="stat-num">{{ stats().members }}+</span>
-          <span class="stat-lbl">Active Members</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-num">{{ stats().committees }}</span>
-          <span class="stat-lbl">Live Committees</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-num">PKR {{ formatPKR(stats().managed) }}</span>
-          <span class="stat-lbl">Managed Monthly</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── COMMITTEES ─────────────────────────────────────────── -->
-  <section class="section" id="committees">
-    <div class="section-inner">
-      <div class="section-tag">Public Committees</div>
-      <h2 class="section-title">Join an Active Committee</h2>
-      <p class="section-sub">Browse all open committees and request to join. Fully transparent, admin-managed.</p>
-
-      <!-- Filters -->
-      <div class="filter-bar">
-        <button *ngFor="let f of filters" class="filter-btn"
-                [class.active]="activeFilter()===f" (click)="applyFilter(f)">{{ f }}</button>
-      </div>
-
-      <div *ngIf="loading()" class="loading-center"><div class="spinner"></div></div>
-
-      <div class="committees-grid" *ngIf="!loading()">
-        <div *ngFor="let c of filteredCommittees()" class="committee-card">
-          <!-- Card header -->
-          <div class="cc-header">
-            <div class="cc-header-left">
-              <div class="cc-icon"><span class="material-icons">groups</span></div>
-              <div>
-                <h3 class="cc-name">{{ c.name }}</h3>
-                <p class="cc-focal">Focal: {{ c.profiles?.name || 'Admin' }}</p>
-              </div>
-            </div>
-            <span class="cc-badge" [class.active]="c.status==='active'" [class.pending]="c.status==='pending'">
-              {{ c.status === 'active' ? 'Active' : 'Pending' }}
-            </span>
-          </div>
-
-          <!-- Stats grid -->
-          <div class="cc-stats-grid">
-            <div class="cc-stat-item">
-              <span class="cc-stat-label">Monthly Amount</span>
-              <span class="cc-stat-val">PKR {{ c.monthly_amount | number }}</span>
-            </div>
-            <div class="cc-stat-item">
-              <span class="cc-stat-label">Total Members</span>
-              <span class="cc-stat-val">{{ c.total_members }}</span>
-            </div>
-            <div class="cc-stat-item">
-              <span class="cc-stat-label">Duration</span>
-              <span class="cc-stat-val">{{ c.duration_months }} months</span>
-            </div>
-            <div class="cc-stat-item">
-              <span class="cc-stat-label">Total Pool</span>
-              <span class="cc-stat-val primary">PKR {{ (c.monthly_amount * c.total_members) | number }}</span>
-            </div>
-          </div>
-
-          <!-- Progress -->
-          <div class="cc-progress">
-            <div class="cc-progress-bar">
-              <div class="cc-progress-fill" [style.width.%]="(c.current_month||0)/c.duration_months*100"></div>
-            </div>
-            <span class="cc-progress-label">{{ c.current_month || 0 }}/{{ c.duration_months }} months</span>
-          </div>
-
-          <!-- Admin row -->
-          <div class="cc-admin-row" (click)="openAdminProfile(c)">
-            <div class="cc-admin-avatars">
-              <div class="mini-avatar" [style.background]="getColor(c.profiles?.name||'')">
-                {{ getInitials(c.profiles?.name||'A') }}
-              </div>
-            </div>
-            <span class="cc-admin-name">{{ c.profiles?.name || 'Admin' }}</span>
-            <span class="verified-badge" *ngIf="c.profiles?.verified">
-              <span class="material-icons">verified</span> Verified
-            </span>
-            <span class="material-icons view-profile-icon">chevron_right</span>
-          </div>
-
-          <!-- Action -->
-          <button class="btn-request-join" (click)="openJoinModal(c)">
-            <span class="material-icons">person_add</span> Request to Join
-          </button>
-        </div>
-
-        <div *ngIf="filteredCommittees().length===0 && !loading()" class="empty-state">
-          <span class="material-icons">search_off</span>
-          <h3>No committees found</h3>
-          <p>Try a different filter or be the first to create one!</p>
-          <a routerLink="/auth/register" class="btn-hero-primary" style="margin-top:16px;display:inline-flex">
-            <span class="material-icons">add</span> Create Committee
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── HOW IT WORKS ───────────────────────────────────────── -->
-  <section class="section dark" id="how-it-works">
-    <div class="section-inner">
-      <div class="section-tag light">Process</div>
-      <h2 class="section-title light">How It Works</h2>
-      <p class="section-sub light">Four simple steps to start saving with your community.</p>
-      <div class="steps-grid">
-        <div *ngFor="let s of howItWorks" class="step-card">
-          <div class="step-num">{{ s.step }}</div>
-          <div class="step-icon"><span class="material-icons">{{ s.icon }}</span></div>
-          <h4>{{ s.title }}</h4>
-          <p>{{ s.desc }}</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── FEATURES ───────────────────────────────────────────── -->
-  <section class="section" id="features">
-    <div class="section-inner">
-      <div class="section-tag">Features</div>
-      <h2 class="section-title">Everything You Need</h2>
-      <p class="section-sub">Purpose-built tools for transparent, accountable committee management.</p>
-      <div class="features-grid">
-        <div *ngFor="let f of features" class="feature-card">
-          <div class="feature-icon"><span class="material-icons">{{ f.icon }}</span></div>
-          <h4>{{ f.title }}</h4>
-          <p>{{ f.desc }}</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── TESTIMONIALS ───────────────────────────────────────── -->
-  <section class="section teal">
-    <div class="section-inner">
-      <div class="section-tag light">Testimonials</div>
-      <h2 class="section-title light">What Our Members Say</h2>
-      <div class="testimonials-grid">
-        <div *ngFor="let t of testimonials" class="testimonial-card">
-          <div class="stars">
-            <span *ngFor="let s of getStars(t.stars)" class="material-icons star">star</span>
-            <span *ngIf="t.stars < 5" class="material-icons star half">star_half</span>
-          </div>
-          <p class="testimonial-text">"{{ t.text }}"</p>
-          <div class="testimonial-author">
-            <div class="t-avatar" [style.background]="getColor(t.name)">{{ t.initials }}</div>
-            <div>
-              <div class="t-name">{{ t.name }}</div>
-              <div class="t-role">{{ t.role }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── FAQ ────────────────────────────────────────────────── -->
-  <section class="section" id="faq">
-    <div class="section-inner narrow">
-      <div class="section-tag">FAQ</div>
-      <h2 class="section-title">Common Questions</h2>
-      <div class="faq-list">
-        <div *ngFor="let f of faqs; let i=index" class="faq-item" [class.open]="activeFaq()===i">
-          <button class="faq-q" (click)="toggleFaq(i)">
-            <span>{{ f.q }}</span>
-            <span class="material-icons faq-icon">{{ activeFaq()===i ? 'expand_less' : 'expand_more' }}</span>
-          </button>
-          <div class="faq-a" *ngIf="activeFaq()===i">{{ f.a }}</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── DISCLAIMER ─────────────────────────────────────────── -->
-  <section class="disclaimer-section">
-    <div class="section-inner narrow">
-      <div class="disclaimer-box">
-        <div class="disclaimer-icon"><span class="material-icons">warning</span></div>
-        <div>
-          <h4>Important Disclaimer</h4>
-          <p>This platform provides committee management services for record-keeping and tracking purposes only. All financial transactions (payments, fund disbursements) occur directly between members and admins/focal persons outside this platform. CommitteeHub is not responsible for any fraud, scams, payment disputes, or financial losses between parties. Users are strongly advised to verify all payments and transactions personally before sending any money. Always deal with verified, trusted individuals and retain all payment receipts independently.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── FOOTER ─────────────────────────────────────────────── -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="footer-top">
-        <div class="footer-brand-col">
-          <div class="footer-brand">
-            <div class="brand-icon sm"><span class="material-icons">account_balance</span></div>
-            <span>CommitteeHub</span>
-          </div>
-          <p class="footer-tagline">Professional committee management for transparent, trusted community savings.</p>
-          <p class="footer-disclaimer">⚠ This platform is not responsible for any payment disputes, fraud, or financial loss. Verify all transactions personally.</p>
-        </div>
-        <div class="footer-links-col">
-          <h5>Platform</h5>
-          <a (click)="scrollTo('committees')">Browse Committees</a>
-          <a (click)="scrollTo('how-it-works')">How It Works</a>
-          <a (click)="scrollTo('features')">Features</a>
-          <a (click)="scrollTo('faq')">FAQ</a>
-        </div>
-        <div class="footer-links-col">
-          <h5>Account</h5>
-          <a routerLink="/auth/login">Admin Login</a>
-          <a routerLink="/auth/register">Admin Register</a>
-        </div>
-        <div class="footer-links-col">
-          <h5>Legal</h5>
-          <a href="#">Terms & Conditions</a>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Disclaimer</a>
-          <a href="#">Contact Us</a>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>© 2026 CommitteeHub. All rights reserved. Designed for transparent community savings management.</p>
-        <p>Designed & Developed by
-          <a href="https://muhammadabdullahcv.vercel.app/#/" target="_blank">Muhammad Abdullah</a> &
-          <a href="https://amnashakeel-portfolio.vercel.app/" target="_blank">Amna Shakeel</a>
-        </p>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ── ADMIN PROFILE MODAL ────────────────────────────────── -->
-  <div class="modal-overlay" *ngIf="selectedAdmin()" (click)="closeAdminProfile()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <button class="modal-close" (click)="closeAdminProfile()">
-        <span class="material-icons">close</span>
-      </button>
-      <div class="modal-header-blue">
-        <div class="modal-avatar" [style.background]="getColor(selectedAdmin()?.name||'')">
-          {{ getInitials(selectedAdmin()?.name||'A') }}
-        </div>
-        <div>
-          <h3>{{ selectedAdmin()?.name }}</h3>
-          <span class="modal-role-badge">Committee Admin</span>
-          <span class="verified-badge white" *ngIf="selectedAdmin()?.verified">
-            <span class="material-icons">verified</span> Verified
-          </span>
-        </div>
-      </div>
-      <div class="modal-body">
-        <div class="info-row" *ngIf="selectedAdmin()?.email">
-          <span class="material-icons">email</span><span>{{ selectedAdmin()?.email }}</span>
-        </div>
-        <div class="info-row" *ngIf="selectedAdmin()?.phone">
-          <span class="material-icons">phone</span><span>{{ selectedAdmin()?.phone }}</span>
-        </div>
-        <h4 class="modal-section-title">Committees Managed</h4>
-        <div *ngFor="let c of adminCommittees()" class="modal-committee-row">
-          <span class="material-icons">groups</span>
-          <span>{{ c.name }}</span>
-          <span class="cc-badge sm" [class.active]="c.status==='active'" [class.pending]="c.status==='pending'">{{ c.status }}</span>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <a routerLink="/auth/login" class="btn-request-join" (click)="closeAdminProfile()">
-          <span class="material-icons">login</span> Login to Join a Committee
-        </a>
+      <div class="hero-stat">
+        <span class="hero-stat-num">PKR {{ formatPKR(stats().managed) }}</span>
+        <span class="hero-stat-lbl">Managed Monthly</span>
       </div>
     </div>
   </div>
-
-  <!-- ── JOIN REQUEST MODAL ─────────────────────────────────── -->
-  <div class="modal-overlay" *ngIf="showJoinModal()" (click)="closeJoinModal()">
-    <div class="modal-box wide" (click)="$event.stopPropagation()">
-      <div class="modal-header-plain">
-        <h3><span class="material-icons">person_add</span> Request to Join</h3>
-        <button class="modal-close-plain" (click)="closeJoinModal()">
-          <span class="material-icons">close</span>
-        </button>
+  <div class="hero-visual" *ngIf="heroCommittee()">
+    <div class="hero-card-float">
+      <div class="h-card-header">
+        <div>
+          <div class="h-card-title">{{ heroCommittee()!.name }}</div>
+          <div class="h-card-sub">Focal: {{ heroCommittee()!.profiles?.name || 'Admin' }}</div>
+        </div>
+        <div class="h-chip green">{{ heroCommittee()!.status | titlecase }}</div>
       </div>
-
-      <!-- Success state -->
-      <div class="join-success" *ngIf="joinSuccess()">
-        <span class="material-icons success-icon">check_circle</span>
-        <h4>Request Submitted!</h4>
-        <p>The admin will review your request and respond within 24-48 hours.</p>
+      <div class="h-card-grid">
+        <div class="h-cell"><div class="h-cell-lbl">Monthly Amount</div><div class="h-cell-val">PKR {{ heroCommittee()!.monthly_amount | number }}</div></div>
+        <div class="h-cell"><div class="h-cell-lbl">Total Members</div><div class="h-cell-val">{{ heroCommittee()!.total_members }}</div></div>
+        <div class="h-cell"><div class="h-cell-lbl">Duration</div><div class="h-cell-val">{{ heroCommittee()!.duration_months }} months</div></div>
+        <div class="h-cell"><div class="h-cell-lbl">Total Pool</div><div class="h-cell-val">PKR {{ (heroCommittee()!.monthly_amount * heroCommittee()!.total_members) | number }}</div></div>
       </div>
+      <div class="cc-slots-label">
+        <span>{{ heroCommittee()!.total_members }} slots</span>
+        <span>{{ heroCommittee()!.status | titlecase }}</span>
+      </div>
+      <div class="h-progress-bar"><div class="h-progress-fill" style="width:80%"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.2rem;">
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <div class="h-avatars">
+            <div class="h-avatar">{{ getInitials(heroCommittee()!.profiles?.name || 'A') }}</div>
+          </div>
+          <span class="h-avatar-count">{{ heroCommittee()!.profiles?.name || 'Admin' }}</span>
+        </div>
+        <button class="cc-btn cc-btn-fill" (click)="openJoinModal(heroCommittee())">Request to Join</button>
+      </div>
+    </div>
+    <div class="floating-badge fb-1">
+      <div class="fb-icon blue"><i class="ti ti-check"></i></div>
+      <span>Payment Verified</span>
+    </div>
+    <div class="floating-badge fb-2">
+      <div class="fb-icon green"><i class="ti ti-trophy"></i></div>
+      <span>Turn Assigned!</span>
+    </div>
+  </div>
+</section>
 
-      <!-- Form -->
-      <div *ngIf="!joinSuccess()">
-        <div class="join-committee-preview" *ngIf="joiningCommittee()">
-          <div class="cc-icon sm"><span class="material-icons">groups</span></div>
+<!-- PUBLIC COMMITTEES -->
+<section id="committees">
+  <div class="section-header">
+    <div class="section-label"><i class="ti ti-building-community"></i> Public Committees</div>
+    <h2 class="section-title">Join an Active Committee</h2>
+    <p class="section-sub">Browse all open committees and request to join. Fully transparent, admin-managed.</p>
+    <div class="divider-accent"></div>
+  </div>
+  <div class="search-bar">
+    <div class="search-input-wrap">
+      <i class="ti ti-search"></i>
+      <input class="search-input" type="text" placeholder="Search committees…"
+             [(ngModel)]="searchQuery" (ngModelChange)="applyFilter()">
+    </div>
+    <div class="filter-group">
+      <button *ngFor="let f of filters" class="filter-chip"
+              [class.active]="activeFilter()===f" (click)="setFilter(f)">{{ f }}</button>
+    </div>
+  </div>
+  <div *ngIf="loading()" style="text-align:center;padding:3rem;">
+    <div class="spinner"></div>
+  </div>
+  <div class="committees-grid" *ngIf="!loading()">
+    <div *ngFor="let c of filteredCommittees()" class="committee-card" (click)="openDetailModal(c)">
+      <div class="cc-header">
+        <div class="cc-icon"><i class="ti ti-building-bank"></i></div>
+        <div class="cc-status" [class.open]="c.status==='active'" [class.filling]="c.status==='pending'" [class.full]="c.status==='completed'">
+          {{ c.status === 'active' ? 'Open' : c.status === 'pending' ? 'Pending' : 'Completed' }}
+        </div>
+      </div>
+      <div class="cc-name">{{ c.name }}</div>
+      <div class="cc-category">{{ (c.description || 'Savings') }} Committee</div>
+      <div class="cc-grid">
+        <div class="cc-cell"><div class="cc-cell-lbl">Monthly</div><div class="cc-cell-val accent">PKR {{ c.monthly_amount | number }}</div></div>
+        <div class="cc-cell"><div class="cc-cell-lbl">Members</div><div class="cc-cell-val">{{ c.total_members }}</div></div>
+        <div class="cc-cell"><div class="cc-cell-lbl">Duration</div><div class="cc-cell-val">{{ c.duration_months }} mo</div></div>
+        <div class="cc-cell"><div class="cc-cell-lbl">Total Pool</div><div class="cc-cell-val">PKR {{ (c.monthly_amount * c.total_members) | number }}</div></div>
+      </div>
+      <div class="cc-slots-bar">
+        <div class="cc-slots-label">
+          <span>{{ c.total_members }} total slots</span>
+          <span>Month {{ c.current_month || 0 }}/{{ c.duration_months }}</span>
+        </div>
+        <div class="cc-bar">
+          <div class="cc-bar-fill" [style.width.%]="((c.current_month||0)/c.duration_months)*100"></div>
+        </div>
+      </div>
+      <div class="cc-footer">
+        <div class="cc-person">
+          <div class="cc-avatar">{{ getInitials(c.profiles?.name || 'A') }}</div>
+          <div class="cc-person-name">
+            {{ c.profiles?.name ? 'Focal Person' : 'Admin' }}
+            <strong>{{ c.profiles?.name || 'Admin' }}</strong>
+          </div>
+        </div>
+        <div class="cc-actions" (click)="$event.stopPropagation()">
+          <button class="cc-btn cc-btn-outline" (click)="openDetailModal(c)">Details</button>
+          <button class="cc-btn cc-btn-fill" (click)="openJoinModal(c)"
+                  [disabled]="c.status==='completed'" [class.no-slots]="c.status==='completed'">
+            {{ c.status === 'completed' ? 'Full' : 'Join' }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <p *ngIf="filteredCommittees().length===0" style="color:var(--muted);text-align:center;padding:3rem;grid-column:1/-1;">
+      No committees match your search.
+    </p>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-header">
+    <div class="section-label"><i class="ti ti-list-numbers"></i> Process</div>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-sub">Four simple steps to start saving with your community.</p>
+    <div class="divider-accent"></div>
+  </div>
+  <div class="steps-grid">
+    <div *ngFor="let s of steps" class="step-card">
+      <div class="step-num">{{ s.num }}</div>
+      <div class="step-icon"><i [class]="'ti ' + s.icon"></i></div>
+      <div class="step-title">{{ s.title }}</div>
+      <div class="step-desc">{{ s.desc }}</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-header">
+    <div class="section-label"><i class="ti ti-sparkles"></i> Features</div>
+    <h2 class="section-title">Everything You Need</h2>
+    <p class="section-sub">Purpose-built tools for transparent, accountable committee management.</p>
+    <div class="divider-accent"></div>
+  </div>
+  <div class="features-grid">
+    <div *ngFor="let f of features" class="feature-card">
+      <div class="feat-icon"><i [class]="'ti ' + f.icon"></i></div>
+      <div>
+        <div class="feat-title">{{ f.title }}</div>
+        <div class="feat-desc">{{ f.desc }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="section-header">
+    <div class="section-label"><i class="ti ti-message-quote"></i> Testimonials</div>
+    <h2 class="section-title">What Our Members Say</h2>
+    <div class="divider-accent"></div>
+  </div>
+  <div class="testimonials-grid">
+    <div *ngFor="let t of testimonials" class="testi-card">
+      <div class="testi-stars">{{ t.stars }}</div>
+      <p class="testi-text">"{{ t.text }}"</p>
+      <div class="testi-author">
+        <div class="testi-avatar">{{ t.initials }}</div>
+        <div>
+          <div class="testi-name">{{ t.name }}</div>
+          <div class="testi-role">{{ t.role }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="section-header">
+    <div class="section-label"><i class="ti ti-help-circle"></i> FAQ</div>
+    <h2 class="section-title">Common Questions</h2>
+    <div class="divider-accent"></div>
+  </div>
+  <div class="faq-list">
+    <div *ngFor="let f of faqs; let i=index" class="faq-item" [class.open]="activeFaq()===i">
+      <div class="faq-q" (click)="toggleFaq(i)">
+        {{ f.q }}<i class="ti ti-plus faq-icon"></i>
+      </div>
+      <div class="faq-a" *ngIf="activeFaq()===i">{{ f.a }}</div>
+    </div>
+  </div>
+</section>
+
+<!-- DISCLAIMER -->
+<section id="disclaimer">
+  <div class="disclaimer-box">
+    <i class="ti ti-alert-triangle disc-icon"></i>
+    <div>
+      <div class="disc-title">Important Disclaimer</div>
+      <p class="disc-text">This platform provides committee management services for record-keeping and tracking purposes only. All financial transactions (payments, fund disbursements) occur directly between members and admins/focal persons outside this platform. <strong>CommitteeHub is not responsible for any fraud, scams, payment disputes, or financial losses between parties.</strong> Users are strongly advised to verify all payments and transactions personally before sending any money. Always deal with verified, trusted individuals and retain all payment receipts independently.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Committee<span>Hub</span></div>
+      <p class="footer-tagline">Professional committee management for transparent, trusted community savings.</p>
+      <div class="footer-socials">
+        <a class="social-btn" href="#"><i class="ti ti-brand-facebook"></i></a>
+        <a class="social-btn" href="#"><i class="ti ti-brand-whatsapp"></i></a>
+        <a class="social-btn" href="#"><i class="ti ti-brand-instagram"></i></a>
+        <a class="social-btn" href="#"><i class="ti ti-mail"></i></a>
+      </div>
+      <div class="footer-disc" style="margin-top:1.25rem;">⚠ This platform is not responsible for any payment disputes, fraud, or financial loss. Verify all transactions personally.</div>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <a (click)="scrollTo('committees')">Browse Committees</a>
+      <a (click)="scrollTo('how')">How It Works</a>
+      <a (click)="scrollTo('features')">Features</a>
+      <a (click)="scrollTo('faq')">FAQ</a>
+    </div>
+    <div class="footer-col">
+      <h4>Account</h4>
+      <a routerLink="/auth/login">Admin Login</a>
+      <a routerLink="/auth/register">Admin Register</a>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <a href="#">Terms & Conditions</a>
+      <a href="#">Privacy Policy</a>
+      <a (click)="scrollTo('disclaimer')">Disclaimer</a>
+      <a href="#">Contact Us</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 CommitteeHub. All rights reserved.</span>
+    <span>Designed & Developed by
+      <a href="https://muhammadabdullahcv.vercel.app/#/" target="_blank" style="color:var(--accent)">Muhammad Abdullah</a> &
+      <a href="https://amnashakeel-portfolio.vercel.app/" target="_blank" style="color:var(--accent)">Amna Shakeel</a>
+    </span>
+  </div>
+</footer>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" [class.active]="showDetailModal()" (click)="closeDetailModal()">
+  <div class="modal" (click)="$event.stopPropagation()" *ngIf="selectedCommittee()">
+    <div class="modal-header">
+      <div class="modal-title">{{ selectedCommittee()!.name }}</div>
+      <div class="modal-close" (click)="closeDetailModal()"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+        <div style="font-size:.8rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Committee Details</div>
+        <div class="cc-status" [class.open]="selectedCommittee()!.status==='active'" [class.filling]="selectedCommittee()!.status==='pending'">
+          {{ selectedCommittee()!.status | titlecase }}
+        </div>
+      </div>
+      <div class="modal-grid">
+        <div class="modal-cell"><div class="modal-cell-lbl">Monthly Amount</div><div class="modal-cell-val" style="color:var(--accent-light)">PKR {{ selectedCommittee()!.monthly_amount | number }}</div></div>
+        <div class="modal-cell"><div class="modal-cell-lbl">Total Members</div><div class="modal-cell-val">{{ selectedCommittee()!.total_members }}</div></div>
+        <div class="modal-cell"><div class="modal-cell-lbl">Duration</div><div class="modal-cell-val">{{ selectedCommittee()!.duration_months }} months</div></div>
+        <div class="modal-cell"><div class="modal-cell-lbl">Total Pool</div><div class="modal-cell-val">PKR {{ (selectedCommittee()!.monthly_amount * selectedCommittee()!.total_members) | number }}</div></div>
+        <div class="modal-cell"><div class="modal-cell-lbl">Start Date</div><div class="modal-cell-val">{{ selectedCommittee()!.start_date | date:'MMM yyyy' }}</div></div>
+        <div class="modal-cell"><div class="modal-cell-lbl">Current Month</div><div class="modal-cell-val">{{ selectedCommittee()!.current_month || 0 }}/{{ selectedCommittee()!.duration_months }}</div></div>
+      </div>
+      <div class="modal-section" *ngIf="selectedCommittee()!.description">
+        <div class="modal-section-title">Description</div>
+        <p class="modal-text">{{ selectedCommittee()!.description }}</p>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Managed By</div>
+        <div style="display:flex;align-items:center;gap:.9rem;background:rgba(255,255,255,.04);border-radius:var(--radius-sm);padding:1rem;">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--navy-4);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--accent-light);border:2px solid var(--border-accent);">
+            {{ getInitials(selectedCommittee()!.profiles?.name || 'A') }}
+          </div>
           <div>
-            <strong>{{ joiningCommittee()?.name }}</strong>
-            <span>PKR {{ joiningCommittee()?.monthly_amount | number }}/month · {{ joiningCommittee()?.total_members }} members</span>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;">{{ selectedCommittee()!.profiles?.name || 'Admin' }}</div>
+            <div style="font-size:.78rem;color:var(--muted);">Focal Person / Admin</div>
           </div>
         </div>
-        <p class="join-note">Fill in your details. The focal person/admin will review your request and respond within 24-48 hours.</p>
-        <div class="join-disclaimer">
-          <span class="material-icons">warning</span>
-          <span>Disclaimer: By submitting this form, you acknowledge that CommitteeHub is not responsible for any financial disputes. Verify all payment details personally before transferring money.</span>
-        </div>
-        <div class="join-form-grid">
-          <div class="form-group">
-            <label>Full Name *</label>
-            <input type="text" class="form-input" placeholder="Your full name" [(ngModel)]="joinForm.name">
-          </div>
-          <div class="form-group">
-            <label>Phone Number *</label>
-            <input type="tel" class="form-input" placeholder="0300-1234567" [(ngModel)]="joinForm.phone">
-          </div>
-          <div class="form-group">
-            <label>Email Address *</label>
-            <input type="email" class="form-input" placeholder="you@example.com" [(ngModel)]="joinForm.email">
-          </div>
-          <div class="form-group">
-            <label>CNIC Number *</label>
-            <input type="text" class="form-input" placeholder="35202-1234567-8" [(ngModel)]="joinForm.cnic">
-          </div>
-          <div class="form-group full">
-            <label>Home Address</label>
-            <input type="text" class="form-input" placeholder="Street, City" [(ngModel)]="joinForm.address">
-          </div>
-          <div class="form-group full">
-            <label>Message (Optional)</label>
-            <textarea class="form-input" rows="3" placeholder="Introduce yourself..." [(ngModel)]="joinForm.message"></textarea>
-          </div>
-        </div>
-        <div class="join-actions">
-          <button class="btn-request-join" (click)="submitJoin()" [disabled]="joinSubmitting()">
-            <span class="material-icons">{{ joinSubmitting() ? 'hourglass_empty' : 'send' }}</span>
-            {{ joinSubmitting() ? 'Submitting...' : 'Submit Join Request' }}
-          </button>
-          <button class="btn-cancel" (click)="closeJoinModal()">Cancel</button>
-        </div>
+      </div>
+      <div class="modal-disc"><i class="ti ti-alert-triangle"></i> <strong>Disclaimer:</strong> CommitteeHub only manages records. Verify all payments personally. The platform is not liable for financial disputes.</div>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-lg" style="flex:1;justify-content:center;"
+                (click)="closeDetailModal(); openJoinModal(selectedCommittee())">
+          <i class="ti ti-user-plus"></i> Request to Join
+        </button>
+        <button class="btn btn-ghost btn-lg" (click)="closeDetailModal()">Close</button>
       </div>
     </div>
   </div>
+</div>
+
+<!-- JOIN MODAL -->
+<div class="modal-overlay" [class.active]="showJoinModal()" (click)="closeJoinModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Request to Join — {{ joiningCommittee()?.name }}</div>
+      <div class="modal-close" (click)="closeJoinModal()"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="joinSuccess()" style="text-align:center;padding:2rem 0;">
+        <i class="ti ti-circle-check" style="font-size:3rem;color:#4ade80;display:block;margin-bottom:1rem;"></i>
+        <h3 style="font-family:'Syne',sans-serif;margin-bottom:.5rem;">Request Submitted!</h3>
+        <p style="color:var(--muted);font-size:.9rem;">The admin will review and respond within 24–48 hours.</p>
+      </div>
+      <ng-container *ngIf="!joinSuccess()">
+        <p style="font-size:.88rem;color:var(--muted);margin-bottom:1.25rem;font-weight:300;">Fill in your details. The focal person/admin will review your request and respond within 24-48 hours.</p>
+        <div class="modal-disc"><i class="ti ti-alert-triangle"></i> <strong>Disclaimer:</strong> By submitting this form, you acknowledge that CommitteeHub is not responsible for any financial disputes. Verify all payment details personally before transferring money.</div>
+        <form (ngSubmit)="submitJoin()" style="margin-top:1.5rem;">
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label"><i class="ti ti-user"></i> Full Name</label><input class="form-input" type="text" placeholder="Your full name" [(ngModel)]="joinForm.name" name="name" required></div>
+            <div class="form-group"><label class="form-label"><i class="ti ti-phone"></i> Phone Number</label><input class="form-input" type="tel" placeholder="+92 3XX XXXXXXX" [(ngModel)]="joinForm.phone" name="phone" required></div>
+            <div class="form-group"><label class="form-label"><i class="ti ti-mail"></i> Email Address</label><input class="form-input" type="email" placeholder="you@example.com" [(ngModel)]="joinForm.email" name="email"></div>
+            <div class="form-group"><label class="form-label"><i class="ti ti-id-badge"></i> CNIC Number</label><input class="form-input" type="text" placeholder="XXXXX-XXXXXXX-X" [(ngModel)]="joinForm.cnic" name="cnic" required></div>
+            <div class="form-group full"><label class="form-label"><i class="ti ti-map-pin"></i> Home Address</label><input class="form-input" type="text" placeholder="Full residential address" [(ngModel)]="joinForm.address" name="address"></div>
+            <div class="form-group full"><label class="form-label"><i class="ti ti-message"></i> Message (Optional)</label><textarea class="form-input" rows="3" placeholder="Any additional information for the admin…" [(ngModel)]="joinForm.message" name="message" style="resize:vertical;"></textarea></div>
+          </div>
+          <div style="display:flex;gap:.75rem;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border);">
+            <button type="submit" class="btn btn-primary btn-lg" style="flex:1;justify-content:center;" [disabled]="joinSubmitting()">
+              <i class="ti ti-send"></i> {{ joinSubmitting() ? 'Submitting...' : 'Submit Join Request' }}
+            </button>
+            <button type="button" class="btn btn-ghost btn-lg" (click)="closeJoinModal()">Cancel</button>
+          </div>
+        </form>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" [class.show]="toastVisible()">
+  <i class="ti ti-circle-check toast-icon"></i>
+  <span>{{ toastMsg() }}</span>
+</div>
 
 </div>
