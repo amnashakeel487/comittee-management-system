@@ -1,4 +1,5 @@
-﻿export interface User {
+﻿// ── Core User ─────────────────────────────────────────────────
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -6,10 +7,13 @@
   address?: string;
   cnic?: string;
   avatar?: string;
-  role?: 'admin' | 'member' | 'super_admin';
+  role: 'admin' | 'super_admin';
+  status?: 'active' | 'suspended' | 'banned';
+  verified?: boolean;
   created_at?: string;
 }
 
+// ── Committee ─────────────────────────────────────────────────
 export interface Committee {
   id: string;
   name: string;
@@ -20,13 +24,28 @@ export interface Committee {
   due_day?: number;
   duration_months: number;
   description?: string;
-  status: 'active' | 'completed' | 'pending';
+  status: 'active' | 'completed' | 'pending' | 'suspended';
+  verification_status?: 'unverified' | 'verified' | 'flagged';
   created_by: string;
   created_at?: string;
   current_month?: number;
-  members?: Member[];
 }
 
+// ── Committee Participant (replaces Member) ───────────────────
+// Now references profiles (auth users) directly
+export interface CommitteeParticipant {
+  id: string;
+  committee_id: string;
+  user_id: string;           // references profiles.id
+  payout_order: number;
+  turn_assigned_by?: 'manual' | 'spin';
+  status: 'active' | 'inactive';
+  joined_at?: string;
+  profile?: User;            // joined profile data
+  committee?: Committee;
+}
+
+// ── Legacy Member (kept for backward compat with existing data) ──
 export interface Member {
   id: string;
   committee_id?: string | null;
@@ -45,6 +64,7 @@ export interface Member {
   created_at?: string;
 }
 
+// ── CommitteeMember (junction — kept for DB compat) ──────────
 export interface CommitteeMember {
   id: string;
   committee_id: string;
@@ -57,6 +77,7 @@ export interface CommitteeMember {
   committee?: Committee;
 }
 
+// ── Payment ───────────────────────────────────────────────────
 export interface Payment {
   id: string;
   committee_id: string;
@@ -74,6 +95,7 @@ export interface Payment {
   created_at?: string;
 }
 
+// ── Payout ────────────────────────────────────────────────────
 export interface Payout {
   id: string;
   committee_id: string;
@@ -87,6 +109,7 @@ export interface Payout {
   created_at?: string;
 }
 
+// ── Notification ──────────────────────────────────────────────
 export interface Notification {
   id: string;
   user_id?: string;
@@ -97,6 +120,22 @@ export interface Notification {
   created_at: string;
 }
 
+// ── Fraud Report ──────────────────────────────────────────────
+export interface FraudReport {
+  id: string;
+  reporter_id: string;
+  reported_user_id?: string;
+  committee_id?: string;
+  reason: 'fraud' | 'fake_payment' | 'spam' | 'inactive' | 'abuse' | 'other';
+  description?: string;
+  status: 'pending' | 'reviewed' | 'dismissed' | 'actioned';
+  created_at?: string;
+  reporter_name?: string;
+  reported_user_name?: string;
+  committee_name?: string;
+}
+
+// ── Dashboard Stats ───────────────────────────────────────────
 export interface DashboardStats {
   totalCommittees: number;
   activeCommittees: number;
