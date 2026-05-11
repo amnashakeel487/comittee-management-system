@@ -241,10 +241,10 @@ interface PaymentAccount {
     .profile-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
 
     .profile-card { overflow: hidden; }
-    .profile-cover { height: 90px; background: linear-gradient(135deg, #3E362E, #865D36, #AC8968); }
+    .profile-cover { height: 90px; background: linear-gradient(135deg, #1E3A5F, #1E3A5F, #3B82F6); }
     .profile-info { padding: 0 24px 24px; text-align: center; }
     .profile-avatar-wrapper { position: relative; display: inline-block; margin-top: -40px; margin-bottom: 12px; }
-    .profile-avatar { background: linear-gradient(135deg, #865D36, #AC8968); border: 4px solid white; box-shadow: 0 4px 12px rgba(62,54,46,0.2); font-size: 28px; }
+    .profile-avatar { background: linear-gradient(135deg, #1E3A5F, #3B82F6); border: 4px solid white; box-shadow: 0 4px 12px rgba(15,23,42,0.2); font-size: 28px; }
     .profile-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
     .profile-email { font-size: 13px; color: var(--gray-500); margin-bottom: 12px; }
     .profile-role { margin-bottom: 0; }
@@ -265,7 +265,7 @@ interface PaymentAccount {
       border-bottom: 1px solid var(--gray-100); transition: background 0.15s;
       &:last-child { border-bottom: none; }
       &:hover { background: var(--gray-50); }
-      &.primary-row { background: #FAF7F4; border-left: 3px solid #865D36; }
+      &.primary-row { background: #EEF3FA; border-left: 3px solid #1E3A5F; }
       &.inactive-row { opacity: 0.55; }
     }
 
@@ -275,12 +275,12 @@ interface PaymentAccount {
     .type-jazzcash { background: #fef3c7; .material-icons { color: #d97706; } }
     .type-nayapay { background: #ede9fe; .material-icons { color: #7c3aed; } }
     .type-sadapay { background: #fee2e2; .material-icons { color: #dc2626; } }
-    .type-other { background: #F0E8DF; .material-icons { color: #865D36; } }
+    .type-other { background: #EEF3FA; .material-icons { color: #1E3A5F; } }
 
     .acc-details { flex: 1; display: flex; flex-direction: column; gap: 2px; }
     .acc-title-row { display: flex; align-items: center; gap: 8px; }
     .acc-title { font-size: 15px; font-weight: 700; color: var(--gray-900); }
-    .primary-badge { background: #865D36; color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .primary-badge { background: #1E3A5F; color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
     .inactive-badge { background: var(--gray-200); color: var(--gray-500); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
     .acc-type-label { font-size: 11px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.05em; }
     .acc-number { font-size: 14px; font-weight: 600; color: var(--gray-700); font-family: monospace; }
@@ -296,7 +296,7 @@ interface PaymentAccount {
     .pwd-toggle { position: absolute; right: 12px; background: none; border: none; cursor: pointer; color: var(--gray-400); display: flex; .material-icons { font-size: 18px; } &:hover { color: var(--gray-600); } }
 
     /* Modal */
-    .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--gray-700); cursor: pointer; input { width: 16px; height: 16px; accent-color: #865D36; } }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--gray-700); cursor: pointer; input { width: 16px; height: 16px; accent-color: #1E3A5F; } }
 
     @media (max-width: 1024px) { .profile-layout { grid-template-columns: 1fr; } }
     @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } .full-width { grid-column: 1; } }

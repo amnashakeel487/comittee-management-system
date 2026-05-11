@@ -135,7 +135,7 @@ import { DataService } from '../../services/data.service';
 
     .filter-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--gray-100); border-radius: 10px; padding: 4px; width: fit-content; }
     .tab { padding: 8px 18px; border-radius: 8px; border: none; background: none; font-size: 13px; font-weight: 500; color: var(--gray-600); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px; &.active { background: white; color: var(--primary); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } }
-    .tab-badge { background: #865D36; color: white; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
+    .tab-badge { background: #1E3A5F; color: white; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
 
     .empty-card { text-align: center; padding: 60px; background: white; border-radius: 12px; border: 1px solid var(--gray-200); .material-icons { font-size: 56px; color: var(--gray-300); display: block; margin-bottom: 16px; } h3 { font-size: 18px; color: var(--gray-700); margin-bottom: 8px; } p { font-size: 14px; color: var(--gray-400); } }
 
@@ -156,7 +156,7 @@ import { DataService } from '../../services/data.service';
     .member-phone { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--gray-500); .material-icons { font-size: 13px; } }
 
     .req-committee { }
-    .committee-tag { display: inline-flex; align-items: center; gap: 6px; background: #F0E8DF; color: #865D36; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 6px; .material-icons { font-size: 16px; } }
+    .committee-tag { display: inline-flex; align-items: center; gap: 6px; background: #EEF3FA; color: #1E3A5F; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 6px; .material-icons { font-size: 16px; } }
     .committee-meta { font-size: 12px; color: var(--gray-500); }
 
     .req-message { grid-column: 1 / -1; display: flex; gap: 8px; align-items: flex-start; background: var(--gray-50); border-radius: 8px; padding: 10px 14px; .material-icons { font-size: 16px; color: var(--gray-400); flex-shrink: 0; margin-top: 1px; } p { font-size: 13px; color: var(--gray-600); margin: 0; line-height: 1.5; } }
@@ -184,7 +184,7 @@ export class JoinRequestsComponent implements OnInit {
   activeTab = signal<'pending' | 'approved' | 'rejected' | 'all'>('pending');
   processingId = signal<string | null>(null);
 
-  private avatarColors = ['#865D36','#93785B','#3E362E','#AC8968','#6B4A28','#4E3D2E'];
+  private avatarColors = ['#1E3A5F','#2E5490','#1E3A5F','#3B82F6','#152C4A','#334155'];
 
   constructor(
     private supabase: SupabaseService,

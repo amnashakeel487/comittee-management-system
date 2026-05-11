@@ -202,7 +202,7 @@ import { ToastService } from '../../../services/toast.service';
 
     .auth-left {
       flex: 1;
-      background: linear-gradient(160deg, #3E362E 0%, #865D36 55%, #AC8968 100%);
+      background: linear-gradient(160deg, #0F172A 0%, #1E3A5F 55%, #2E5490 100%);
       padding: 48px;
       display: flex;
       flex-direction: column;
@@ -398,7 +398,7 @@ import { ToastService } from '../../../services/toast.service';
       align-items: center;
       justify-content: center;
       padding: 40px;
-      background: #FAF7F4;
+      background: #F8FAFC;
     }
 
     .auth-card {
@@ -407,14 +407,14 @@ import { ToastService } from '../../../services/toast.service';
       background: white;
       border-radius: 20px;
       padding: 40px;
-      box-shadow: 0 20px 60px rgba(62,54,46,0.12);
-      border: 1px solid #E2D8CE;
+      box-shadow: 0 20px 60px rgba(15,23,42,0.12);
+      border: 1px solid #E2E8F0;
     }
 
     .auth-card-header {
       margin-bottom: 24px;
-      h2 { font-size: 26px; font-weight: 800; color: #2A1F14; margin-bottom: 6px; }
-      p { font-size: 14px; color: #93785B; }
+      h2 { font-size: 26px; font-weight: 800; color: #0F172A; margin-bottom: 6px; }
+      p { font-size: 14px; color: #64748B; }
     }
 
     /* ── Role Selector ── */
@@ -430,7 +430,7 @@ import { ToastService } from '../../../services/toast.service';
       align-items: center;
       gap: 10px;
       padding: 14px 16px;
-      border: 2px solid #E2D8CE;
+      border: 2px solid #E2E8F0;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.18s ease;
@@ -438,14 +438,14 @@ import { ToastService } from '../../../services/toast.service';
       background: white;
 
       &:hover {
-        border-color: #865D36;
-        background: #FAF7F4;
+        border-color: #1E3A5F;
+        background: #EEF3FA;
       }
 
       &.active {
-        border-color: #865D36;
-        background: #FAF7F4;
-        box-shadow: 0 0 0 3px rgba(134,93,54,0.12);
+        border-color: #1E3A5F;
+        background: #EEF3FA;
+        box-shadow: 0 0 0 3px rgba(30,58,95,0.12);
       }
     }
 
@@ -453,18 +453,18 @@ import { ToastService } from '../../../services/toast.service';
       width: 40px;
       height: 40px;
       border-radius: 10px;
-      background: #F0EBE4;
+      background: #F1F5F9;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       transition: background 0.18s;
 
-      .material-icons { font-size: 20px; color: #93785B; transition: color 0.18s; }
+      .material-icons { font-size: 20px; color: #2E5490; transition: color 0.18s; }
     }
 
     .role-card.active .role-icon {
-      background: #865D36;
+      background: #1E3A5F;
       .material-icons { color: white; }
     }
 
@@ -478,16 +478,16 @@ import { ToastService } from '../../../services/toast.service';
     .role-title {
       font-size: 14px;
       font-weight: 700;
-      color: #2A1F14;
+      color: #0F172A;
     }
 
     .role-card.active .role-title {
-      color: #865D36;
+      color: #1E3A5F;
     }
 
     .role-desc {
       font-size: 11px;
-      color: #93785B;
+      color: #2E5490;
       line-height: 1.4;
       margin-top: 2px;
     }
@@ -496,7 +496,7 @@ import { ToastService } from '../../../services/toast.service';
       position: absolute;
       top: 8px;
       right: 8px;
-      .material-icons { font-size: 16px; color: #865D36; }
+      .material-icons { font-size: 16px; color: #1E3A5F; }
     }
 
     /* ── Form ── */
@@ -511,14 +511,14 @@ import { ToastService } from '../../../services/toast.service';
         align-items: center;
         font-size: 13px;
         font-weight: 600;
-        color: #4E3D2E;
+        color: #334155;
         margin-bottom: 6px;
       }
     }
 
     .forgot-link {
       font-size: 12px;
-      color: #865D36;
+      color: #1E3A5F;
       text-decoration: none;
       font-weight: 500;
       &:hover { text-decoration: underline; }
@@ -533,7 +533,7 @@ import { ToastService } from '../../../services/toast.service';
     .input-icon {
       position: absolute;
       left: 12px;
-      color: #A69080;
+      color: #94A3B8;
       font-size: 18px;
       z-index: 1;
     }
@@ -541,15 +541,15 @@ import { ToastService } from '../../../services/toast.service';
     .input-icon-wrap .form-control {
       padding-left: 42px;
       padding-right: 44px;
-      border-color: #E2D8CE;
-      color: #2A1F14;
+      border-color: #E2E8F0;
+      color: #0F172A;
 
       &:focus {
-        border-color: #865D36;
-        box-shadow: 0 0 0 3px rgba(134,93,54,0.12);
+        border-color: #1E3A5F;
+        box-shadow: 0 0 0 3px rgba(30,58,95,0.12);
       }
 
-      &::placeholder { color: #A69080; }
+      &::placeholder { color: #94A3B8; }
     }
 
     .pwd-toggle {
@@ -558,10 +558,10 @@ import { ToastService } from '../../../services/toast.service';
       background: none;
       border: none;
       cursor: pointer;
-      color: #A69080;
+      color: #94A3B8;
       display: flex;
       .material-icons { font-size: 18px; }
-      &:hover { color: #6B5544; }
+      &:hover { color: #475569; }
     }
 
     .form-control.error { border-color: var(--danger); }
@@ -575,13 +575,13 @@ import { ToastService } from '../../../services/toast.service';
       align-items: center;
       gap: 8px;
       font-size: 13px;
-      color: #6B5544;
+      color: #475569;
       cursor: pointer;
 
       input[type="checkbox"] {
         width: 16px;
         height: 16px;
-        accent-color: #865D36;
+        accent-color: #1E3A5F;
       }
     }
 
@@ -620,20 +620,20 @@ import { ToastService } from '../../../services/toast.service';
         content: '';
         flex: 1;
         height: 1px;
-        background: #E2D8CE;
+        background: #E2E8F0;
       }
 
-      span { font-size: 12px; color: #A69080; white-space: nowrap; }
+      span { font-size: 12px; color: #94A3B8; white-space: nowrap; }
     }
 
     .auth-card-footer {
       text-align: center;
       margin-top: 24px;
       padding-top: 20px;
-      border-top: 1px solid #E2D8CE;
+      border-top: 1px solid #E2E8F0;
 
-      p { font-size: 14px; color: #6B5544; }
-      a { color: #865D36; font-weight: 600; text-decoration: none; &:hover { text-decoration: underline; } }
+      p { font-size: 14px; color: #475569; }
+      a { color: #1E3A5F; font-weight: 600; text-decoration: none; &:hover { text-decoration: underline; } }
     }
 
     @media (max-width: 1024px) {

@@ -74,7 +74,7 @@ interface NavItem {
     .sidebar {
       width: var(--sidebar-width);
       height: 100vh;
-      background: #3E362E;
+      background: #1E3A5F;
       border-right: none;
       display: flex;
       flex-direction: column;
@@ -84,8 +84,8 @@ interface NavItem {
       z-index: 100;
       transition: width 0.3s ease;
       overflow: hidden;
-      box-shadow: 4px 0 20px rgba(62,54,46,0.15);
-      color: #FAF7F4;
+      box-shadow: 4px 0 20px rgba(15,23,42,0.15);
+      color: #EEF3FA;
     }
 
     .sidebar.collapsed {
@@ -104,7 +104,7 @@ interface NavItem {
     .logo-icon {
       width: 38px;
       height: 38px;
-      background: linear-gradient(135deg, #865D36, #AC8968);
+      background: linear-gradient(135deg, #1E3A5F, #3B82F6);
       border-radius: 10px;
       display: flex;
       align-items: center;
@@ -122,13 +122,13 @@ interface NavItem {
     .logo-name {
       font-size: 16px;
       font-weight: 700;
-      color: #FAF7F4;
+      color: #EEF3FA;
       white-space: nowrap;
     }
 
     .logo-tagline {
       font-size: 11px;
-      color: #AC8968;
+      color: #3B82F6;
       white-space: nowrap;
     }
 
@@ -150,7 +150,7 @@ interface NavItem {
     .nav-section-label {
       font-size: 10px;
       font-weight: 700;
-      color: #93785B;
+      color: #2E5490;
       letter-spacing: 0.08em;
       padding: 8px 10px 4px;
       text-transform: uppercase;
@@ -168,7 +168,7 @@ interface NavItem {
       gap: 10px;
       padding: 10px 12px;
       border-radius: 8px;
-      color: #C9BAA8;
+      color: #CBD5E1;
       text-decoration: none;
       font-size: 14px;
       font-weight: 500;
@@ -181,18 +181,18 @@ interface NavItem {
       white-space: nowrap;
 
       &:hover {
-        background: rgba(134,93,54,0.25);
-        color: #FAF7F4;
-        .nav-icon { color: #AC8968; }
+        background: rgba(30,58,95,0.25);
+        color: #EEF3FA;
+        .nav-icon { color: #3B82F6; }
       }
 
       &.active {
-        background: rgba(134,93,54,0.35);
-        color: #FAF7F4;
+        background: rgba(30,58,95,0.35);
+        color: #EEF3FA;
         font-weight: 600;
-        border-left: 3px solid #865D36;
+        border-left: 3px solid #1E3A5F;
         padding-left: 9px;
-        .nav-icon { color: #AC8968; }
+        .nav-icon { color: #3B82F6; }
       }
     }
 
@@ -204,7 +204,7 @@ interface NavItem {
 
     .nav-icon {
       font-size: 20px;
-      color: #93785B;
+      color: #2E5490;
       flex-shrink: 0;
       transition: color 0.15s;
     }
@@ -212,7 +212,7 @@ interface NavItem {
     .nav-label { flex: 1; }
 
     .nav-badge {
-      background: #865D36;
+      background: #1E3A5F;
       color: white;
       font-size: 11px;
       font-weight: 700;
@@ -232,7 +232,7 @@ interface NavItem {
     }
 
     .user-avatar {
-      background: linear-gradient(135deg, #865D36, #AC8968);
+      background: linear-gradient(135deg, #1E3A5F, #3B82F6);
       font-size: 13px;
     }
 
@@ -245,7 +245,7 @@ interface NavItem {
     .user-name {
       font-size: 13px;
       font-weight: 600;
-      color: #FAF7F4;
+      color: #EEF3FA;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -253,7 +253,7 @@ interface NavItem {
 
     .user-email {
       font-size: 11px;
-      color: #93785B;
+      color: #2E5490;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;

@@ -525,7 +525,7 @@ import { DashboardStats, Payment, Payout } from '../../models';
       color: var(--primary);
     }
 
-    .badge-info { background: #EDE0D4; color: #4E3D2E; }
+    .badge-info { background: #EDE0D4; color: #334155; }
   `]
 })
 export class DashboardComponent implements OnInit, OnDestroy {

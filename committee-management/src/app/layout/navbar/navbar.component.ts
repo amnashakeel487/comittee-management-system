@@ -98,7 +98,7 @@ import { DataService } from '../../services/data.service';
     .navbar {
       height: var(--navbar-height);
       background: #ffffff;
-      border-bottom: 1px solid #E2D8CE;
+      border-bottom: 1px solid #E2E8F0;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -106,7 +106,7 @@ import { DataService } from '../../services/data.service';
       position: sticky;
       top: 0;
       z-index: 50;
-      box-shadow: 0 1px 4px rgba(62,54,46,0.08);
+      box-shadow: 0 1px 4px rgba(15,23,42,0.08);
     }
 
     .navbar-left {
@@ -115,12 +115,12 @@ import { DataService } from '../../services/data.service';
       gap: 16px;
     }
 
-    .toggle-btn { color: #6B5544; }
+    .toggle-btn { color: #475569; }
 
     .page-title {
       font-size: 18px;
       font-weight: 700;
-      color: #2A1F14;
+      color: #0F172A;
     }
 
     .navbar-right {
@@ -133,29 +133,29 @@ import { DataService } from '../../services/data.service';
       display: flex;
       align-items: center;
       gap: 8px;
-      background: #FAF7F4;
+      background: #EEF3FA;
       border-radius: 8px;
       padding: 8px 14px;
-      border: 1.5px solid #E2D8CE;
+      border: 1.5px solid #E2E8F0;
       transition: all 0.2s;
 
       &:focus-within {
         background: white;
-        border-color: #865D36;
-        box-shadow: 0 0 0 3px rgba(134,93,54,0.12);
+        border-color: #1E3A5F;
+        box-shadow: 0 0 0 3px rgba(30,58,95,0.12);
       }
     }
 
-    .search-icon { font-size: 18px; color: #A69080; }
+    .search-icon { font-size: 18px; color: #94A3B8; }
 
     .search-input {
       border: none;
       background: none;
       outline: none;
       font-size: 14px;
-      color: #4E3D2E;
+      color: #334155;
       width: 200px;
-      &::placeholder { color: #A69080; }
+      &::placeholder { color: #94A3B8; }
     }
 
     .notification-wrapper, .user-menu-wrapper {
@@ -166,7 +166,7 @@ import { DataService } from '../../services/data.service';
       position: absolute;
       top: 4px;
       right: 4px;
-      background: #865D36;
+      background: #1E3A5F;
       color: white;
       font-size: 10px;
       font-weight: 700;
@@ -184,8 +184,8 @@ import { DataService } from '../../services/data.service';
       right: 0;
       background: white;
       border-radius: 12px;
-      box-shadow: 0 20px 40px rgba(62,54,46,0.15);
-      border: 1px solid #E2D8CE;
+      box-shadow: 0 20px 40px rgba(15,23,42,0.15);
+      border: 1px solid #E2E8F0;
       z-index: 200;
       animation: slideUp 0.2s ease;
     }
@@ -199,10 +199,10 @@ import { DataService } from '../../services/data.service';
       align-items: center;
       justify-content: space-between;
       padding: 16px 20px 12px;
-      border-bottom: 1px solid #E2D8CE;
+      border-bottom: 1px solid #E2E8F0;
       font-weight: 600;
       font-size: 15px;
-      color: #2A1F14;
+      color: #0F172A;
     }
 
     .notif-list { padding: 8px; }
@@ -215,8 +215,8 @@ import { DataService } from '../../services/data.service';
       transition: background 0.15s;
       cursor: pointer;
 
-      &:hover { background: #FAF7F4; }
-      &.unread { background: #F0E8DF; }
+      &:hover { background: #EEF3FA; }
+      &.unread { background: #EEF3FA; }
     }
 
     .notif-icon {
@@ -230,13 +230,13 @@ import { DataService } from '../../services/data.service';
 
       &.success { background: var(--success-light); .material-icons { color: var(--success); font-size: 18px; } }
       &.warning { background: var(--warning-light); .material-icons { color: var(--warning); font-size: 18px; } }
-      &.info { background: #F0E8DF; .material-icons { color: #865D36; font-size: 18px; } }
+      &.info { background: #EEF3FA; .material-icons { color: #1E3A5F; font-size: 18px; } }
     }
 
     .notif-content { flex: 1; }
-    .notif-title { font-size: 13px; font-weight: 600; color: #2A1F14; }
-    .notif-msg { font-size: 12px; color: #6B5544; margin-top: 2px; }
-    .notif-time { font-size: 11px; color: #A69080; margin-top: 4px; display: block; }
+    .notif-title { font-size: 13px; font-weight: 600; color: #0F172A; }
+    .notif-msg { font-size: 12px; color: #475569; margin-top: 2px; }
+    .notif-time { font-size: 11px; color: #94A3B8; margin-top: 4px; display: block; }
 
     .user-menu-btn {
       display: flex;
@@ -244,16 +244,16 @@ import { DataService } from '../../services/data.service';
       gap: 10px;
       padding: 6px 12px 6px 6px;
       border-radius: 10px;
-      border: 1.5px solid #E2D8CE;
+      border: 1.5px solid #E2E8F0;
       background: white;
       cursor: pointer;
       transition: all 0.15s;
 
-      &:hover { border-color: #865D36; background: #FAF7F4; }
+      &:hover { border-color: #1E3A5F; background: #EEF3FA; }
     }
 
     .user-avatar {
-      background: linear-gradient(135deg, #865D36, #AC8968);
+      background: linear-gradient(135deg, #1E3A5F, #3B82F6);
       font-size: 13px;
     }
 
@@ -263,9 +263,9 @@ import { DataService } from '../../services/data.service';
       text-align: left;
     }
 
-    .user-name { font-size: 13px; font-weight: 600; color: #2A1F14; }
-    .user-role { font-size: 11px; color: #93785B; }
-    .chevron { font-size: 18px; color: #A69080; }
+    .user-name { font-size: 13px; font-weight: 600; color: #0F172A; }
+    .user-role { font-size: 11px; color: #2E5490; }
+    .chevron { font-size: 18px; color: #94A3B8; }
 
     .user-dropdown { width: 200px; padding: 8px; }
 
@@ -276,7 +276,7 @@ import { DataService } from '../../services/data.service';
       padding: 10px 12px;
       border-radius: 8px;
       font-size: 14px;
-      color: #4E3D2E;
+      color: #334155;
       text-decoration: none;
       cursor: pointer;
       border: none;
@@ -285,19 +285,19 @@ import { DataService } from '../../services/data.service';
       text-align: left;
       transition: background 0.15s;
 
-      &:hover { background: #FAF7F4; }
+      &:hover { background: #EEF3FA; }
       &.danger { color: var(--danger); &:hover { background: #fee2e2; } }
 
-      .material-icons { font-size: 18px; color: #93785B; }
+      .material-icons { font-size: 18px; color: #2E5490; }
     }
 
-    .dropdown-divider { height: 1px; background: #E2D8CE; margin: 4px 0; }
+    .dropdown-divider { height: 1px; background: #E2E8F0; margin: 4px 0; }
 
     .notif-empty {
       text-align: center;
       padding: 32px 20px;
-      color: #A69080;
-      .material-icons { font-size: 40px; display: block; margin-bottom: 8px; color: #C9BAA8; }
+      color: #94A3B8;
+      .material-icons { font-size: 40px; display: block; margin-bottom: 8px; color: #CBD5E1; }
       p { font-size: 13px; margin: 0; }
     }
 

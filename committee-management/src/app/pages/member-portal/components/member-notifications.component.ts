@@ -43,26 +43,26 @@ import { AuthService } from '../../../services/auth.service';
   styles: [`
     .m-notifications { animation: fadeIn 0.3s ease; }
     .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
-    .page-header h1 { font-size: 24px; font-weight: 700; color: #2A1F14; }
-    .page-header p { font-size: 14px; color: #93785B; }
+    .page-header h1 { font-size: 24px; font-weight: 700; color: #0F172A; }
+    .page-header p { font-size: 14px; color: #2E5490; }
     .loading-center { display: flex; justify-content: center; padding: 60px; }
 
-    .btn-outline { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; border: 1.5px solid #865D36; background: transparent; color: #865D36; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; &:hover { background: #F0E8DF; } .material-icons { font-size: 16px; } }
+    .btn-outline { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; border: 1.5px solid #1E3A5F; background: transparent; color: #1E3A5F; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; &:hover { background: #EEF3FA; } .material-icons { font-size: 16px; } }
 
-    .notif-card { background: white; border-radius: 12px; border: 1px solid #E2D8CE; overflow: hidden; box-shadow: 0 1px 4px rgba(62,54,46,0.06); }
-    .empty-state { text-align: center; padding: 60px 20px; .empty-icon { font-size: 56px; color: #C9BAA8; display: block; margin-bottom: 16px; } h3 { font-size: 18px; color: #4E3D2E; margin-bottom: 8px; } p { font-size: 14px; color: #A69080; } }
+    .notif-card { background: white; border-radius: 12px; border: 1px solid #E2E8F0; overflow: hidden; box-shadow: 0 1px 4px rgba(15,23,42,0.06); }
+    .empty-state { text-align: center; padding: 60px 20px; .empty-icon { font-size: 56px; color: #CBD5E1; display: block; margin-bottom: 16px; } h3 { font-size: 18px; color: #334155; margin-bottom: 8px; } p { font-size: 14px; color: #94A3B8; } }
 
-    .notif-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 20px; border-bottom: 1px solid #F0EBE4; transition: background 0.12s; &:last-child { border-bottom: none; } &:hover { background: #FAF7F4; } &.unread { background: #F0E8DF; } }
+    .notif-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 20px; border-bottom: 1px solid #F1F5F9; transition: background 0.12s; &:last-child { border-bottom: none; } &:hover { background: #EEF3FA; } &.unread { background: #EEF3FA; } }
     .notif-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; .material-icons { font-size: 20px; } }
-    .notif-info { background: #F0E8DF; .material-icons { color: #865D36; } }
+    .notif-info { background: #EEF3FA; .material-icons { color: #1E3A5F; } }
     .notif-success { background: #d1fae5; .material-icons { color: #10b981; } }
     .notif-warning { background: #fef3c7; .material-icons { color: #f59e0b; } }
     .notif-error { background: #fee2e2; .material-icons { color: #ef4444; } }
     .notif-body { flex: 1; }
-    .notif-title { font-size: 14px; font-weight: 600; color: #2A1F14; margin: 0 0 4px; }
-    .notif-msg { font-size: 13px; color: #6B5544; margin: 0 0 6px; line-height: 1.5; }
-    .notif-time { font-size: 11px; color: #A69080; }
-    .unread-dot { width: 8px; height: 8px; background: #865D36; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+    .notif-title { font-size: 14px; font-weight: 600; color: #0F172A; margin: 0 0 4px; }
+    .notif-msg { font-size: 13px; color: #475569; margin: 0 0 6px; line-height: 1.5; }
+    .notif-time { font-size: 11px; color: #94A3B8; }
+    .unread-dot { width: 8px; height: 8px; background: #1E3A5F; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
   `]
 })
 export class MemberNotificationsComponent implements OnInit {
