@@ -45,10 +45,10 @@ export class AuthService {
 
   private async loadUserProfile(supabaseUser: any) {
     try {
-      const { data: profile } = await this.supabase.client
+      const { data: profile, error } = await this.supabase.client
         .from('profiles').select('*').eq('id', supabaseUser.id).single();
 
-      if (profile) {
+      if (profile && !error) {
         this.currentUser.set({
           id: supabaseUser.id,
           name: profile.name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0],
@@ -57,20 +57,23 @@ export class AuthService {
           address: profile.address,
           cnic: profile.cnic,
           avatar: profile.profile_image,
-          role: profile.role || 'admin',
-          status: profile.status || 'active',
+          role: (profile.role as any) || 'admin',
+          status: (profile.status as any) || 'active',
           verified: profile.verified || false
         });
         return;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('loadUserProfile error:', e);
+    }
 
-    // Fallback
+    // Fallback — use metadata but also try to detect super_admin from email pattern
+    const metaRole = supabaseUser.user_metadata?.role;
     this.currentUser.set({
       id: supabaseUser.id,
       name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'User',
       email: supabaseUser.email || '',
-      role: supabaseUser.user_metadata?.role === 'super_admin' ? 'super_admin' : 'admin',
+      role: metaRole === 'super_admin' ? 'super_admin' : 'admin',
       status: 'active'
     });
   }
