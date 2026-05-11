@@ -612,3 +612,9 @@ table.data-table {
 
 // Material overrides
 .mat-mdc-form-field { width: 100%; }
+
+/* ── Landing page body override ─────────────────────────────── */
+body:has(app-landing) {
+  background: #020b18 !important;
+  color: #ffffff;
+}

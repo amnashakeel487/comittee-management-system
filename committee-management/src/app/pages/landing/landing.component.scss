@@ -1,7 +1,16 @@
 :root{--navy:#020b18;--navy-2:#051527;--navy-3:#0a2540;--navy-4:#0e3460;--navy-5:#164080;--accent:#2d8cff;--accent-light:#5aabff;--accent-glow:rgba(45,140,255,0.18);--white:#ffffff;--off-white:#f0f4ff;--muted:rgba(255,255,255,0.55);--border:rgba(255,255,255,0.08);--border-accent:rgba(45,140,255,0.3);--card-bg:rgba(255,255,255,0.04);--card-hover:rgba(255,255,255,0.07);--radius:14px;--radius-sm:8px;--radius-lg:22px;}
-.landing{font-family:"DM Sans",sans-serif;background:var(--navy);color:var(--white);overflow-x:hidden;line-height:1.65;}
-h1,h2,h3,h4{font-family:"Syne",sans-serif;line-height:1.2;}
-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1rem 5%;background:rgba(2,11,24,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:all .3s;}
+.landing{font-family:"DM Sans",sans-serif;background:#020b18 !important;color:#ffffff;overflow-x:hidden;line-height:1.65;min-height:100vh;}
+.landing *{box-sizing:border-box;}
+.landing h1,.landing h2,.landing h3,.landing h4{font-family:"Syne",sans-serif;line-height:1.2;color:#ffffff;}
+.landing section{background:#020b18;}
+.landing #committees{background:#051527;}
+.landing #features{background:#051527;}
+.landing #faq{background:#051527;}
+.landing #testimonials{background:#020b18;}
+.landing #how{background:#020b18;}
+.landing #disclaimer{background:rgba(239,68,68,.04);border-top:1px solid rgba(239,68,68,.2);border-bottom:1px solid rgba(239,68,68,.2);}
+.landing footer{background:#051527;}
+.landing nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1rem 5%;background:rgba(2,11,24,0.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.08);transition:all .3s;}
 .nav-logo{font-family:"Syne",sans-serif;font-weight:800;font-size:1.25rem;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:8px;span{color:var(--accent);}}
 .nav-links{display:flex;align-items:center;gap:2rem;a{color:var(--muted);text-decoration:none;font-size:.9rem;font-weight:500;transition:color .2s;cursor:pointer;&:hover{color:var(--white);}}}
 .nav-cta{display:flex;gap:.75rem;}
