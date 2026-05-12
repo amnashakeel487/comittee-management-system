@@ -49,6 +49,9 @@
       <button class="rv-tab" [class.active]="activeTab()==='received'" (click)="activeTab.set('received')">
         <span class="material-icons">reviews</span> Reviews Received ({{ receivedReviews().length }})
       </button>
+      <button class="rv-tab" [class.active]="activeTab()==='sent'" (click)="activeTab.set('sent')">
+        <span class="material-icons">send</span> Reviews I Wrote ({{ sentReviews().length }})
+      </button>
       <button class="rv-tab" [class.active]="activeTab()==='write'" (click)="activeTab.set('write')">
         <span class="material-icons">rate_review</span> Write a Review ({{ committeeMembers().length }} available)
       </button>
@@ -68,6 +71,42 @@
               <div class="rv-av" [style.background]="getColor(r.reviewer?.name||'')">{{ getInitials(r.reviewer?.name||'R') }}</div>
               <div>
                 <div class="rv-reviewer-name">{{ r.reviewer?.name || 'Anonymous' }}</div>
+                <div class="rv-committee">{{ r.committee?.name || 'Committee' }}</div>
+              </div>
+            </div>
+            <div class="rv-date">{{ r.created_at | date:'MMM d, y' }}</div>
+          </div>
+          <div class="rv-stars-row">
+            <span *ngFor="let s of getStars(r.rating)" class="material-icons star-icon" [class.filled]="s">star</span>
+            <span class="rv-rating-num">{{ r.rating }}/5</span>
+          </div>
+          <div class="rv-sub-ratings" *ngIf="r.communication_rating || r.reliability_rating || r.payment_behavior_rating">
+            <div class="rv-sub" *ngIf="r.communication_rating"><span>Communication</span><div class="rv-sub-stars"><span *ngFor="let s of getStars(r.communication_rating)" class="material-icons mini-star" [class.filled]="s">star</span></div></div>
+            <div class="rv-sub" *ngIf="r.reliability_rating"><span>Reliability</span><div class="rv-sub-stars"><span *ngFor="let s of getStars(r.reliability_rating)" class="material-icons mini-star" [class.filled]="s">star</span></div></div>
+            <div class="rv-sub" *ngIf="r.payment_behavior_rating"><span>Payment</span><div class="rv-sub-stars"><span *ngFor="let s of getStars(r.payment_behavior_rating)" class="material-icons mini-star" [class.filled]="s">star</span></div></div>
+          </div>
+          <p class="rv-message" *ngIf="r.review_message">"{{ r.review_message }}"</p>
+          <div class="rv-tags" *ngIf="r.tags?.length">
+            <span *ngFor="let tag of r.tags" class="rv-tag" [class.positive]="['trusted','cooperative','responsive','recommended'].includes(tag)" [class.negative]="['late_payer','fraud_risk'].includes(tag)">{{ tag | titlecase }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reviews I Wrote -->
+    <div *ngIf="activeTab()==='sent'">
+      <div *ngIf="sentReviews().length===0" class="rv-empty">
+        <span class="material-icons">send</span>
+        <h3>You haven't written any reviews yet</h3>
+        <p>Reviews you write for committee members will appear here.</p>
+      </div>
+      <div class="rv-list">
+        <div *ngFor="let r of sentReviews()" class="rv-card">
+          <div class="rv-card-header">
+            <div class="rv-reviewer">
+              <div class="rv-av" [style.background]="getColor(r.reviewed?.name||'')">{{ getInitials(r.reviewed?.name||'M') }}</div>
+              <div>
+                <div class="rv-reviewer-name">For: {{ r.reviewed?.name || 'Member' }}</div>
                 <div class="rv-committee">{{ r.committee?.name || 'Committee' }}</div>
               </div>
             </div>

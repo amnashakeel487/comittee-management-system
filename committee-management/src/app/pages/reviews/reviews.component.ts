@@ -17,11 +17,12 @@ export class ReviewsComponent implements OnInit {
   loading = signal(true);
   myProfile = signal<any>(null);
   receivedReviews = signal<any[]>([]);
+  sentReviews = signal<any[]>([]);
   committeeMembers = signal<any[]>([]);
   showReviewModal = signal(false);
   reviewingUser = signal<any>(null);
   submitting = signal(false);
-  activeTab = signal<"received"|"write">("received");
+  activeTab = signal<"received"|"sent"|"write">("received");
 
   reviewForm = {
     rating: 0, communication_rating: 0, reliability_rating: 0,
@@ -43,7 +44,12 @@ export class ReviewsComponent implements OnInit {
 
   async ngOnInit() {
     await this.auth.waitForAuth();
-    await Promise.all([this.loadMyProfile(), this.loadReceivedReviews(), this.loadCommitteeMembers()]);
+    await Promise.all([
+      this.loadMyProfile(),
+      this.loadReceivedReviews(),
+      this.loadSentReviews(),
+      this.loadCommitteeMembers()
+    ]);
     this.loading.set(false);
   }
 
@@ -96,6 +102,49 @@ export class ReviewsComponent implements OnInit {
       ...r,
       reviewer:  profileMap.get(r.reviewer_id)   || null,
       committee: committeeMap.get(r.committee_id) || null
+    })));
+  }
+
+  // Reviews the current user has WRITTEN about others. Mirrors loadReceivedReviews()
+  // but filters by reviewer_id and resolves the reviewed-person's profile, so the
+  // user can verify their own outgoing reviews without logging in as the recipient.
+  private async loadSentReviews() {
+    const myId = this.auth.currentUser()?.id;
+    if (!myId) { this.sentReviews.set([]); return; }
+
+    const { data: rows, error } = await this.supabase.client
+      .from("reviews")
+      .select("*")
+      .eq("reviewer_id", myId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      this.sentReviews.set([]);
+      return;
+    }
+
+    const reviews = rows || [];
+    if (!reviews.length) { this.sentReviews.set([]); return; }
+
+    const reviewedIds  = [...new Set(reviews.map(r => r.reviewed_user_id).filter(Boolean))];
+    const committeeIds = [...new Set(reviews.map(r => r.committee_id).filter(Boolean))];
+
+    const [profilesRes, committeesRes] = await Promise.all([
+      reviewedIds.length
+        ? this.supabase.client.from('profiles').select('id, name, email').in('id', reviewedIds)
+        : Promise.resolve({ data: [] as any[], error: null }),
+      committeeIds.length
+        ? this.supabase.client.from('committees').select('id, name').in('id', committeeIds)
+        : Promise.resolve({ data: [] as any[], error: null })
+    ]);
+
+    const profileMap   = new Map((profilesRes.data   || []).map((p: any) => [p.id, p]));
+    const committeeMap = new Map((committeesRes.data || []).map((c: any) => [c.id, c]));
+
+    this.sentReviews.set(reviews.map((r: any) => ({
+      ...r,
+      reviewed:  profileMap.get(r.reviewed_user_id) || null,
+      committee: committeeMap.get(r.committee_id)   || null
     })));
   }
 
@@ -341,7 +390,7 @@ export class ReviewsComponent implements OnInit {
       });
       this.toast.success("Review submitted successfully!");
       this.closeReviewModal();
-      await this.loadCommitteeMembers();
+      await Promise.all([this.loadSentReviews(), this.loadCommitteeMembers()]);
     } catch (e: any) {
       const msg = (e?.message || '').toLowerCase();
       const code = e?.code || '';
@@ -353,7 +402,11 @@ export class ReviewsComponent implements OnInit {
       if (isDuplicate) {
         this.toast.warning("You've already reviewed this person for this committee.");
         this.closeReviewModal();
-        await Promise.all([this.loadReceivedReviews(), this.loadCommitteeMembers()]);
+        await Promise.all([
+          this.loadReceivedReviews(),
+          this.loadSentReviews(),
+          this.loadCommitteeMembers()
+        ]);
       } else {
         this.toast.error("Failed: " + (e?.message || 'unknown error'));
       }
