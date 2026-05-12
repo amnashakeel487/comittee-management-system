@@ -54,6 +54,7 @@ export const routes: Routes = [
       { path: "committees/create", loadComponent: () => import("./pages/create-committee/create-committee.component").then(m => m.CreateCommitteeComponent) },
       { path: "committees/:id", loadComponent: () => import("./pages/committee-detail/committee-detail.component").then(m => m.CommitteeDetailComponent) },
       { path: "joined-committees", loadComponent: () => import("./pages/joined-committees/joined-committees.component").then(m => m.JoinedCommitteesComponent) },
+      { path: "joined-committees/:id", loadComponent: () => import("./pages/joined-committee-detail/joined-committee-detail.component").then(m => m.JoinedCommitteeDetailComponent) },
       { path: "browse", loadComponent: () => import("./pages/browse-committees/browse-committees.component").then(m => m.BrowseCommitteesComponent) },
       { path: "payments", loadComponent: () => import("./pages/payments/payments.component").then(m => m.PaymentsComponent) },
       { path: "my-payments", loadComponent: () => import("./pages/my-payments/my-payments.component").then(m => m.MyPaymentsComponent) },

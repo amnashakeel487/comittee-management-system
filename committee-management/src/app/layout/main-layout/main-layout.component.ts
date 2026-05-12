@@ -85,7 +85,15 @@ export class MainLayoutComponent {
       filter(e => e instanceof NavigationEnd)
     ).subscribe((e: any) => {
       const url = e.urlAfterRedirects.split('?')[0];
-      this.currentPageTitle.set(this.routeTitles[url] || 'CommitteeHub');
+      if (this.routeTitles[url]) {
+        this.currentPageTitle.set(this.routeTitles[url]);
+      } else if (url.startsWith('/joined-committees/')) {
+        this.currentPageTitle.set('Committee Details');
+      } else if (url.startsWith('/committees/') && url !== '/committees/create') {
+        this.currentPageTitle.set('Committee Details');
+      } else {
+        this.currentPageTitle.set('CommitteeHub');
+      }
     });
   }
 

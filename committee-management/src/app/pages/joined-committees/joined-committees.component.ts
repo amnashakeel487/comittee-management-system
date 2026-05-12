@@ -88,7 +88,7 @@ import { ToastService } from '../../services/toast.service';
           </div>
 
           <div class="card-actions">
-            <a [routerLink]="['/committees', m.committee?.id]" class="btn btn-outline btn-sm">
+            <a [routerLink]="['/joined-committees', m.committee?.id]" class="btn btn-outline btn-sm">
               <span class="material-icons">visibility</span> View Details
             </a>
             <a routerLink="/my-payments" class="btn btn-primary btn-sm">
