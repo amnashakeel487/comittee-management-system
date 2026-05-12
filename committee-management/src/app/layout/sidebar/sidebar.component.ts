@@ -1,6 +1,7 @@
 import { Component, signal, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { DataService } from '../../services/data.service';
 
@@ -30,71 +31,91 @@ interface NavItem {
 
       <!-- Navigation -->
       <nav class="sidebar-nav">
+        <!-- MAIN MENU (no header — just Dashboard) -->
         <div class="nav-section">
-          <span class="nav-section-label" *ngIf="!collapsed">MAIN MENU</span>
           <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Dashboard' : ''">
             <span class="material-icons nav-icon">dashboard</span>
             <span class="nav-label" *ngIf="!collapsed">Dashboard</span>
           </a>
         </div>
 
+        <!-- MY COMMITTEES (collapsible) -->
         <div class="nav-section">
-          <span class="nav-section-label" *ngIf="!collapsed">MY COMMITTEES</span>
-          <a routerLink="/committees" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'My Committees' : ''">
-            <span class="material-icons nav-icon">groups</span>
-            <span class="nav-label" *ngIf="!collapsed">My Committees</span>
-          </a>
-          <a routerLink="/committees/create" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Create Committee' : ''">
-            <span class="material-icons nav-icon">add_circle</span>
-            <span class="nav-label" *ngIf="!collapsed">Create Committee</span>
-          </a>
-          <a routerLink="/payments" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'Payments' : ''">
-            <span class="material-icons nav-icon">payments</span>
-            <span class="nav-label" *ngIf="!collapsed">Payments</span>
-            <span class="nav-badge" *ngIf="pendingPaymentsCount() > 0 && !collapsed">{{ pendingPaymentsCount() }}</span>
-          </a>
-          <a routerLink="/join-requests" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Join Requests' : ''">
-            <span class="material-icons nav-icon">person_add</span>
-            <span class="nav-label" *ngIf="!collapsed">Join Requests</span>
-            <span class="nav-badge" *ngIf="pendingRequestsCount() > 0 && !collapsed">{{ pendingRequestsCount() }}</span>
-          </a>
-          <a routerLink="/payouts" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Payouts' : ''">
-            <span class="material-icons nav-icon">account_balance_wallet</span>
-            <span class="nav-label" *ngIf="!collapsed">Payouts</span>
-          </a>
-          <a routerLink="/reports" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Reports' : ''">
-            <span class="material-icons nav-icon">bar_chart</span>
-            <span class="nav-label" *ngIf="!collapsed">Reports</span>
-          </a>
+          <button *ngIf="!collapsed"
+                  type="button"
+                  class="nav-section-header"
+                  [class.open]="isOpen('committees')"
+                  (click)="toggleSection('committees')">
+            <span class="nav-section-label">MY COMMITTEES</span>
+            <span class="material-icons section-chevron">{{ isOpen('committees') ? 'expand_more' : 'chevron_right' }}</span>
+          </button>
+          <div class="nav-section-body" [class.open]="collapsed || isOpen('committees')">
+            <a routerLink="/committees" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'My Committees' : ''">
+              <span class="material-icons nav-icon">groups</span>
+              <span class="nav-label" *ngIf="!collapsed">My Committees</span>
+            </a>
+            <a routerLink="/committees/create" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Create Committee' : ''">
+              <span class="material-icons nav-icon">add_circle</span>
+              <span class="nav-label" *ngIf="!collapsed">Create Committee</span>
+            </a>
+            <a routerLink="/payments" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'Payments' : ''">
+              <span class="material-icons nav-icon">payments</span>
+              <span class="nav-label" *ngIf="!collapsed">Payments</span>
+              <span class="nav-badge" *ngIf="pendingPaymentsCount() > 0 && !collapsed">{{ pendingPaymentsCount() }}</span>
+            </a>
+            <a routerLink="/join-requests" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Join Requests' : ''">
+              <span class="material-icons nav-icon">person_add</span>
+              <span class="nav-label" *ngIf="!collapsed">Join Requests</span>
+              <span class="nav-badge" *ngIf="pendingRequestsCount() > 0 && !collapsed">{{ pendingRequestsCount() }}</span>
+            </a>
+            <a routerLink="/payouts" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Payouts' : ''">
+              <span class="material-icons nav-icon">account_balance_wallet</span>
+              <span class="nav-label" *ngIf="!collapsed">Payouts</span>
+            </a>
+            <a routerLink="/reports" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Reports' : ''">
+              <span class="material-icons nav-icon">bar_chart</span>
+              <span class="nav-label" *ngIf="!collapsed">Reports</span>
+            </a>
+          </div>
         </div>
 
+        <!-- PARTICIPATION (collapsible) -->
         <div class="nav-section">
-          <span class="nav-section-label" *ngIf="!collapsed">PARTICIPATION</span>
-          <a routerLink="/joined-committees" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Joined Committees' : ''">
-            <span class="material-icons nav-icon">how_to_reg</span>
-            <span class="nav-label" *ngIf="!collapsed">Joined Committees</span>
-          </a>
-          <a routerLink="/browse" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Browse & Join' : ''">
-            <span class="material-icons nav-icon">explore</span>
-            <span class="nav-label" *ngIf="!collapsed">Browse & Join</span>
-          </a>
-          <a routerLink="/my-payments" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'My Payments' : ''">
-            <span class="material-icons nav-icon">receipt_long</span>
-            <span class="nav-label" *ngIf="!collapsed">My Payments (Upload)</span>
-          </a>
-          <a routerLink="/verification" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Get Verified' : ''">
-            <span class="material-icons nav-icon">verified_user</span>
-            <span class="nav-label" *ngIf="!collapsed">Get Verified</span>
-            <span class="nav-badge" *ngIf="!collapsed && !auth.currentUser()?.verified" style="background:#f59e0b">!</span>
-          </a>
-          <a routerLink="/reviews" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Reviews' : ''">
-            <span class="material-icons nav-icon">reviews</span>
-            <span class="nav-label" *ngIf="!collapsed">Reviews & Reputation</span>
-          </a>
+          <button *ngIf="!collapsed"
+                  type="button"
+                  class="nav-section-header"
+                  [class.open]="isOpen('participation')"
+                  (click)="toggleSection('participation')">
+            <span class="nav-section-label">PARTICIPATION</span>
+            <span class="material-icons section-chevron">{{ isOpen('participation') ? 'expand_more' : 'chevron_right' }}</span>
+          </button>
+          <div class="nav-section-body" [class.open]="collapsed || isOpen('participation')">
+            <a routerLink="/joined-committees" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Joined Committees' : ''">
+              <span class="material-icons nav-icon">how_to_reg</span>
+              <span class="nav-label" *ngIf="!collapsed">Joined Committees</span>
+            </a>
+            <a routerLink="/browse" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Browse & Join' : ''">
+              <span class="material-icons nav-icon">explore</span>
+              <span class="nav-label" *ngIf="!collapsed">Browse & Join</span>
+            </a>
+            <a routerLink="/my-payments" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'My Payments' : ''">
+              <span class="material-icons nav-icon">receipt_long</span>
+              <span class="nav-label" *ngIf="!collapsed">My Payments</span>
+            </a>
+            <a routerLink="/verification" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Get Verified' : ''">
+              <span class="material-icons nav-icon">verified_user</span>
+              <span class="nav-label" *ngIf="!collapsed">Get Verified</span>
+              <span class="nav-badge" *ngIf="!collapsed && !auth.currentUser()?.verified" style="background:#f59e0b">!</span>
+            </a>
+            <a routerLink="/reviews" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Reviews' : ''">
+              <span class="material-icons nav-icon">reviews</span>
+              <span class="nav-label" *ngIf="!collapsed">Reviews</span>
+            </a>
+          </div>
         </div>
 
+        <!-- ACCOUNT (always pinned bottom) -->
         <div class="nav-section nav-bottom">
-          <span class="nav-section-label" *ngIf="!collapsed">ACCOUNT</span>
           <a routerLink="/profile" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Profile' : ''">
             <span class="material-icons nav-icon">person</span>
             <span class="nav-label" *ngIf="!collapsed">Profile</span>
@@ -148,22 +169,22 @@ interface NavItem {
     .sidebar-logo {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 20px 16px;
+      gap: 10px;
+      padding: 14px 14px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       min-height: var(--navbar-height);
     }
 
     .logo-icon {
-      width: 38px;
-      height: 38px;
+      width: 34px;
+      height: 34px;
       background: linear-gradient(135deg, #0a2540, #2d8cff);
-      border-radius: 10px;
+      border-radius: 9px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      .material-icons { color: white; font-size: 20px; }
+      .material-icons { color: white; font-size: 18px; }
     }
 
     .logo-text {
@@ -187,43 +208,80 @@ interface NavItem {
 
     .sidebar-nav {
       flex: 1;
-      padding: 16px 10px;
+      padding: 8px 8px 4px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
+      /* Slim scrollbar in WebKit */
+      &::-webkit-scrollbar { width: 5px; }
+      &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+      &::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
     }
 
     .nav-section {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
+    }
+
+    /* Click-to-collapse section header */
+    .nav-section-header {
+      all: unset;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px 4px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.15s;
+      &:hover { background: rgba(255,255,255,0.04); }
     }
 
     .nav-section-label {
       font-size: 10px;
       font-weight: 700;
-      color: rgba(255,255,255,0.35);
+      color: rgba(255,255,255,0.4);
       letter-spacing: 0.08em;
-      padding: 8px 10px 4px;
       text-transform: uppercase;
+    }
+
+    .section-chevron {
+      font-size: 16px !important;
+      color: rgba(255,255,255,0.35);
+      transition: transform 0.2s ease, color 0.15s;
+    }
+    .nav-section-header.open .section-chevron { color: rgba(255,255,255,0.55); }
+    .nav-section-header:hover .section-chevron { color: #2d8cff; }
+
+    /* Collapsible body */
+    .nav-section-body {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease;
+    }
+    .nav-section-body.open {
+      max-height: 600px; /* enough for any realistic section */
     }
 
     .nav-bottom {
       margin-top: auto;
-      padding-top: 16px;
+      padding-top: 8px;
       border-top: 1px solid rgba(255,255,255,0.08);
     }
 
     .nav-item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 8px;
+      gap: 9px;
+      padding: 7px 10px;
+      border-radius: 7px;
       color: #CBD5E1;
       text-decoration: none;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 500;
       transition: all 0.15s ease;
       cursor: pointer;
@@ -244,7 +302,7 @@ interface NavItem {
         color: #EEF3FA;
         font-weight: 600;
         border-left: 3px solid #2d8cff;
-        padding-left: 9px;
+        padding-left: 7px;
         .nav-icon { color: #2d8cff; }
       }
     }
@@ -256,8 +314,8 @@ interface NavItem {
     }
 
     .nav-icon {
-      font-size: 20px;
-      color: rgba(255,255,255,0.35);
+      font-size: 18px;
+      color: rgba(255,255,255,0.4);
       flex-shrink: 0;
       transition: color 0.15s;
     }
@@ -265,13 +323,13 @@ interface NavItem {
     .nav-label { flex: 1; }
 
     .nav-badge {
-      background: #060e1a;
+      background: #2d8cff;
       color: white;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      padding: 2px 7px;
+      padding: 1px 7px;
       border-radius: 10px;
-      min-width: 20px;
+      min-width: 18px;
       text-align: center;
     }
 
@@ -279,9 +337,9 @@ interface NavItem {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 16px;
+      padding: 10px 14px;
       border-top: 1px solid rgba(255,255,255,0.08);
-      background: rgba(0,0,0,0.15);
+      background: rgba(0,0,0,0.18);
     }
 
     .user-avatar {
@@ -324,9 +382,24 @@ export class SidebarComponent implements OnInit {
   pendingPaymentsCount = signal(0);
   pendingRequestsCount = signal(0);
 
+  // Routes that live under each collapsible section.  Used both to
+  // auto-open the section that owns the current route and to persist
+  // expand/collapse state in localStorage.
+  private sectionRoutes: Record<string, string[]> = {
+    committees: ['/committees', '/payments', '/join-requests', '/payouts', '/reports'],
+    participation: ['/joined-committees', '/browse', '/my-payments', '/verification', '/reviews']
+  };
+
+  // Default to collapsed for both — auto-opens the active one on init.
+  // This keeps the sidebar from spilling beyond the viewport on
+  // smaller laptops.
+  sectionsOpen = signal<Record<string, boolean>>({
+    committees: false,
+    participation: false
+  });
+
   navItems: NavItem[] = [
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
-    // MY COMMITTEES section
     { label: 'My Committees', icon: 'groups', route: '/committees' },
     { label: 'Create Committee', icon: 'add_circle', route: '/committees/create' },
     { label: 'Payments', icon: 'payments', route: '/payments', badgeSignal: () => this.pendingPaymentsCount() },
@@ -335,11 +408,60 @@ export class SidebarComponent implements OnInit {
     { label: 'Reports', icon: 'bar_chart', route: '/reports' },
   ];
 
-  constructor(public auth: AuthService, private dataService: DataService) {}
+  constructor(
+    public auth: AuthService,
+    private dataService: DataService,
+    private router: Router
+  ) {
+    // Restore any previously toggled state from localStorage so the
+    // user's preference sticks across refreshes / navigations.
+    try {
+      const saved = localStorage.getItem('sidebar-sections');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          this.sectionsOpen.set({ ...this.sectionsOpen(), ...parsed });
+        }
+      }
+    } catch { /* ignore corrupt local storage */ }
+
+    // Auto-open the section that owns the current URL on every nav,
+    // so that the relevant items are always visible without manual
+    // scrolling / expanding.
+    this.openActiveSection(this.router.url);
+    this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe((e: any) => this.openActiveSection(e.urlAfterRedirects || e.url));
+  }
 
   async ngOnInit() {
     await this.auth.waitForAuth();
     await this.loadPendingCount();
+  }
+
+  /** Auto-expand whichever section contains the supplied URL. */
+  private openActiveSection(url: string) {
+    if (!url) return;
+    const path = url.split('?')[0];
+    let changed = false;
+    const next = { ...this.sectionsOpen() };
+    for (const [key, prefixes] of Object.entries(this.sectionRoutes)) {
+      const inside = prefixes.some(p => path === p || path.startsWith(p + '/'));
+      if (inside && !next[key]) { next[key] = true; changed = true; }
+    }
+    if (changed) this.sectionsOpen.set(next);
+  }
+
+  isOpen(section: string): boolean {
+    return !!this.sectionsOpen()[section];
+  }
+
+  toggleSection(section: string) {
+    const next = { ...this.sectionsOpen(), [section]: !this.sectionsOpen()[section] };
+    this.sectionsOpen.set(next);
+    try {
+      localStorage.setItem('sidebar-sections', JSON.stringify(next));
+    } catch { /* ignore */ }
   }
 
   async loadPendingCount() {
