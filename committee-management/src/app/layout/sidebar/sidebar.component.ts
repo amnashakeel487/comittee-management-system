@@ -122,7 +122,7 @@ interface NavItem {
     .sidebar {
       width: var(--sidebar-width);
       height: 100vh;
-      background: #1E3A5F;
+      background: #060e1a;
       border-right: none;
       display: flex;
       flex-direction: column;
@@ -152,7 +152,7 @@ interface NavItem {
     .logo-icon {
       width: 38px;
       height: 38px;
-      background: linear-gradient(135deg, #1E3A5F, #3B82F6);
+      background: linear-gradient(135deg, #0a2540, #2d8cff);
       border-radius: 10px;
       display: flex;
       align-items: center;
@@ -176,7 +176,7 @@ interface NavItem {
 
     .logo-tagline {
       font-size: 11px;
-      color: #3B82F6;
+      color: #2d8cff;
       white-space: nowrap;
     }
 
@@ -198,7 +198,7 @@ interface NavItem {
     .nav-section-label {
       font-size: 10px;
       font-weight: 700;
-      color: #2E5490;
+      color: rgba(255,255,255,0.35);
       letter-spacing: 0.08em;
       padding: 8px 10px 4px;
       text-transform: uppercase;
@@ -229,18 +229,18 @@ interface NavItem {
       white-space: nowrap;
 
       &:hover {
-        background: rgba(30,58,95,0.25);
+        background: rgba(45,140,255,0.08);
         color: #EEF3FA;
-        .nav-icon { color: #3B82F6; }
+        .nav-icon { color: #2d8cff; }
       }
 
       &.active {
-        background: rgba(30,58,95,0.35);
+        background: rgba(45,140,255,0.15);
         color: #EEF3FA;
         font-weight: 600;
-        border-left: 3px solid #1E3A5F;
+        border-left: 3px solid #2d8cff;
         padding-left: 9px;
-        .nav-icon { color: #3B82F6; }
+        .nav-icon { color: #2d8cff; }
       }
     }
 
@@ -252,7 +252,7 @@ interface NavItem {
 
     .nav-icon {
       font-size: 20px;
-      color: #2E5490;
+      color: rgba(255,255,255,0.35);
       flex-shrink: 0;
       transition: color 0.15s;
     }
@@ -260,7 +260,7 @@ interface NavItem {
     .nav-label { flex: 1; }
 
     .nav-badge {
-      background: #1E3A5F;
+      background: #060e1a;
       color: white;
       font-size: 11px;
       font-weight: 700;
@@ -280,7 +280,7 @@ interface NavItem {
     }
 
     .user-avatar {
-      background: linear-gradient(135deg, #1E3A5F, #3B82F6);
+      background: linear-gradient(135deg, #0a2540, #2d8cff);
       font-size: 13px;
     }
 
@@ -301,7 +301,7 @@ interface NavItem {
 
     .user-email {
       font-size: 11px;
-      color: #2E5490;
+      color: rgba(255,255,255,0.35);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;

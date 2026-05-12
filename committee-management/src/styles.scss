@@ -3,11 +3,11 @@
 
 :root {
   // ── Primary: Deep Navy Blue ──────────────────────────────────
-  --primary: #1E3A5F;
-  --primary-dark: #152C4A;
-  --primary-light: #2E5490;
-  --primary-50: #EEF3FA;
-  --primary-100: #D0DFF2;
+  --primary: #2d8cff;
+  --primary-dark: #1a6fd4;
+  --primary-light: #5aabff;
+  --primary-50: rgba(45,140,255,0.08);
+  --primary-100: rgba(45,140,255,0.15);
 
   // ── Accent: Bright Blue ──────────────────────────────────────
   --accent: #2563EB;
@@ -64,7 +64,7 @@
   --text-primary: #0F172A;
   --text-secondary: #475569;
   --border-color: #E2E8F0;
-  --sidebar-bg: #1E3A5F;
+  --sidebar-bg: #060e1a;
   --navbar-bg: #ffffff;
 }
 
@@ -228,9 +228,9 @@ h1, h2, h3, h4, h5, h6 {
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 
   &.btn-primary {
-    background: var(--primary);
+    background: #2d8cff;
     color: white;
-    &:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    &:hover:not(:disabled) { background: #1a6fd4; transform: translateY(-1px); box-shadow: var(--shadow-md); }
   }
 
   &.btn-secondary {
@@ -395,7 +395,7 @@ table.data-table {
   justify-content: center;
   font-weight: 600;
   color: white;
-  background: var(--primary);
+  background: #2d8cff;
   flex-shrink: 0;
 
   &.avatar-sm { width: 32px; height: 32px; font-size: 13px; }

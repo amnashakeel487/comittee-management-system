@@ -141,7 +141,7 @@ import { DataService } from '../../services/data.service';
 
       &:focus-within {
         background: white;
-        border-color: #1E3A5F;
+        border-color: #2d8cff;
         box-shadow: 0 0 0 3px rgba(30,58,95,0.12);
       }
     }
@@ -166,7 +166,7 @@ import { DataService } from '../../services/data.service';
       position: absolute;
       top: 4px;
       right: 4px;
-      background: #1E3A5F;
+      background: #2d8cff;
       color: white;
       font-size: 10px;
       font-weight: 700;
@@ -230,7 +230,7 @@ import { DataService } from '../../services/data.service';
 
       &.success { background: var(--success-light); .material-icons { color: var(--success); font-size: 18px; } }
       &.warning { background: var(--warning-light); .material-icons { color: var(--warning); font-size: 18px; } }
-      &.info { background: #EEF3FA; .material-icons { color: #1E3A5F; font-size: 18px; } }
+      &.info { background: #EEF3FA; .material-icons { color: #2d8cff; font-size: 18px; } }
     }
 
     .notif-content { flex: 1; }
@@ -249,11 +249,11 @@ import { DataService } from '../../services/data.service';
       cursor: pointer;
       transition: all 0.15s;
 
-      &:hover { border-color: #1E3A5F; background: #EEF3FA; }
+      &:hover { border-color: #2d8cff; background: #EEF3FA; }
     }
 
     .user-avatar {
-      background: linear-gradient(135deg, #1E3A5F, #3B82F6);
+      background: linear-gradient(135deg, #2d8cff, #3B82F6);
       font-size: 13px;
     }
 
