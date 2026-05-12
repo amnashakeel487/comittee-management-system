@@ -2,7 +2,7 @@
   <div class="page-header">
     <div class="page-title">
       <h1>Members</h1>
-      <p>Add members here, then assign them to committees from the committee detail page</p>
+      <p>Provision sub-admin accounts. Every member created here can sign in to the sub-admin dashboard with the auto-generated credentials.</p>
     </div>
     <button class="btn btn-primary" (click)="openAddModal()">
       <span class="material-icons">person_add</span> Add Member
@@ -24,7 +24,7 @@
     <div class="stat-card">
       <div class="stat-icon" style="background:#fef3c7"><span class="material-icons" style="color:#f59e0b">admin_panel_settings</span></div>
       <div class="stat-value">{{ adminCount() }}</div>
-      <div class="stat-label">Admins</div>
+      <div class="stat-label">Sub-Admins</div>
     </div>
   </div>
 
@@ -86,7 +86,7 @@
                       title="View login credentials">
                 <span class="material-icons">key</span> View
               </button>
-              <span *ngIf="!hasCredential(member)" class="no-cred-text">—</span>
+              <span *ngIf="!hasCredential(member)" class="no-cred-text"></span>
             </td>
             <td>
               <div class="action-btns">
@@ -145,17 +145,10 @@
             <label class="required-label"><span class="material-icons label-icon">badge</span>CNIC *</label>
             <input type="text" class="form-control" placeholder="35202-1234567-8" [(ngModel)]="memberForm.cnic">
           </div>
-          <div class="form-group">
-            <label><span class="material-icons label-icon">admin_panel_settings</span>Role</label>
-            <select class="form-control" [(ngModel)]="memberForm.role">
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
         </div>
         <div class="info-box" *ngIf="!editingMember()">
           <span class="material-icons">info</span>
-          <p>A <strong>login password</strong> will be auto-generated and saved. You can view it anytime from the <strong>Key icon</strong> in the member list.</p>
+          <p>The user will be created as a <strong>Sub-Admin</strong> and can log into the sub-admin dashboard. A <strong>login password</strong> is auto-generated and shown once  view it any time via the <strong>Key icon</strong>.</p>
         </div>
       </div>
       <div class="modal-footer">
@@ -224,7 +217,7 @@
             </div>
             <div class="cred-value-row">
               <span class="cred-value password-value">
-                {{ showPassword() ? creds.password : '••••••••••' }}
+                {{ showPassword() ? creds.password : '' }}
               </span>
               <button class="copy-btn" (click)="copyToClipboard(creds.password, 'password')" [class.copied]="copiedField() === 'password'">
                 <span class="material-icons">{{ copiedField() === 'password' ? 'check' : 'content_copy' }}</span>

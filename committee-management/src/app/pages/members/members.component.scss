@@ -1,5 +1,17 @@
-﻿.members-page { animation: fadeIn 0.3s ease; }
+.members-page { animation: fadeIn 0.3s ease; }
 .member-stats { margin-bottom: 24px; }
+
+/* The page is rendered inside the super-admin shell (dark background).
+   Override the header colors so they're readable; cards keep their light
+   look which provides good contrast against the dark shell. */
+.members-page {
+  .page-header {
+    .page-title {
+      h1 { color: #ffffff; }
+      p  { color: rgba(255,255,255,0.6); }
+    }
+  }
+}
 
 .search-filter {
   display: flex; align-items: center; gap: 8px;

@@ -35,7 +35,7 @@ export class MembersComponent implements OnInit {
 
   memberForm = {
     name: "", phone: "", email: "", cnic: "" as string | undefined,
-    role: "member" as "sub_admin" | "member",
+    role: "sub_admin" as "sub_admin" | "member",
     payout_order: 1
   };
 
@@ -105,7 +105,7 @@ export class MembersComponent implements OnInit {
 
   openAddModal() {
     this.editingMember.set(null);
-    this.memberForm = { name: "", phone: "", email: "", cnic: "", role: "member", payout_order: this.members().length + 1 };
+    this.memberForm = { name: "", phone: "", email: "", cnic: "", role: "sub_admin", payout_order: this.members().length + 1 };
     this.showModal.set(true);
   }
 

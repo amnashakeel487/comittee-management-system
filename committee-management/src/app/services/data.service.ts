@@ -95,24 +95,27 @@ export class DataService {
     let supabaseUserId: string | null = null;
 
     if (input.email && input.password) {
-      // Register with role: 'member' in metadata
+      // Every member added by the super admin is provisioned as a sub_admin so they
+      // can log into the sub-admin dashboard. Their auth metadata + profiles row
+      // both carry role='sub_admin' — that's what AuthService.login() and the
+      // subAdminGuard read to decide where to send them after login.
       const { data: signUpData, error: signUpError } = await this.supabase.signUp(
         input.email, input.password, input.name || '',
-        { role: 'member', phone: input.phone || '' }
+        { role: 'sub_admin', phone: input.phone || '' }
       );
       if (signUpError && !signUpError.message?.includes('already registered')) {
         console.warn('Signup warning:', signUpError.message);
       }
       supabaseUserId = signUpData?.user?.id || null;
 
-      // Insert profile row with role: 'member' so role check works at login
       if (supabaseUserId) {
         await this.supabase.client.from('profiles').upsert({
           id: supabaseUserId,
           name: input.name || '',
           email: input.email,
           phone: input.phone || null,
-          role: 'member'   // ← CRITICAL: always member
+          role: 'sub_admin',
+          status: 'active'
         }, { onConflict: 'id' }).then(({ error }) => {
           if (error) console.warn('Profile upsert warning:', error.message);
         });
@@ -123,7 +126,7 @@ export class DataService {
       .insert({
         name: input.name, phone: input.phone, email: input.email,
         address: input.address || null, cnic: input.cnic || null,
-        role: 'member',   // ← always member in members table
+        role: 'sub_admin',
         payout_order: input.payout_order || 1,
         status: 'active', created_by: this.userId,
         login_password: input.password || null

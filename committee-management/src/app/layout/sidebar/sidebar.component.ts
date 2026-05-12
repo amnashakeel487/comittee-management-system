@@ -48,10 +48,6 @@ interface NavItem {
             <span class="material-icons nav-icon">add_circle</span>
             <span class="nav-label" *ngIf="!collapsed">Create Committee</span>
           </a>
-          <a routerLink="/members" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Members' : ''">
-            <span class="material-icons nav-icon">people</span>
-            <span class="nav-label" *ngIf="!collapsed">Members</span>
-          </a>
           <a routerLink="/payments" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'Payments' : ''">
             <span class="material-icons nav-icon">payments</span>
             <span class="nav-label" *ngIf="!collapsed">Payments</span>
@@ -333,7 +329,6 @@ export class SidebarComponent implements OnInit {
     // MY COMMITTEES section
     { label: 'My Committees', icon: 'groups', route: '/committees' },
     { label: 'Create Committee', icon: 'add_circle', route: '/committees/create' },
-    { label: 'Members', icon: 'people', route: '/members' },
     { label: 'Payments', icon: 'payments', route: '/payments', badgeSignal: () => this.pendingPaymentsCount() },
     { label: 'Join Requests', icon: 'person_add', route: '/join-requests', badgeSignal: () => this.pendingRequestsCount() },
     { label: 'Payouts', icon: 'account_balance_wallet', route: '/payouts' },

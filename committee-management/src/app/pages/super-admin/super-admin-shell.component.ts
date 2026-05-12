@@ -31,6 +31,10 @@ import { AuthService } from '../../services/auth.service';
         <span class="material-icons">people</span>
         <span *ngIf="!collapsed()">User Management</span>
       </a>
+      <a routerLink="/super-admin/dashboard/members" routerLinkActive="active" class="sa-nav-item" [title]="collapsed() ? 'Members' : ''">
+        <span class="material-icons">person_add</span>
+        <span *ngIf="!collapsed()">Members</span>
+      </a>
       <a routerLink="/super-admin/dashboard/committees" routerLinkActive="active" class="sa-nav-item" [title]="collapsed() ? 'Committees' : ''">
         <span class="material-icons">groups</span>
         <span *ngIf="!collapsed()">Committees</span>

@@ -1,4 +1,4 @@
-﻿import { Routes } from "@angular/router";
+import { Routes } from "@angular/router";
 import { subAdminGuard, guestGuard, superAdminGuard, superAdminGuestGuard } from "./guards/auth.guard";
 
 export const routes: Routes = [
@@ -34,6 +34,7 @@ export const routes: Routes = [
           { path: "announcements", loadComponent: () => import("./pages/super-admin/pages/sa-announcements.component").then(m => m.SaAnnouncementsComponent) },
           { path: "profile", loadComponent: () => import("./pages/super-admin/pages/sa-profile.component").then(m => m.SaProfileComponent) },
           { path: "verification", loadComponent: () => import("./pages/super-admin/pages/sa-verification.component").then(m => m.SaVerificationComponent) },
+          { path: "members", loadComponent: () => import("./pages/members/members.component").then(m => m.MembersComponent) },
         ]
       },
       // Redirect /super-admin → /super-admin/login
@@ -54,7 +55,6 @@ export const routes: Routes = [
       { path: "committees/:id", loadComponent: () => import("./pages/committee-detail/committee-detail.component").then(m => m.CommitteeDetailComponent) },
       { path: "joined-committees", loadComponent: () => import("./pages/joined-committees/joined-committees.component").then(m => m.JoinedCommitteesComponent) },
       { path: "browse", loadComponent: () => import("./pages/browse-committees/browse-committees.component").then(m => m.BrowseCommitteesComponent) },
-      { path: "members", loadComponent: () => import("./pages/members/members.component").then(m => m.MembersComponent) },
       { path: "payments", loadComponent: () => import("./pages/payments/payments.component").then(m => m.PaymentsComponent) },
       { path: "my-payments", loadComponent: () => import("./pages/my-payments/my-payments.component").then(m => m.MyPaymentsComponent) },
       { path: "verification", loadComponent: () => import("./pages/verification/verification-request.component").then(m => m.VerificationRequestComponent) },
