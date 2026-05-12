@@ -4,13 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { ToastService } from '../../services/toast.service';
-import { createClient } from '@supabase/supabase-js';
-
-// Use anon key to bypass RLS for public committee browsing
-const anonSb = createClient(
-  'https://vxvgagkwgsjetvyvxdxg.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4dmdhZ2t3Z3NqZXR2eXZ4ZHhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzOTI1NTUsImV4cCI6MjA5Mzk2ODU1NX0.knri6Kwk9p09rJ1zLwhOokbcCj-ByKdIlt774hKyJn8'
-);
 
 @Component({
   selector: 'app-browse-committees',
@@ -268,23 +261,35 @@ export class BrowseCommitteesComponent implements OnInit {
   }
 
   private async loadCommittees() {
-    // Use anon client to get ALL public committees regardless of RLS
-    const { data, error } = await anonSb
+    // Use authenticated client — fetch ALL active/pending committees
+    const { data, error } = await this.supabase.client
       .from('committees')
-      .select('*, profiles(name, email, verified)')
+      .select('id, name, description, monthly_amount, total_members, duration_months, status, current_month, start_date, created_by')
       .in('status', ['active', 'pending'])
       .order('created_at', { ascending: false });
 
     if (error) console.error('Browse load error:', error.message);
 
-    // Enrich with admin name
-    const cs = (data || []).map((c: any) => ({
+    // Fetch admin names separately
+    const cs = data || [];
+    const creatorIds = [...new Set(cs.map((c: any) => c.created_by).filter(Boolean))];
+    let profileMap: Record<string, any> = {};
+
+    if (creatorIds.length > 0) {
+      const { data: profiles } = await this.supabase.client
+        .from('profiles')
+        .select('id, name, verified')
+        .in('id', creatorIds);
+      (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
+    }
+
+    const enriched = cs.map((c: any) => ({
       ...c,
-      admin_name: c.profiles?.name || 'Admin',
-      admin_verified: c.profiles?.verified || false
+      admin_name: profileMap[c.created_by]?.name || 'Admin',
+      admin_verified: profileMap[c.created_by]?.verified || false
     }));
 
-    this.allCommittees = cs;
+    this.allCommittees = enriched;
     this.applyFilter();
   }
 
