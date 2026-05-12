@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -34,40 +34,44 @@ export class LandingComponent implements OnInit {
   filters = ['All', 'Open', 'Pending'];
 
   activeFaq = signal(-1);
+  theme = signal('dark');
 
   joinForm = { name: '', phone: '', email: '', cnic: '', address: '', message: '' };
 
   steps = [
-    { num: 1, title: 'Register / Login', desc: 'Create your account or log in as Sub-Admin.' },
-    { num: 2, title: 'Join a Committee', desc: 'Browse public committees and request to join.' },
-    { num: 3, title: 'Pay Monthly', desc: 'Upload your payment screenshot each month.' },
-    { num: 4, title: 'Receive Your Turn', desc: 'Get the full payout when your turn arrives.' }
+    { num: 1, title: 'Register / Login', desc: 'Create your account. Admin sets up your member profile and access.' },
+    { num: 2, title: 'Join a Committee', desc: 'Browse committees, submit a request, and get approved by the focal person.' },
+    { num: 3, title: 'Pay Monthly', desc: 'Upload your payment screenshot. Admin verifies and marks it paid.' },
+    { num: 4, title: 'Receive Your Turn', desc: 'When your number is drawn, you receive the full monthly payout.' }
   ];
 
   features = [
-    { title: 'Secure Member Management', desc: 'CNIC-verified profiles and role-based access.' },
-    { title: 'Payment Tracking', desc: 'Upload screenshots and track payment history.' },
-    { title: 'Turn Management', desc: 'Automated turn scheduling with spin wheel.' },
-    { title: 'Screenshot Upload', desc: 'Members upload receipts, admins verify.' },
-    { title: 'Notifications', desc: 'Alerts for payment due dates and approvals.' },
-    { title: 'Spin Wheel', desc: 'Fair, transparent turn selection.' },
-    { title: 'Dashboards', desc: 'Professional dashboards for all roles.' },
-    { title: 'Financial Reports', desc: 'Monthly reports and fund summaries.' }
+    { icon: 'ti ti-shield-lock', title: 'Secure Member Management', desc: 'CNIC-verified profiles with role-based access and full audit history.' },
+    { icon: 'ti ti-receipt-2', title: 'Payment Tracking', desc: 'Upload receipts, track monthly installments, and view real-time status.' },
+    { icon: 'ti ti-arrows-shuffle', title: 'Turn Management', desc: 'Automated scheduling with manual override. Everyone knows their date.' },
+    { icon: 'ti ti-photo-up', title: 'Screenshot Upload', desc: 'Members upload bank receipts. Admins verify with one click.' },
+    { icon: 'ti ti-bell-ringing', title: 'Smart Notifications', desc: 'Automated alerts for due dates, turns, and approvals.' },
+    { icon: 'ti ti-rotate-clockwise-2', title: 'Spin Wheel Selection', desc: 'Fair, visible turn selection with an animated spin wheel.' },
+    { icon: 'ti ti-layout-dashboard', title: 'Role-Based Dashboards', desc: 'Separate views for members, focal persons, and admins.' },
+    { icon: 'ti ti-chart-bar', title: 'Financial Reports', desc: 'Monthly summaries, outstanding balances, and full fund history.' }
   ];
 
   testimonials = [
-    { stars: '★★★★★', text: 'Finally a proper system for committees. Payment tracking saved us from many disputes.', initials: 'AU', name: 'Ahmed Usman', role: 'Committee Member, Lahore' },
-    { stars: '★★★★★', text: 'Managing 3 committees and 45 members became easy. The spin wheel is brilliant.', initials: 'SR', name: 'Sara Rehman', role: 'Focal Person, Islamabad' },
-    { stars: '★★★★☆', text: 'Full visibility into who has paid. No more chasing people every month.', initials: 'KA', name: 'Kamran Ali', role: 'Admin, Karachi' },
-    { stars: '★★★★★', text: 'Got my turn payout on time. Everything was smooth and transparent.', initials: 'NB', name: 'Nadia Baig', role: 'Member, Rawalpindi' }
+    { stars: '★★★★★', text: '"Payment tracking and screenshot uploads saved us from so many disputes."', initials: 'AU', name: 'Ahmed Usman', role: 'Member, Lahore' },
+    { stars: '★★★★★', text: '"Managing 3 committees and 45 members is now easy. The spin wheel feature is great."', initials: 'SR', name: 'Sara Rehman', role: 'Focal Person, Islamabad' },
+    { stars: '★★★★☆', text: '"Full visibility into payments — no more chasing members every month."', initials: 'KA', name: 'Kamran Ali', role: 'Admin, Karachi' },
+    { stars: '★★★★★', text: '"The verification process gave me confidence. My payout came on time without any issue."', initials: 'NB', name: 'Nadia Baig', role: 'Member, Rawalpindi' },
+    { stars: '★★★★★', text: '"Running a family committee across multiple cities was hard — CommitteeHub fixed that."', initials: 'MH', name: 'Muhammad Hussain', role: 'Family Admin' },
+    { stars: '★★★★★', text: '"Notifications mean I never miss a payment date. Professional and trustworthy."', initials: 'ZF', name: 'Zara Farooq', role: 'Member, Faisalabad' }
   ];
 
   faqs = [
-    { q: 'How do committees work?', a: 'All members contribute a fixed monthly amount. Each month, one member receives the total collected amount. CommitteeHub manages tracking, payment verification, and turn scheduling.' },
-    { q: 'How are payments verified?', a: 'Members upload a bank transfer screenshot. The admin reviews and marks the payment as verified, creating a full audit trail.' },
-    { q: 'How is turn selection decided?', a: 'Turns can be pre-assigned or determined through our animated spin wheel for maximum fairness and transparency.' },
-    { q: 'How do I request to join?', a: 'Click "Request to Join" on any committee card. Fill in your details. The admin will review and respond within 24-48 hours.' },
-    { q: 'Can I be in multiple committees?', a: 'Yes, subject to each admin\'s approval. Each committee has its own independent payment and turn schedule.' }
+    { q: 'How do committees work on this platform?', a: 'A committee is a group savings arrangement where members contribute a fixed monthly amount. Each month, one member receives the total collected (their "turn"). CommitteeHub manages tracking, payment verification, and turn scheduling.' },
+    { q: 'How are payments verified?', a: 'Members upload a bank transfer screenshot. The admin or focal person reviews and marks it verified. This creates a full audit trail for every transaction.' },
+    { q: 'How is turn selection decided?', a: 'Turns can be pre-assigned when a member joins, or decided through the spin wheel for fairness. All members can see the result in real time.' },
+    { q: 'Is my payment information secure?', a: 'CommitteeHub uses CNIC-verified registration and secure data storage. Note: all financial transactions happen directly between members and admins. The platform records them but does not process payments.' },
+    { q: 'What if a member doesn\'t pay on time?', a: 'Automated reminders are sent before the due date. If payment is missed, the member is flagged and the admin is notified. Penalty rules are defined by the committee admin.' },
+    { q: 'How do I request to join a committee?', a: 'Click "Request to Join" on any open committee. Fill in your name, CNIC, phone, email, and address. The admin will approve or reject your request and you will be notified.' }
   ];
 
   private colors = ['#2563eb', '#7c3aed', '#db2777', '#059669', '#d97706', '#dc2626'];
@@ -137,6 +141,7 @@ export class LandingComponent implements OnInit {
   }
 
   toggleFaq(i: number) { this.activeFaq.set(this.activeFaq() === i ? -1 : i); }
+  toggleTheme() { this.theme.set(this.theme() === 'dark' ? 'light' : 'dark'); }
 
   scrollTo(id: string) {
     const el = document.getElementById(id);
@@ -156,5 +161,26 @@ export class LandingComponent implements OnInit {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M+';
     if (n >= 1000) return Math.round(n / 1000) + 'K+';
     return n.toString();
+  }
+
+  getJoinedCount(c: any) {
+    // Generate a deterministic joined count based on id and total_members
+    // Just for visual effect on the landing page if the backend doesn't provide it
+    if (!c.id) return 1;
+    const mock = Math.floor(c.total_members * 0.7) + (c.id % 3);
+    return Math.min(mock, c.total_members);
+  }
+
+  getFillPct(c: any) {
+    const j = this.getJoinedCount(c);
+    if (!c.total_members) return 0;
+    return Math.round((j / c.total_members) * 100);
+  }
+
+  getStepIcon(num: number) {
+    if (num === 1) return 'ti ti-user-plus';
+    if (num === 2) return 'ti ti-building-community';
+    if (num === 3) return 'ti ti-credit-card';
+    return 'ti ti-trophy';
   }
 }

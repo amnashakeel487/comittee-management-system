@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CommitteeHub — Smart Committee Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+[data-theme="dark"]{
+  --bg:#060e1a;--bg2:#0b1828;--bg3:#0f2035;
+  --card:rgba(255,255,255,0.04);--card-h:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.08);--border-a:rgba(45,140,255,0.35);
+  --txt:#f0f4ff;--txt2:rgba(240,244,255,0.55);--txt3:rgba(240,244,255,0.28);
+  --accent:#2d8cff;--accent2:#60aeff;--chip-bg:rgba(45,140,255,0.12);
+  --open-bg:rgba(34,197,94,0.12);--open-tx:#4ade80;
+  --fill-bg:rgba(251,191,36,0.12);--fill-tx:#fbbf24;
+  --full-bg:rgba(239,68,68,0.12);--full-tx:#f87171;
+  --disc-bg:rgba(239,68,68,0.06);--disc-bd:rgba(239,68,68,0.2);--disc-tx:#f87171;
+  --nav-bg:rgba(6,14,26,0.9);--shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+[data-theme="light"]{
+  --bg:#f3f6fc;--bg2:#e7edf8;--bg3:#d8e3f3;
+  --card:#ffffff;--card-h:#f0f5ff;
+  --border:rgba(14,52,96,0.1);--border-a:rgba(14,52,96,0.28);
+  --txt:#0a1929;--txt2:rgba(10,25,41,0.55);--txt3:rgba(10,25,41,0.28);
+  --accent:#1565c0;--accent2:#1976d2;--chip-bg:rgba(21,101,192,0.08);
+  --open-bg:rgba(21,128,61,0.1);--open-tx:#166534;
+  --fill-bg:rgba(180,83,9,0.1);--fill-tx:#b45309;
+  --full-bg:rgba(185,28,28,0.1);--full-tx:#b91c1c;
+  --disc-bg:rgba(185,28,28,0.05);--disc-bd:rgba(185,28,28,0.18);--disc-tx:#b91c1c;
+  --nav-bg:rgba(243,246,252,0.92);--shadow:0 2px 16px rgba(14,52,96,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--txt);font-size:15px;line-height:1.6;overflow-x:hidden;transition:background .3s,color .3s;}
+a{text-decoration:none;color:inherit;}
+button{font-family:inherit;cursor:pointer;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:.85rem 5%;background:var(--nav-bg);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);}
+.logo{font-weight:700;font-size:1.1rem;display:flex;align-items:center;gap:7px;color:var(--txt);}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.nav-links{display:flex;align-items:center;gap:1.6rem;}
+.nav-links a{color:var(--txt2);font-size:.875rem;font-weight:500;transition:color .2s;}
+.nav-links a:hover{color:var(--txt);}
+.nav-r{display:flex;align-items:center;gap:.55rem;}
+.theme-btn{width:34px;height:34px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--txt2);font-size:.95rem;transition:all .2s;}
+.theme-btn:hover{color:var(--accent);border-color:var(--border-a);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:.48rem 1.2rem;border-radius:8px;font-size:.85rem;font-weight:600;border:none;transition:all .2s;cursor:pointer;}
+.btn-sm{padding:.34rem .85rem;font-size:.77rem;border-radius:6px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{opacity:.85;transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--txt);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--border-a);color:var(--accent);}
+.btn-outline{background:transparent;color:var(--accent);border:1.5px solid var(--accent);}
+.btn-outline:hover{background:var(--accent);color:#fff;}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;align-items:center;padding:7rem 5% 4rem;position:relative;overflow:hidden;}
+[data-theme="dark"] #hero{background:linear-gradient(155deg,var(--bg3) 0%,var(--bg) 55%);}
+[data-theme="light"] #hero{background:linear-gradient(155deg,#d9e6f7 0%,var(--bg) 55%);}
+.hero-wrap{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;width:100%;max-width:1160px;margin:0 auto;}
+.badge{display:inline-flex;align-items:center;gap:5px;background:var(--chip-bg);border:1px solid var(--border-a);color:var(--accent);padding:.26rem .72rem;border-radius:50px;font-size:.73rem;font-weight:600;margin-bottom:1.1rem;}
+h1{font-size:clamp(1.9rem,4.2vw,3rem);font-weight:700;line-height:1.18;margin-bottom:.9rem;}
+h1 em{font-style:normal;color:var(--accent);}
+.hero-p{color:var(--txt2);font-size:.95rem;max-width:440px;margin-bottom:1.8rem;}
+.hero-btns{display:flex;flex-wrap:wrap;gap:.65rem;margin-bottom:2.2rem;}
+.hero-stats{display:flex;gap:1.75rem;}
+.stat-n{font-size:1.4rem;font-weight:700;}
+.stat-l{font-size:.72rem;color:var(--txt2);}
+
+/* hero float card */
+.h-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.4rem;box-shadow:var(--shadow);animation:rise .7s .2s both;}
+@keyframes rise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.hc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.9rem;}
+.hc-name{font-size:.93rem;font-weight:700;}
+.hc-sub{font-size:.73rem;color:var(--txt2);margin-top:2px;}
+.sc{padding:.22rem .62rem;border-radius:50px;font-size:.69rem;font-weight:600;}
+.sc.open{background:var(--open-bg);color:var(--open-tx);}
+.sc.filling{background:var(--fill-bg);color:var(--fill-tx);}
+.sc.full{background:var(--full-bg);color:var(--full-tx);}
+.hc-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin:.9rem 0;}
+.hc-cell{background:var(--bg2);border-radius:7px;padding:.55rem .7rem;}
+.cl{font-size:.66rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.1rem;}
+.cv{font-size:.88rem;font-weight:700;}
+.cv.a{color:var(--accent);}
+.bar-lb{display:flex;justify-content:space-between;font-size:.71rem;color:var(--txt2);margin-bottom:.3rem;}
+.bar-tr{background:var(--border);border-radius:50px;height:5px;}
+.bar-fi{height:100%;border-radius:50px;background:var(--accent);}
+.hc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.9rem;padding-top:.85rem;border-top:1px solid var(--border);}
+.mini-av{width:24px;height:24px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;color:var(--accent);}
+.fp-n{font-size:.72rem;color:var(--txt2);}
+.fp-n strong{display:block;font-size:.77rem;color:var(--txt);font-weight:600;}
+
+/* SECTIONS */
+section{padding:4.5rem 5%;}
+.s-inner{max-width:1160px;margin:0 auto;}
+.s-head{text-align:center;margin-bottom:2.75rem;}
+.s-tag{display:inline-flex;align-items:center;gap:5px;background:var(--chip-bg);border:1px solid var(--border-a);color:var(--accent);padding:.24rem .72rem;border-radius:50px;font-size:.71rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:.85rem;}
+h2{font-size:clamp(1.55rem,3.2vw,2.1rem);font-weight:700;margin-bottom:.45rem;}
+.s-desc{color:var(--txt2);font-size:.88rem;max-width:500px;margin:0 auto;}
+
+/* COMMITTEES */
+#committees{background:var(--bg2);}
+.search-row{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.72rem 1rem;margin-bottom:1.6rem;}
+.s-ico{color:var(--txt3);font-size:.95rem;}
+.s-inp{flex:1;background:transparent;border:none;outline:none;color:var(--txt);font-family:inherit;font-size:.875rem;min-width:130px;}
+.s-inp::placeholder{color:var(--txt3);}
+.chips{display:flex;gap:.45rem;flex-wrap:wrap;}
+.chip{background:var(--bg2);border:1px solid var(--border);color:var(--txt2);padding:.26rem .72rem;border-radius:50px;font-size:.73rem;font-weight:500;cursor:pointer;transition:all .2s;}
+.chip:hover,.chip.on{background:var(--chip-bg);border-color:var(--border-a);color:var(--accent);}
+.coms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:1.15rem;}
+.com-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;transition:border-color .25s,transform .25s,box-shadow .25s;cursor:pointer;}
+.com-card:hover{border-color:var(--border-a);transform:translateY(-2px);box-shadow:var(--shadow);}
+.cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.8rem;}
+.cc-ico{width:38px;height:38px;border-radius:9px;background:var(--chip-bg);display:flex;align-items:center;justify-content:center;font-size:.95rem;color:var(--accent);}
+.cc-title{font-size:.92rem;font-weight:700;margin-bottom:.15rem;}
+.cc-cat{font-size:.7rem;color:var(--accent);font-weight:500;}
+.cc-pairs{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:.8rem 0;}
+.cc-kv{background:var(--bg2);border-radius:7px;padding:.52rem .68rem;}
+.kv-l{font-size:.65rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.1rem;}
+.kv-v{font-size:.86rem;font-weight:700;}
+.kv-v.a{color:var(--accent);}
+.cc-bar{margin:.8rem 0 .25rem;}
+.cc-foot{display:flex;align-items:center;justify-content:space-between;padding-top:.8rem;border-top:1px solid var(--border);}
+.fp-row{display:flex;align-items:center;gap:.42rem;}
+.fp-av{width:23px;height:23px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.56rem;font-weight:700;color:var(--accent);}
+.fp-inf{font-size:.7rem;color:var(--txt2);}
+.fp-inf strong{display:block;font-size:.74rem;color:var(--txt);font-weight:600;}
+.cc-btns{display:flex;gap:.38rem;}
+
+/* HOW */
+#how{background:var(--bg);}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:1.1rem;}
+.step{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:1.4rem 1.2rem;text-align:center;transition:all .25s;}
+.step:hover{border-color:var(--border-a);transform:translateY(-3px);}
+.step-n{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:var(--accent);color:#fff;font-size:.95rem;font-weight:700;margin:0 auto .85rem;}
+.step i{font-size:1.25rem;color:var(--accent);display:block;margin-bottom:.55rem;}
+.step-t{font-size:.88rem;font-weight:700;margin-bottom:.3rem;}
+.step-d{font-size:.79rem;color:var(--txt2);line-height:1.55;}
+
+/* FEATURES */
+#features{background:var(--bg2);}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:.95rem;}
+.feat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;display:flex;gap:.85rem;align-items:flex-start;transition:border-color .2s;}
+.feat:hover{border-color:var(--border-a);}
+.feat-ico{width:38px;height:38px;min-width:38px;border-radius:9px;background:var(--chip-bg);display:flex;align-items:center;justify-content:center;font-size:.95rem;color:var(--accent);}
+.feat-t{font-size:.86rem;font-weight:700;margin-bottom:.2rem;}
+.feat-d{font-size:.79rem;color:var(--txt2);line-height:1.55;}
+
+/* TESTIMONIALS */
+#testimonials{background:var(--bg);}
+.testis{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:1.1rem;}
+.testi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.3rem;transition:all .25s;}
+.testi:hover{border-color:var(--border-a);transform:translateY(-2px);}
+.stars{color:#fbbf24;font-size:.82rem;letter-spacing:1px;margin-bottom:.7rem;}
+.testi-q{font-size:.83rem;color:var(--txt2);font-style:italic;line-height:1.65;margin-bottom.95rem;}
+.testi-au{display:flex;align-items:center;gap:.6rem;margin-top:.9rem;}
+.t-av{width:32px;height:32px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:var(--accent);border:2px solid var(--border-a);}
+.t-name{font-size:.8rem;font-weight:700;}
+.t-role{font-size:.7rem;color:var(--txt2);}
+
+/* FAQ */
+#faq{background:var(--bg2);}
+.faqs{max-width:700px;margin:0 auto;}
+.faq{border:1px solid var(--border);border-radius:9px;margin-bottom:.55rem;overflow:hidden;transition:border-color .2s;}
+.faq.on{border-color:var(--border-a);}
+.faq-q{display:flex;justify-content:space-between;align-items:center;padding:.95rem 1.1rem;cursor:pointer;font-size:.88rem;font-weight:600;background:var(--card);transition:background .2s;}
+.faq-q:hover{background:var(--card-h);}
+.faq-ico{color:var(--accent);font-size:.88rem;transition:transform .3s;}
+.faq.on .faq-ico{transform:rotate(45deg);}
+.faq-a{display:none;padding:.15rem 1.1rem .95rem;font-size:.83rem;color:var(--txt2);line-height:1.7;background:var(--card);}
+.faq.on .faq-a{display:block;}
+
+/* DISCLAIMER */
+#disclaimer{background:var(--bg);}
+.disc-box{background:var(--disc-bg);border:1px solid var(--disc-bd);border-radius:12px;padding:1.4rem;max-width:840px;margin:0 auto;display:flex;gap:.9rem;align-items:flex-start;}
+.disc-ic{font-size:1.25rem;color:var(--disc-tx);min-width:20px;margin-top:1px;}
+.disc-title{font-size:.85rem;font-weight:700;color:var(--disc-tx);margin-bottom:.35rem;}
+.disc-text{font-size:.8rem;color:var(--txt2);line-height:1.7;}
+
+/* FOOTER */
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:3.25rem 5% 1.6rem;}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2.25rem;margin-bottom:2.25rem;}
+.f-logo{font-size:1.05rem;font-weight:700;margin-bottom:.55rem;}
+.f-logo span{color:var(--accent);}
+.f-desc{font-size:.79rem;color:var(--txt2);line-height:1.65;margin-bottom:.9rem;}
+.socials{display:flex;gap:.45rem;}
+.soc{width:30px;height:30px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--txt2);font-size:.85rem;transition:all .2s;}
+.soc:hover{border-color:var(--border-a);color:var(--accent);}
+.f-disc{font-size:.7rem;color:var(--disc-tx);background:var(--disc-bg);border:1px solid var(--disc-bd);border-radius:7px;padding:.55rem .85rem;margin-top:.9rem;line-height:1.55;}
+.f-col h4{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.8rem;}
+.f-col a{display:block;font-size:.8rem;color:var(--txt2);margin-bottom:.45rem;transition:color .2s;}
+.f-col a:hover{color:var(--accent);}
+.f-bottom{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.65rem;padding-top:1.1rem;border-top:1px solid var(--border);font-size:.76rem;color:var(--txt3);}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1.5rem;}
+.overlay.on{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border-a);border-radius:16px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;animation:pop .25s ease;}
+@keyframes pop{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
+.m-head{display:flex;justify-content:space-between;align-items:center;padding:1.15rem 1.4rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:2;}
+.m-title{font-size:1rem;font-weight:700;}
+.m-close{width:30px;height:30px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--txt2);font-size:.88rem;cursor:pointer;transition:all .2s;}
+.m-close:hover{background:var(--disc-bg);color:var(--disc-tx);border-color:var(--disc-bd);}
+.m-body{padding:1.4rem;}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.95rem 0;}
+.m-cell{background:var(--card);border-radius:8px;padding:.7rem .95rem;}
+.m-cl{font-size:.66rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.18rem;}
+.m-cv{font-size:.9rem;font-weight:700;}
+.m-sec{margin-top:1.15rem;}
+.m-sec-t{font-size:.72rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.55rem;}
+.m-text{font-size:.83rem;color:var(--txt2);line-height:1.7;}
+.m-disc{background:var(--disc-bg);border:1px solid var(--disc-bd);border-radius:8px;padding:.85rem .95rem;margin-top:.9rem;font-size:.76rem;color:var(--disc-tx);line-height:1.6;}
+.m-acts{display:flex;gap:.6rem;margin-top:1.1rem;padding-top:1.05rem;border-top:1px solid var(--border);}
+
+/* FORM */
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;}
+.fg{display:flex;flex-direction:column;gap:.38rem;}
+.fg.full{grid-column:1/-1;}
+.flbl{font-size:.76rem;font-weight:600;color:var(--txt2);display:flex;align-items:center;gap:.3rem;}
+.finp{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.58rem .82rem;color:var(--txt);font-family:inherit;font-size:.875rem;outline:none;transition:border-color .2s;}
+.finp:focus{border-color:var(--border-a);}
+.finp::placeholder{color:var(--txt3);}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.6rem;right:1.6rem;z-index:999;background:var(--bg2);border:1px solid var(--open-bg);border-radius:10px;padding:.8rem 1.05rem;display:flex;align-items:center;gap:.6rem;font-size:.83rem;color:var(--txt);transform:translateY(80px);opacity:0;transition:all .35s ease;box-shadow:var(--shadow);max-width:310px;}
+.toast.on{transform:translateY(0);opacity:1;}
+.t-ic{color:var(--open-tx);font-size:1rem;}
+
+@media(max-width:860px){.hero-wrap{grid-template-columns:1fr;}.h-card{display:none;}.footer-grid{grid-template-columns:1fr 1fr;}.m-grid{grid-template-columns:1fr;}.f-grid{grid-template-columns:1fr;}.fg.full{grid-column:1;}}
+@media(max-width:540px){nav .nav-links{display:none;}.footer-grid{grid-template-columns:1fr;}.hero-stats{gap:1.2rem;}.m-acts{flex-direction:column;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><div class="logo-dot"></div>CommitteeHub</div>
+  <div class="nav-links">
+    <a href="#committees">Committees</a>
+    <a href="#how">How It Works</a>
+    <a href="#features">Features</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div class="nav-r">
+    <button class="theme-btn" id="tbtn" title="Toggle theme"><i class="ti ti-moon" id="tico"></i></button>
+    <button class="btn btn-ghost" onclick="alert('Member Login')">Login</button>
+    <button class="btn btn-primary" onclick="alert('Admin Register')">Register</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-wrap">
+    <div>
+      <div class="badge"><i class="ti ti-shield-check"></i> Trusted Platform</div>
+      <h1>Smart <em>Committee</em><br>Management System</h1>
+      <p class="hero-p">Manage committees, payments, members, and monthly turns — all in one transparent, easy-to-use platform.</p>
+      <div class="hero-btns">
+        <a href="#committees" class="btn btn-primary"><i class="ti ti-building-community"></i> Explore Committees</a>
+        <button class="btn btn-ghost" onclick="alert('Admin Register')">Admin Register</button>
+        <button class="btn btn-outline" onclick="alert('Member Login')">Member Login</button>
+      </div>
+      <div class="hero-stats">
+        <div><div class="stat-n">240+</div><div class="stat-l">Active Members</div></div>
+        <div><div class="stat-n">18</div><div class="stat-l">Live Committees</div></div>
+        <div><div class="stat-n">PKR 12M+</div><div class="stat-l">Managed Monthly</div></div>
+      </div>
+    </div>
+    <div class="h-card">
+      <div class="hc-top">
+        <div><div class="hc-name">Gold Savings Committee</div><div class="hc-sub">Focal: Usman Malik</div></div>
+        <div class="sc open">Active</div>
+      </div>
+      <div class="hc-grid">
+        <div class="hc-cell"><div class="cl">Monthly</div><div class="cv a">PKR 5,000</div></div>
+        <div class="hc-cell"><div class="cl">Members</div><div class="cv">12 / 15</div></div>
+        <div class="hc-cell"><div class="cl">Current Turn</div><div class="cv">#4 Ahmed</div></div>
+        <div class="hc-cell"><div class="cl">Due Date</div><div class="cv">15 Jun</div></div>
+      </div>
+      <div class="bar-lb"><span>3 slots left</span><span>80%</span></div>
+      <div class="bar-tr"><div class="bar-fi" style="width:80%"></div></div>
+      <div class="hc-foot">
+        <div style="display:flex;align-items:center;gap:.45rem;">
+          <div class="mini-av">UM</div>
+          <div class="fp-n"><span style="font-size:.68rem;">Focal Person</span><strong>Usman Malik</strong></div>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="openJoin({name:'Gold Savings Committee',id:0})">Request Join</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMITTEES -->
+<section id="committees">
+  <div class="s-inner">
+    <div class="s-head">
+      <div class="s-tag"><i class="ti ti-building-community"></i> Public Committees</div>
+      <h2>Join an Active Committee</h2>
+      <p class="s-desc">Browse open committees and submit a join request.</p>
+    </div>
+    <div class="search-row">
+      <i class="ti ti-search s-ico"></i>
+      <input class="s-inp" id="s-inp" type="text" placeholder="Search by name, category, focal person…" oninput="render()">
+      <div class="chips" id="chips">
+        <button class="chip on" onclick="setF('all',this)">All</button>
+        <button class="chip" onclick="setF('open',this)">Open</button>
+        <button class="chip" onclick="setF('filling',this)">Filling</button>
+        <button class="chip" onclick="setF('full',this)">Full</button>
+        <button class="chip" onclick="setF('savings',this)">Savings</button>
+        <button class="chip" onclick="setF('family',this)">Family</button>
+        <button class="chip" onclick="setF('business',this)">Business</button>
+      </div>
+    </div>
+    <div class="coms-grid" id="coms-grid"></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="s-inner">
+    <div class="s-head">
+      <div class="s-tag"><i class="ti ti-list-numbers"></i> Process</div>
+      <h2>How It Works</h2>
+      <p class="s-desc">Four simple steps to start saving with your community.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-n">1</div><i class="ti ti-user-plus"></i><div class="step-t">Register / Login</div><div class="step-d">Create your account. Admin sets up your member profile and access.</div></div>
+      <div class="step"><div class="step-n">2</div><i class="ti ti-building-community"></i><div class="step-t">Join a Committee</div><div class="step-d">Browse committees, submit a request, and get approved by the focal person.</div></div>
+      <div class="step"><div class="step-n">3</div><i class="ti ti-credit-card"></i><div class="step-t">Pay Monthly</div><div class="step-d">Upload your payment screenshot. Admin verifies and marks it paid.</div></div>
+      <div class="step"><div class="step-n">4</div><i class="ti ti-trophy"></i><div class="step-t">Receive Your Turn</div><div class="step-d">When your number is drawn, you receive the full monthly payout.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="s-inner">
+    <div class="s-head">
+      <div class="s-tag"><i class="ti ti-sparkles"></i> Features</div>
+      <h2>Everything You Need</h2>
+      <p class="s-desc">Built for transparent, accountable committee management.</p>
+    </div>
+    <div class="feats">
+      <div class="feat"><div class="feat-ico"><i class="ti ti-shield-lock"></i></div><div><div class="feat-t">Secure Member Management</div><div class="feat-d">CNIC-verified profiles with role-based access and full audit history.</div></div></div>
+      <div class="feat"><div class="feat-ico"><i class="ti ti-receipt-2"></i></div><div><div class="feat-t">Payment Tracking</div><div class="feat-d">Upload receipts, track monthly installments, and view real-time status.</div></div></div>
+      <div class="feat"><div class="feat-ico"><i class="ti ti-arrows-shuffle"></i></div><div><div class="feat-t">Turn Management</div><div class="feat-d">Automated scheduling with manual override. Everyone knows their date.</div></div></div>
+      <div class="feat"><div class="feat-ico"><i class="ti ti-photo-up"></i></div><div><div class="feat-t">Screenshot Upload</div><div class="feat-d">Members upload bank receipts. Admins verify with one click.</div></div></div>
+      <div class="feat"><div class="feat-ico"><i class="ti ti-bell-ringing"></i></div><div><div class="feat-t">Smart Notifications</div><div class="feat-d">Automated alerts for due dates, turns, and approvals.</div></div></div>
+      <div class="feat"><div class="feat-ico"><i class="ti ti-rotate-clockwise-2"></i></div><div><div class="feat-t">Spin Wheel Selection</div><div class="feat-d">Fair, visible turn selection with an animated spin wheel.</div></div></div>
+      <div class="feat"><div class="feat-ico"><i class="ti ti-layout-dashboard"></i></div><div><div class="feat-t">Role-Based Dashboards</div><div class="feat-d">Separate views for members, focal persons, and admins.</div></div></div>
+      <div class="feat"><div class="feat-ico"><i class="ti ti-chart-bar"></i></div><div><div class="feat-t">Financial Reports</div><div class="feat-d">Monthly summaries, outstanding balances, and full fund history.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="s-inner">
+    <div class="s-head">
+      <div class="s-tag"><i class="ti ti-message-quote"></i> Testimonials</div>
+      <h2>What Members Say</h2>
+    </div>
+    <div class="testis">
+      <div class="testi"><div class="stars">★★★★★</div><p class="testi-q">"Payment tracking and screenshot uploads saved us from so many disputes."</p><div class="testi-au"><div class="t-av">AU</div><div><div class="t-name">Ahmed Usman</div><div class="t-role">Member, Lahore</div></div></div></div>
+      <div class="testi"><div class="stars">★★★★★</div><p class="testi-q">"Managing 3 committees and 45 members is now easy. The spin wheel feature is great."</p><div class="testi-au"><div class="t-av">SR</div><div><div class="t-name">Sara Rehman</div><div class="t-role">Focal Person, Islamabad</div></div></div></div>
+      <div class="testi"><div class="stars">★★★★☆</div><p class="testi-q">"Full visibility into payments — no more chasing members every month."</p><div class="testi-au"><div class="t-av">KA</div><div><div class="t-name">Kamran Ali</div><div class="t-role">Admin, Karachi</div></div></div></div>
+      <div class="testi"><div class="stars">★★★★★</div><p class="testi-q">"The verification process gave me confidence. My payout came on time without any issue."</p><div class="testi-au"><div class="t-av">NB</div><div><div class="t-name">Nadia Baig</div><div class="t-role">Member, Rawalpindi</div></div></div></div>
+      <div class="testi"><div class="stars">★★★★★</div><p class="testi-q">"Running a family committee across multiple cities was hard — CommitteeHub fixed that."</p><div class="testi-au"><div class="t-av">MH</div><div><div class="t-name">Muhammad Hussain</div><div class="t-role">Family Admin</div></div></div></div>
+      <div class="testi"><div class="stars">★★★★★</div><p class="testi-q">"Notifications mean I never miss a payment date. Professional and trustworthy."</p><div class="testi-au"><div class="t-av">ZF</div><div><div class="t-name">Zara Farooq</div><div class="t-role">Member, Faisalabad</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="s-inner">
+    <div class="s-head">
+      <div class="s-tag"><i class="ti ti-help-circle"></i> FAQ</div>
+      <h2>Common Questions</h2>
+    </div>
+    <div class="faqs">
+      <div class="faq"><div class="faq-q" onclick="tFaq(this)">How do committees work on this platform?<i class="ti ti-plus faq-ico"></i></div><div class="faq-a">A committee is a group savings arrangement where members contribute a fixed monthly amount. Each month, one member receives the total collected (their "turn"). CommitteeHub manages tracking, payment verification, and turn scheduling.</div></div>
+      <div class="faq"><div class="faq-q" onclick="tFaq(this)">How are payments verified?<i class="ti ti-plus faq-ico"></i></div><div class="faq-a">Members upload a bank transfer screenshot. The admin or focal person reviews and marks it verified. This creates a full audit trail for every transaction.</div></div>
+      <div class="faq"><div class="faq-q" onclick="tFaq(this)">How is turn selection decided?<i class="ti ti-plus faq-ico"></i></div><div class="faq-a">Turns can be pre-assigned when a member joins, or decided through the spin wheel for fairness. All members can see the result in real time.</div></div>
+      <div class="faq"><div class="faq-q" onclick="tFaq(this)">Is my payment information secure?<i class="ti ti-plus faq-ico"></i></div><div class="faq-a">CommitteeHub uses CNIC-verified registration and secure data storage. Note: all financial transactions happen directly between members and admins. The platform records them but does not process payments.</div></div>
+      <div class="faq"><div class="faq-q" onclick="tFaq(this)">What if a member doesn't pay on time?<i class="ti ti-plus faq-ico"></i></div><div class="faq-a">Automated reminders are sent before the due date. If payment is missed, the member is flagged and the admin is notified. Penalty rules are defined by the committee admin.</div></div>
+      <div class="faq"><div class="faq-q" onclick="tFaq(this)">How do I request to join a committee?<i class="ti ti-plus faq-ico"></i></div><div class="faq-a">Click "Request to Join" on any open committee. Fill in your name, CNIC, phone, email, and address. The admin will approve or reject your request and you will be notified.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DISCLAIMER -->
+<section id="disclaimer">
+  <div class="s-inner">
+    <div class="disc-box">
+      <i class="ti ti-alert-triangle disc-ic"></i>
+      <div>
+        <div class="disc-title">Important Disclaimer</div>
+        <p class="disc-text">This platform provides committee management and record-keeping only. All financial transactions occur directly between members and admins outside this platform. <strong>CommitteeHub is not responsible for fraud, scams, payment disputes, or financial losses.</strong> Always verify payments personally and retain all receipts independently.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="s-inner">
+    <div class="footer-grid">
+      <div>
+        <div class="f-logo">Committee<span>Hub</span></div>
+        <p class="f-desc">Transparent, trusted community savings management platform.</p>
+        <div class="socials">
+          <a class="soc" href="#"><i class="ti ti-brand-facebook"></i></a>
+          <a class="soc" href="#"><i class="ti ti-brand-whatsapp"></i></a>
+          <a class="soc" href="#"><i class="ti ti-brand-instagram"></i></a>
+          <a class="soc" href="#"><i class="ti ti-mail"></i></a>
+        </div>
+        <div class="f-disc">⚠ Not responsible for payment disputes. Verify all transactions personally.</div>
+      </div>
+      <div class="f-col">
+        <h4>Platform</h4>
+        <a href="#committees">Browse Committees</a>
+        <a href="#how">How It Works</a>
+        <a href="#features">Features</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="f-col">
+        <h4>Account</h4>
+        <a href="#">Member Login</a>
+        <a href="#">Admin Register</a>
+        <a href="#">Focal Person</a>
+      </div>
+      <div class="f-col">
+        <h4>Legal</h4>
+        <a href="#">Terms & Conditions</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#disclaimer">Disclaimer</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+    <div class="f-bottom">
+      <span>© 2025 CommitteeHub. All rights reserved.</span>
+      <span>Transparent community savings management.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="d-ov">
+  <div class="modal">
+    <div class="m-head"><div class="m-title" id="d-title">Committee Details</div><div class="m-close" onclick="cls('d-ov')"><i class="ti ti-x"></i></div></div>
+    <div class="m-body" id="d-body"></div>
+  </div>
+</div>
+
+<!-- JOIN MODAL -->
+<div class="overlay" id="j-ov">
+  <div class="modal">
+    <div class="m-head"><div class="m-title" id="j-title">Request to Join</div><div class="m-close" onclick="cls('j-ov')"><i class="ti ti-x"></i></div></div>
+    <div class="m-body">
+      <p style="font-size:.83rem;color:var(--txt2);margin-bottom:.9rem;">Fill in your details. The admin will respond within 24–48 hours.</p>
+      <div class="m-disc"><i class="ti ti-alert-triangle"></i> <strong>Disclaimer:</strong> CommitteeHub is not responsible for payment disputes. Verify all transactions personally before sending money.</div>
+      <form id="j-form" onsubmit="submitJ(event)" style="margin-top:1.15rem;">
+        <div class="f-grid">
+          <div class="fg"><label class="flbl"><i class="ti ti-user"></i> Full Name</label><input class="finp" type="text" placeholder="Your full name" required></div>
+          <div class="fg"><label class="flbl"><i class="ti ti-phone"></i> Phone</label><input class="finp" type="tel" placeholder="+92 3XX XXXXXXX" required></div>
+          <div class="fg"><label class="flbl"><i class="ti ti-mail"></i> Email</label><input class="finp" type="email" placeholder="you@example.com"></div>
+          <div class="fg"><label class="flbl"><i class="ti ti-id-badge"></i> CNIC</label><input class="finp" type="text" placeholder="XXXXX-XXXXXXX-X" required></div>
+          <div class="fg full"><label class="flbl"><i class="ti ti-map-pin"></i> Address</label><input class="finp" type="text" placeholder="Residential address"></div>
+          <div class="fg full"><label class="flbl"><i class="ti ti-message"></i> Message (Optional)</label><textarea class="finp" rows="3" placeholder="Additional info for admin…" style="resize:vertical;"></textarea></div>
+        </div>
+        <div style="display:flex;gap:.6rem;margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--border);">
+          <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;"><i class="ti ti-send"></i> Submit Request</button>
+          <button type="button" class="btn btn-ghost" onclick="cls('j-ov')">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ti ti-circle-check t-ic"></i><span id="tmsg"></span></div>
+
+<script>
+const D=[
+  {id:0,name:'Gold Savings Committee',cat:'savings',amt:5000,total:15,joined:12,start:'Jan 2025',due:'15 Jun 2025',status:'open',turn:'#4 — Ahmed Raza',focal:'Usman Malik',role:'Focal Person',desc:'Monthly savings committee for mid-income families. Members receive full payout on their turn month.',rules:'1. Payment by 15th each month.\n2. Late payments: PKR 200/day penalty.\n3. Max one skipped payment allowed.\n4. Turns via spin wheel.'},
+  {id:1,name:'Family Trust Circle',cat:'family',amt:10000,total:10,joined:10,start:'Mar 2025',due:'1 Jul 2025',status:'full',turn:'#7 — Fatima Khan',focal:'Dr. Amina Qureshi',role:'Admin',desc:'Family-based committee for trusted households only. Pre-vetted members.',rules:'1. Members must be referred by existing members.\n2. Bank transfer only — no cash.\n3. Turns pre-assigned.'},
+  {id:2,name:'Business Boost Fund',cat:'business',amt:25000,total:8,joined:5,start:'Apr 2025',due:'20 Jun 2025',status:'open',turn:'#2 — Bilal Ahmed',focal:'Tariq Mehmood',role:'Admin',desc:'High-value committee for small business owners funding growth in their turn month.',rules:'1. Business registration required.\n2. IBFT payments only.\n3. Two consecutive defaults = removal.'},
+  {id:3,name:'Women Welfare Committee',cat:'savings',amt:3000,total:20,joined:16,start:'Feb 2025',due:'10 Jun 2025',status:'filling',turn:'#9 — Saima Nawaz',focal:'Razia Sultana',role:'Focal Person',desc:'Designed for working women. Safe, verified, community-driven savings.',rules:'1. Female members only.\n2. CNIC copy required.\n3. Monthly meeting attendance encouraged.'},
+  {id:4,name:'Youth Savings League',cat:'savings',amt:2000,total:12,joined:4,start:'Jun 2025',due:'5 Jul 2025',status:'open',turn:'Not started',focal:'Hassan Raza',role:'Focal Person',desc:'New committee for young professionals aged 18–35. Build savings habits with community.',rules:'1. Age 18–35 at joining.\n2. WhatsApp group required.\n3. Turns by spin wheel.'},
+  {id:5,name:'Elite Property Circle',cat:'business',amt:50000,total:6,joined:5,start:'Jan 2025',due:'1 Jul 2025',status:'filling',turn:'#3 — Arif Malik',focal:'Shahzad Enterprises',role:'Admin',desc:'High-value committee for property investors. Payout: PKR 300,000 per turn.',rules:'1. By invitation only.\n2. Bank transfer mandatory.\n3. Legal agreement required before joining.'},
+];
+const SL={open:'Open',filling:'Filling Fast',full:'Full'};
+let activeF='all';
+function ini(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
+function pct(c){return Math.round(c.joined/c.total*100);}
+
+function render(){
+  const q=document.getElementById('s-inp').value.toLowerCase();
+  const g=document.getElementById('coms-grid');
+  const list=D.filter(c=>{
+    const mq=c.name.toLowerCase().includes(q)||c.cat.includes(q)||c.focal.toLowerCase().includes(q);
+    const mf=activeF==='all'||c.status===activeF||c.cat===activeF;
+    return mq&&mf;
+  });
+  if(!list.length){g.innerHTML='<p style="color:var(--txt2);text-align:center;padding:3rem;grid-column:1/-1;">No committees found.</p>';return;}
+  g.innerHTML=list.map(c=>{
+    const p=pct(c),rem=c.total-c.joined,full=c.status==='full';
+    return`<div class="com-card" onclick="openD(${c.id})">
+      <div class="cc-top"><div class="cc-ico"><i class="ti ti-building-bank"></i></div><div class="sc ${c.status}">${SL[c.status]}</div></div>
+      <div class="cc-title">${c.name}</div>
+      <div class="cc-cat">${c.cat.charAt(0).toUpperCase()+c.cat.slice(1)} Committee</div>
+      <div class="cc-pairs">
+        <div class="cc-kv"><div class="kv-l">Monthly</div><div class="kv-v a">PKR ${c.amt.toLocaleString()}</div></div>
+        <div class="cc-kv"><div class="kv-l">Members</div><div class="kv-v">${c.joined}/${c.total}</div></div>
+        <div class="cc-kv"><div class="kv-l">Start</div><div class="kv-v">${c.start}</div></div>
+        <div class="cc-kv"><div class="kv-l">Due</div><div class="kv-v">${c.due}</div></div>
+      </div>
+      <div class="cc-bar">
+        <div class="bar-lb"><span>${rem} slot${rem!==1?'s':''} left</span><span>${p}%</span></div>
+        <div class="bar-tr"><div class="bar-fi" style="width:${p}%"></div></div>
+      </div>
+      <div class="cc-foot">
+        <div class="fp-row"><div class="fp-av">${ini(c.focal)}</div><div class="fp-inf">${c.role}<strong>${c.focal}</strong></div></div>
+        <div class="cc-btns" onclick="event.stopPropagation()">
+          <button class="btn btn-sm btn-ghost" onclick="openD(${c.id})">Details</button>
+          <button class="btn btn-sm btn-primary" ${full?'disabled style="opacity:.45;cursor:not-allowed;"':''} onclick="${full?'':('openJoin(D['+c.id+'])')}">${full?'Full':'Join'}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setF(f,el){activeF=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');render();}
+
+function openD(id){
+  const c=D[id];
+  document.getElementById('d-title').textContent=c.name;
+  document.getElementById('d-body').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem;">
+      <span style="font-size:.72rem;color:var(--accent);font-weight:600;text-transform:uppercase;">${c.cat} committee</span>
+      <span class="sc ${c.status}">${SL[c.status]}</span>
+    </div>
+    <div class="m-grid">
+      <div class="m-cell"><div class="m-cl">Monthly</div><div class="m-cv" style="color:var(--accent)">PKR ${c.amt.toLocaleString()}</div></div>
+      <div class="m-cell"><div class="m-cl">Members</div><div class="m-cv">${c.joined} / ${c.total}</div></div>
+      <div class="m-cell"><div class="m-cl">Start Date</div><div class="m-cv">${c.start}</div></div>
+      <div class="m-cell"><div class="m-cl">Due Date</div><div class="m-cv">${c.due}</div></div>
+      <div class="m-cell"><div class="m-cl">Current Turn</div><div class="m-cv">${c.turn}</div></div>
+      <div class="m-cell"><div class="m-cl">Slots Left</div><div class="m-cv">${c.total-c.joined}</div></div>
+    </div>
+    <div class="m-sec"><div class="m-sec-t">About</div><p class="m-text">${c.desc}</p></div>
+    <div class="m-sec"><div class="m-sec-t">Rules</div><p class="m-text" style="white-space:pre-line;">${c.rules}</p></div>
+    <div class="m-sec">
+      <div class="m-sec-t">Managed By</div>
+      <div style="display:flex;align-items:center;gap:.7rem;background:var(--card);border-radius:8px;padding:.85rem .95rem;">
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--accent);border:2px solid var(--border-a);">${ini(c.focal)}</div>
+        <div><div style="font-size:.88rem;font-weight:700;">${c.focal}</div><div style="font-size:.72rem;color:var(--txt2);">${c.role}</div></div>
+      </div>
+    </div>
+    <div class="m-disc"><i class="ti ti-alert-triangle"></i> CommitteeHub manages records only. Verify all payments personally. Not liable for disputes.</div>
+    <div class="m-acts">
+      <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="cls('d-ov');openJoin(D[${id}])" ${c.status==='full'?'disabled style="opacity:.45;cursor:not-allowed;"':''}>
+        <i class="ti ti-user-plus"></i> ${c.status==='full'?'Committee Full':'Request to Join'}
+      </button>
+      <button class="btn btn-ghost" onclick="cls('d-ov')">Close</button>
+    </div>`;
+  opn('d-ov');
+}
+
+function openJoin(c){document.getElementById('j-title').textContent='Join — '+c.name;opn('j-ov');}
+function opn(id){document.getElementById(id).classList.add('on');}
+function cls(id){document.getElementById(id).classList.remove('on');}
+function submitJ(e){e.preventDefault();cls('j-ov');showToast('Request submitted! Admin will respond within 24–48 hours.');e.target.reset();}
+function showToast(msg){const t=document.getElementById('toast');document.getElementById('tmsg').textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),4000);}
+function tFaq(el){const item=el.parentElement;const was=item.classList.contains('on');document.querySelectorAll('.faq').forEach(f=>f.classList.remove('on'));if(!was)item.classList.add('on');}
+
+// Theme
+const html=document.documentElement;
+document.getElementById('tbtn').addEventListener('click',()=>{
+  const dark=html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme',dark?'light':'dark');
+  document.getElementById('tico').className=dark?'ti ti-moon':'ti ti-sun';
+});
+
+// Close overlay on bg click
+document.querySelectorAll('.overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on');});});
+
+render();
+</script>
+</body>
+</html>
