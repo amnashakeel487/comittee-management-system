@@ -206,18 +206,35 @@ export class SaVerificationComponent implements OnInit {
   async approve(r: any) {
     this.processingId.set(r.id);
     try {
-      // Update request
-      await this.supabase.client.from('verification_requests')
-        .update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', r.id);
-      // Update profile
-      await this.supabase.client.from('profiles')
-        .update({ verified: true, verification_status: 'verified' }).eq('id', r.user_id);
-      // Notify user
+      // 1) Mark the request approved. We .select() and check rowcount so an RLS
+      //    silent-drop (returns 0 rows, no error) is treated as a hard failure
+      //    rather than masquerading as success.
+      const reqRes = await this.supabase.client.from('verification_requests')
+        .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+        .eq('id', r.id)
+        .select('id');
+      if (reqRes.error) throw new Error(reqRes.error.message);
+      if (!reqRes.data?.length) {
+        throw new Error('Permission denied updating verification_requests. Run scripts/migration-super-admin-rls.sql in Supabase.');
+      }
+
+      // 2) Flip the user's profile to verified.
+      const profRes = await this.supabase.client.from('profiles')
+        .update({ verified: true, verification_status: 'verified' })
+        .eq('id', r.user_id)
+        .select('id');
+      if (profRes.error) throw new Error(profRes.error.message);
+      if (!profRes.data?.length) {
+        throw new Error('Permission denied updating profiles.verified. Run scripts/migration-super-admin-rls.sql in Supabase.');
+      }
+
+      // 3) Notify the user.
       await this.supabase.client.from('notifications').insert({
         user_id: r.user_id, title: 'Account Verified! ✅',
         message: 'Congratulations! Your account has been verified. A verified badge now appears on your profile.',
         type: 'success', read: false
       });
+
       this.requests.update(l => l.map(x => x.id === r.id ? { ...x, status: 'approved' } : x));
       this.toast.success(`${r.full_name} verified successfully`);
     } catch (e: any) { this.toast.error('Failed: ' + e?.message); }
@@ -229,15 +246,30 @@ export class SaVerificationComponent implements OnInit {
   async confirmReject(r: any) {
     if (!this.rejectionReason.trim()) { this.toast.error('Please enter a rejection reason'); return; }
     try {
-      await this.supabase.client.from('verification_requests')
-        .update({ status: 'rejected', rejection_reason: this.rejectionReason, reviewed_at: new Date().toISOString() }).eq('id', r.id);
-      await this.supabase.client.from('profiles')
-        .update({ verified: false, verification_status: 'rejected' }).eq('id', r.user_id);
+      const reqRes = await this.supabase.client.from('verification_requests')
+        .update({ status: 'rejected', rejection_reason: this.rejectionReason, reviewed_at: new Date().toISOString() })
+        .eq('id', r.id)
+        .select('id');
+      if (reqRes.error) throw new Error(reqRes.error.message);
+      if (!reqRes.data?.length) {
+        throw new Error('Permission denied updating verification_requests. Run scripts/migration-super-admin-rls.sql in Supabase.');
+      }
+
+      const profRes = await this.supabase.client.from('profiles')
+        .update({ verified: false, verification_status: 'rejected' })
+        .eq('id', r.user_id)
+        .select('id');
+      if (profRes.error) throw new Error(profRes.error.message);
+      if (!profRes.data?.length) {
+        throw new Error('Permission denied updating profiles. Run scripts/migration-super-admin-rls.sql in Supabase.');
+      }
+
       await this.supabase.client.from('notifications').insert({
         user_id: r.user_id, title: 'Verification Request Rejected',
         message: `Your verification request was rejected. Reason: ${this.rejectionReason}`,
         type: 'warning', read: false
       });
+
       this.requests.update(l => l.map(x => x.id === r.id ? { ...x, status: 'rejected', rejection_reason: this.rejectionReason } : x));
       this.rejectingId.set(null);
       this.toast.success('Request rejected');
