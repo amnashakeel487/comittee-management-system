@@ -103,7 +103,12 @@
             <div class="rv-av" [style.background]="getColor(item.member?.name||'')">{{ getInitials(item.member?.name||'M') }}</div>
             <div>
               <div class="wc-name">{{ item.member?.name }}</div>
-              <div class="wc-committee">{{ item.committee?.name }}</div>
+              <div class="wc-committee">
+                {{ item.committee?.name }}
+                <span class="wc-type" *ngIf="item.type==='creator'"> · Committee Admin</span>
+                <span class="wc-type" *ngIf="item.type==='participant'"> · Your Member</span>
+                <span class="wc-type" *ngIf="item.type==='member'"> · Co-Member</span>
+              </div>
             </div>
           </div>
           <button class="wc-btn" (click)="openReviewModal(item)">

@@ -63,28 +63,116 @@ export class ReviewsComponent implements OnInit {
   private async loadCommitteeMembers() {
     const userId = this.auth.currentUser()?.id;
     const email = this.auth.currentUser()?.email;
-    const { data: myMemberRecs } = await this.supabase.client.from("members").select("id").eq("email", email || "");
-    if (!myMemberRecs?.length) return;
-    const myMemberIds = myMemberRecs.map((m: any) => m.id);
-    const { data: myCMs } = await this.supabase.client.from("committee_members").select("committee_id").in("member_id", myMemberIds);
-    if (!myCMs?.length) return;
-    const committeeIds = [...new Set(myCMs.map((c: any) => c.committee_id))];
+
+    // Get committees this user CREATED
+    const { data: myCreatedCommittees } = await this.supabase.client
+      .from('committees').select('id, name').eq('created_by', userId);
+
+    // Get committees this user JOINED (via members table)
+    const { data: myMemberRecs } = await this.supabase.client
+      .from('members').select('id').eq('email', email || '');
+    const myMemberIds = (myMemberRecs || []).map((m: any) => m.id);
+
+    let joinedCommitteeIds: string[] = [];
+    if (myMemberIds.length > 0) {
+      const { data: myCMs } = await this.supabase.client
+        .from('committee_members').select('committee_id').in('member_id', myMemberIds);
+      joinedCommitteeIds = (myCMs || []).map((c: any) => c.committee_id);
+    }
+
+    // All committee IDs this user is part of
+    const allCommitteeIds = [
+      ...new Set([
+        ...(myCreatedCommittees || []).map((c: any) => c.id),
+        ...joinedCommitteeIds
+      ])
+    ];
+
+    if (!allCommitteeIds.length) { this.committeeMembers.set([]); return; }
+
+    // Get all committee details
+    const { data: allCommittees } = await this.supabase.client
+      .from('committees').select('id, name, created_by').in('id', allCommitteeIds);
+
+    // Get all members in these committees
     const { data: allCMs } = await this.supabase.client
-      .from("committee_members").select("member_id, committee_id, members(name, email, id), committees(name, id)")
-      .in("committee_id", committeeIds);
+      .from('committee_members')
+      .select('member_id, committee_id, members(id, name, email)')
+      .in('committee_id', allCommitteeIds);
+
+    // Get all committee creators (other sub-admins who created committees you joined)
+    const creatorIds = (allCommittees || [])
+      .map((c: any) => c.created_by)
+      .filter((id: string) => id !== userId);
+
+    let creatorProfiles: any[] = [];
+    if (creatorIds.length > 0) {
+      const { data: profiles } = await this.supabase.client
+        .from('profiles').select('id, name, email').in('id', creatorIds);
+      creatorProfiles = profiles || [];
+    }
+
+    // Get already-reviewed pairs
     const { data: existingReviews } = await this.supabase.client
-      .from("reviews").select("reviewed_user_id, committee_id").eq("reviewer_id", userId);
+      .from('reviews').select('reviewed_user_id, committee_id').eq('reviewer_id', userId);
     const reviewed = new Set((existingReviews || []).map((r: any) => `${r.reviewed_user_id}-${r.committee_id}`));
+
     const unique = new Map();
+
+    // Add committee members (people in same committees via members table)
     (allCMs || []).forEach((cm: any) => {
       const memberEmail = cm.members?.email;
-      if (memberEmail && memberEmail !== email) {
-        const key = `${memberEmail}-${cm.committee_id}`;
-        if (!unique.has(key) && !reviewed.has(`${cm.members?.id}-${cm.committee_id}`)) {
-          unique.set(key, { member: cm.members, committee: cm.committees, committee_id: cm.committee_id });
+      const memberId = cm.members?.id;
+      if (memberEmail && memberEmail !== email && memberId) {
+        const key = `${memberId}-${cm.committee_id}`;
+        if (!unique.has(key) && !reviewed.has(key)) {
+          const committee = (allCommittees || []).find((c: any) => c.id === cm.committee_id);
+          unique.set(key, {
+            member: cm.members,
+            committee: { id: cm.committee_id, name: committee?.name || 'Committee' },
+            committee_id: cm.committee_id,
+            type: 'member'
+          });
         }
       }
     });
+
+    // Add committee creators (sub-admins who created committees you joined)
+    creatorProfiles.forEach((profile: any) => {
+      (allCommittees || [])
+        .filter((c: any) => c.created_by === profile.id && joinedCommitteeIds.includes(c.id))
+        .forEach((c: any) => {
+          const key = `${profile.id}-${c.id}`;
+          if (!unique.has(key) && !reviewed.has(key)) {
+            unique.set(key, {
+              member: { id: profile.id, name: profile.name, email: profile.email },
+              committee: { id: c.id, name: c.name },
+              committee_id: c.id,
+              type: 'creator'
+            });
+          }
+        });
+    });
+
+    // Add members of YOUR committees (people who joined your committees)
+    (allCMs || []).forEach((cm: any) => {
+      const memberEmail = cm.members?.email;
+      const memberId = cm.members?.id;
+      const isMyCommittee = (myCreatedCommittees || []).some((c: any) => c.id === cm.committee_id);
+      if (isMyCommittee && memberEmail && memberEmail !== email && memberId) {
+        const key = `${memberId}-${cm.committee_id}`;
+        if (!unique.has(key) && !reviewed.has(key)) {
+          const committee = (allCommittees || []).find((c: any) => c.id === cm.committee_id);
+          unique.set(key, {
+            member: cm.members,
+            committee: { id: cm.committee_id, name: committee?.name || 'Committee' },
+            committee_id: cm.committee_id,
+            type: 'participant'
+          });
+        }
+      }
+    });
+
     this.committeeMembers.set([...unique.values()]);
   }
 
@@ -99,11 +187,13 @@ export class ReviewsComponent implements OnInit {
     if (!this.reviewForm.rating) { this.toast.error("Please give an overall rating"); return; }
     const item = this.reviewingUser();
     if (!item) return;
+    const reviewedId = item.member?.id;
+    if (!reviewedId) { this.toast.error("Cannot identify user to review"); return; }
     this.submitting.set(true);
     try {
       const { error } = await this.supabase.client.from("reviews").insert({
         reviewer_id: this.auth.currentUser()?.id,
-        reviewed_user_id: item.member?.id,
+        reviewed_user_id: reviewedId,
         committee_id: item.committee_id,
         rating: this.reviewForm.rating,
         communication_rating: this.reviewForm.communication_rating || null,
@@ -113,9 +203,14 @@ export class ReviewsComponent implements OnInit {
         tags: this.reviewForm.tags.length ? this.reviewForm.tags : null
       });
       if (error) throw new Error(error.message);
-      await this.updateReputationScore(item.member?.id);
-      await this.supabase.client.from("notifications").insert({ user_id: item.member?.id, title: "New Review Received", message: `${this.auth.currentUser()?.name} left you a ${this.reviewForm.rating}-star review.`, type: "info", read: false });
-      this.toast.success("Review submitted!");
+      await this.updateReputationScore(reviewedId);
+      await this.supabase.client.from("notifications").insert({
+        user_id: reviewedId,
+        title: "New Review Received ⭐",
+        message: `${this.auth.currentUser()?.name} left you a ${this.reviewForm.rating}-star review.`,
+        type: "info", read: false
+      });
+      this.toast.success("Review submitted successfully!");
       this.closeReviewModal();
       await this.loadCommitteeMembers();
     } catch (e: any) { this.toast.error("Failed: " + e?.message); }
