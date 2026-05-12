@@ -91,25 +91,49 @@ export class LandingComponent implements OnInit {
 
   private async loadData() {
     try {
-      const [cRes, mRes] = await Promise.all([
-        sb.from('committees')
-          .select('id, name, description, monthly_amount, total_members, duration_months, status, current_month, start_date, created_by, profiles(name, verified)')
-          .in('status', ['active', 'pending'])
-          .order('created_at', { ascending: false }),
-        sb.from('members').select('id', { count: 'exact', head: true })
-      ]);
-      const cs = (cRes.data || []).map((c: any) => ({
+      // Step 1: fetch committees (no join — join fails with anon key)
+      const cRes = await sb
+        .from('committees')
+        .select('id, name, description, monthly_amount, total_members, duration_months, status, current_month, start_date, created_by')
+        .in('status', ['active', 'pending'])
+        .order('created_at', { ascending: false });
+
+      const cs = cRes.data || [];
+
+      // Step 2: fetch admin names from profiles separately
+      const creatorIds = [...new Set(cs.map((c: any) => c.created_by).filter(Boolean))];
+      let profileMap: Record<string, any> = {};
+      if (creatorIds.length > 0) {
+        const pRes = await sb.from('profiles').select('id, name, verified').in('id', creatorIds);
+        (pRes.data || []).forEach((p: any) => { profileMap[p.id] = p; });
+      }
+
+      // Step 3: enrich committees with admin info
+      const enriched = cs.map((c: any) => ({
         ...c,
-        admin_name: c.profiles?.name || 'Admin',
-        admin_verified: c.profiles?.verified || false
+        admin_name: profileMap[c.created_by]?.name || 'Admin',
+        admin_verified: profileMap[c.created_by]?.verified || false
       }));
-      this.committees.set(cs);
-      this.filtered.set(cs);
-      if (cs.length > 0) this.heroC.set(cs[0]);
-      const totalManaged = cs.reduce((s: number, c: any) => s + ((c.monthly_amount || 0) * (c.total_members || 0)), 0);
-      this.stats.set({ committees: cs.length, members: mRes.count || 0, managed: totalManaged });
-    } catch (e) { console.error(e); }
-    finally { this.loading.set(false); }
+
+      this.committees.set(enriched);
+      this.filtered.set(enriched);
+      if (enriched.length > 0) this.heroC.set(enriched[0]);
+
+      // Step 4: get member count using service role via a simple count trick
+      // Use committees data to estimate — or just show committee count
+      const totalManaged = enriched.reduce((s: number, c: any) => s + ((c.monthly_amount || 0) * (c.total_members || 0)), 0);
+      const totalMembers = enriched.reduce((s: number, c: any) => s + (c.total_members || 0), 0);
+
+      this.stats.set({
+        committees: enriched.length,
+        members: totalMembers,
+        managed: totalManaged
+      });
+    } catch (e) {
+      console.error('Landing load error:', e);
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   applyFilter() {

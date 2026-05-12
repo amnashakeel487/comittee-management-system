@@ -86,9 +86,9 @@ import { ToastService } from "../../../services/toast.service";
 
     /* LEFT */
     .auth-left { flex: 1; padding: 2.5rem 3.5rem; display: flex; flex-direction: column; background: linear-gradient(155deg, #0f2035 0%, #060e1a 60%); border-right: 1px solid rgba(255,255,255,0.06); }
-    .auth-logo { font-weight: 700; font-size: 1.1rem; color: #f0f4ff; text-decoration: none; display: flex; align-items: center; gap: 7px; margin-bottom: 3rem; }
+    .auth-logo { font-weight: 700; font-size: 1.1rem; color: #f0f4ff; text-decoration: none; display: flex; align-items: center; gap: 7px; margin-bottom: 2.5rem; }
     .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #2d8cff; flex-shrink: 0; }
-    .auth-left-body { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 460px; }
+    .auth-left-body { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; max-width: 460px; }
     .auth-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(45,140,255,0.12); border: 1px solid rgba(45,140,255,0.35); color: #2d8cff; padding: .26rem .72rem; border-radius: 50px; font-size: .73rem; font-weight: 600; margin-bottom: 1.2rem; }
     h1 { font-size: clamp(1.8rem,3.5vw,2.6rem); font-weight: 700; line-height: 1.2; margin-bottom: .9rem; color: #f0f4ff; }
     h1 em { font-style: normal; color: #2d8cff; }
@@ -98,7 +98,7 @@ import { ToastService } from "../../../services/toast.service";
     .af-ico { width: 36px; height: 36px; min-width: 36px; border-radius: 9px; background: rgba(45,140,255,0.12); border: 1px solid rgba(45,140,255,0.2); display: flex; align-items: center; justify-content: center; color: #2d8cff; .material-icons { font-size: 18px; } }
     .af-t { font-size: .85rem; font-weight: 700; color: #f0f4ff; margin-bottom: 2px; }
     .af-d { font-size: .76rem; color: rgba(240,244,255,0.5); line-height: 1.5; }
-    .auth-left-foot { font-size: .75rem; color: rgba(240,244,255,0.35); line-height: 1.7; a { color: #2d8cff; text-decoration: none; &:hover { text-decoration: underline; } } }
+    .auth-left-foot { margin-top: 2rem; font-size: .75rem; color: rgba(240,244,255,0.35); line-height: 1.7; a { color: #2d8cff; text-decoration: none; &:hover { text-decoration: underline; } } }
 
     /* RIGHT */
     .auth-right { width: 460px; display: flex; align-items: center; justify-content: center; padding: 2rem; background: #060e1a; }

@@ -21,26 +21,16 @@ import { ToastService } from '../../../services/toast.service';
           <p>Join thousands of committee managers</p>
         </div>
 
-        <div class="auth-illustration">
-          <div class="illustration-card">
-            <div class="ill-header">
-              <span class="material-icons">groups</span>
-              <span>Family Savings Circle</span>
-            </div>
-            <div class="ill-stats">
-              <div class="ill-stat">
-                <span class="ill-val">PKR 50,000</span>
-                <span class="ill-label">Monthly Pool</span>
-              </div>
-              <div class="ill-stat">
-                <span class="ill-val">10</span>
-                <span class="ill-label">Members</span>
-              </div>
-            </div>
-            <div class="ill-progress">
-              <div class="ill-progress-bar" style="width:60%"></div>
-            </div>
-            <span class="ill-month">Month 6 of 10</span>
+        <div class="auth-left-content">
+          <div class="auth-badge-reg"><span class="material-icons" style="font-size:13px">verified</span> Trusted Committee Platform</div>
+          <h2 class="auth-left-title">Start Managing<br><em>Your Committees</em></h2>
+          <p class="auth-left-sub">Create and manage ROSCA committees with full transparency, automated payouts, and real-time payment tracking.</p>
+          <div class="auth-reg-feats">
+            <div class="arf"><span class="material-icons">groups</span><span>Create & manage multiple committees</span></div>
+            <div class="arf"><span class="material-icons">payments</span><span>Track payments with screenshot upload</span></div>
+            <div class="arf"><span class="material-icons">casino</span><span>Fair turn selection with spin wheel</span></div>
+            <div class="arf"><span class="material-icons">notifications_active</span><span>Automated payment reminders</span></div>
+            <div class="arf"><span class="material-icons">bar_chart</span><span>Analytics & financial reports</span></div>
           </div>
         </div>
 
@@ -140,22 +130,18 @@ import { ToastService } from '../../../services/toast.service';
 
     /* LEFT */
     .auth-left { flex: 1; padding: 2.5rem 3.5rem; display: flex; flex-direction: column; background: linear-gradient(155deg, #0f2035 0%, #060e1a 60%); border-right: 1px solid rgba(255,255,255,0.06); }
-    .auth-brand { margin-bottom: 3rem; }
+    .auth-brand { margin-bottom: 2rem; }
     .brand-icon { width: 52px; height: 52px; background: rgba(45,140,255,0.15); border: 1px solid rgba(45,140,255,0.3); border-radius: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
     .brand-icon .material-icons { color: #2d8cff; font-size: 26px; }
     .auth-brand h1 { font-size: 1.5rem; font-weight: 700; color: #f0f4ff; margin-bottom: 4px; }
     .auth-brand p { font-size: .85rem; color: rgba(240,244,255,0.5); }
 
-    .auth-illustration { flex: 1; display: flex; align-items: center; }
-    .illustration-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(45,140,255,0.2); border-radius: 14px; padding: 1.4rem; width: 100%; max-width: 380px; }
-    .ill-header { display: flex; align-items: center; gap: 8px; color: #f0f4ff; font-size: .9rem; font-weight: 600; margin-bottom: 1.2rem; }
-    .ill-header .material-icons { font-size: 18px; color: #2d8cff; }
-    .ill-stats { display: flex; gap: 1.5rem; margin-bottom: 1.2rem; }
-    .ill-val { display: block; font-size: 1.2rem; font-weight: 700; color: #f0f4ff; }
-    .ill-label { display: block; font-size: .72rem; color: rgba(240,244,255,0.45); }
-    .ill-progress { height: 5px; background: rgba(255,255,255,0.1); border-radius: 50px; margin-bottom: 6px; }
-    .ill-progress-bar { height: 100%; background: #2d8cff; border-radius: 50px; }
-    .ill-month { font-size: .72rem; color: rgba(240,244,255,0.4); }
+    .auth-left-content { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
+    .auth-badge-reg { display: inline-flex; align-items: center; gap: 5px; background: rgba(45,140,255,0.12); border: 1px solid rgba(45,140,255,0.35); color: #2d8cff; padding: .26rem .72rem; border-radius: 50px; font-size: .73rem; font-weight: 600; margin-bottom: 1rem; }
+    .auth-left-title { font-size: clamp(1.5rem,3vw,2.2rem); font-weight: 700; line-height: 1.2; margin-bottom: .8rem; color: #f0f4ff; em { font-style: normal; color: #2d8cff; } }
+    .auth-left-sub { font-size: .88rem; color: rgba(240,244,255,0.55); line-height: 1.65; margin-bottom: 1.5rem; }
+    .auth-reg-feats { display: flex; flex-direction: column; gap: .7rem; }
+    .arf { display: flex; align-items: center; gap: .65rem; font-size: .83rem; color: rgba(240,244,255,0.65); .material-icons { font-size: 18px; color: #2d8cff; flex-shrink: 0; } }
 
     .auth-footer-text { margin-top: 2rem; }
     .auth-footer-text p { font-size: .75rem; color: rgba(240,244,255,0.35); }
