@@ -189,3 +189,25 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:3.25rem 
 
 @media(max-width:860px){.hero-wrap{grid-template-columns:1fr;}.h-card{display:none;}.footer-grid{grid-template-columns:1fr 1fr;}.m-grid{grid-template-columns:1fr;}.f-grid{grid-template-columns:1fr;}.fg.full{grid-column:1;}}
 @media(max-width:540px){nav .nav-links{display:none;}.footer-grid{grid-template-columns:1fr;}.hero-stats{gap:1.2rem;}.m-acts{flex-direction:column;}}
+
+/* TEAM SECTION */
+#team{background:var(--bg);}
+.team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;}
+.team-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;display:flex;gap:1.75rem;align-items:flex-start;transition:border-color .25s,transform .25s;}
+.team-card:hover{border-color:var(--border-a);transform:translateY(-3px);}
+.team-img-wrap{position:relative;flex-shrink:0;}
+.team-img{width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid var(--border-a);display:block;}
+.team-img-fallback{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,#1E3A5F,#2563EB);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;color:#fff;border:3px solid var(--border-a);}
+.team-badge{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);padding:.18rem .65rem;border-radius:50px;font-size:.65rem;font-weight:700;white-space:nowrap;}
+.team-badge.leader{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);}
+.team-badge.dev{background:rgba(45,140,255,0.15);color:var(--accent);border:1px solid var(--border-a);}
+.team-info{flex:1;}
+.team-info h3{font-size:1.15rem;font-weight:700;margin-bottom:.25rem;}
+.team-role{font-size:.82rem;color:var(--accent);font-weight:600;margin-bottom:.7rem;}
+.team-bio{font-size:.83rem;color:var(--txt2);line-height:1.7;margin-bottom:.9rem;}
+.team-skills{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.9rem;}
+.team-skills span{background:var(--chip-bg);border:1px solid var(--border-a);color:var(--accent);padding:.2rem .65rem;border-radius:50px;font-size:.7rem;font-weight:600;}
+.team-link{display:inline-flex;align-items:center;gap:.35rem;background:var(--accent);color:#fff;padding:.42rem 1rem;border-radius:8px;font-size:.8rem;font-weight:600;text-decoration:none;transition:opacity .2s;}
+.team-link:hover{opacity:.85;}
+.team-link .material-icons{font-size:.95rem;}
+@media(max-width:860px){.team-grid{grid-template-columns:1fr;}.team-card{flex-direction:column;align-items:center;text-align:center;}.team-skills{justify-content:center;}}
