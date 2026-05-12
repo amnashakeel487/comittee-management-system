@@ -345,37 +345,40 @@ export class BrowseCommitteesComponent implements OnInit {
   async submitRequest() {
     const c = this.joiningC();
     if (!c) return;
-    const email = this.auth.currentUser()?.email;
-    const { data: memberRec } = await this.supabase.client
-      .from('members').select('id').eq('email', email || '').maybeSingle();
-
-    if (!memberRec) {
-      this.toast.error('No member record found. Ask your admin to add you as a member first.');
+    const user = this.auth.currentUser();
+    if (!user?.id) {
+      this.toast.error('Please sign in to send a join request.');
+      return;
+    }
+    if (c.created_by === user.id) {
+      this.toast.warning("You're the admin of this committee — you can't request to join it.");
       return;
     }
 
     this.submitting.set(true);
     try {
-      const { error } = await this.supabase.client.from('join_requests').upsert({
-        committee_id: c.id,
-        member_id: memberRec.id,
-        status: 'pending',
-        message: this.requestMessage || null
-      }, { onConflict: 'committee_id,member_id' });
-
-      if (error) throw new Error(error.message);
-
-      // Notify the committee admin
-      await this.supabase.client.from('notifications').insert({
-        user_id: c.created_by,
-        title: 'New Join Request',
-        message: `${this.auth.currentUser()?.name} requested to join "${c.name}"`,
-        type: 'info',
-        read: false
+      // Server-side RPC handles: find-or-create members row for the
+      // caller, upsert the join request, and notify the committee admin.
+      // See scripts/migration-self-join-request.sql.
+      const { error } = await this.supabase.client.rpc('submit_join_request_as_self', {
+        p_committee_id: c.id,
+        p_message: this.requestMessage || null
       });
 
-      this.myRequests.update(l => [...l.filter((r: any) => r.committee_id !== c.id),
-        { committee_id: c.id, member_id: memberRec.id, status: 'pending' }]);
+      if (error) {
+        const msg = (error.message || '').toLowerCase();
+        if (msg.includes('function') && msg.includes('does not exist')) {
+          throw new Error(
+            'Server function missing. Run scripts/migration-self-join-request.sql in Supabase.'
+          );
+        }
+        throw new Error(error.message);
+      }
+
+      this.myRequests.update(l => [
+        ...l.filter((r: any) => r.committee_id !== c.id),
+        { committee_id: c.id, member_id: null, status: 'pending' }
+      ]);
       this.joinSuccess.set(true);
       this.toast.success('Request sent!');
       setTimeout(() => this.closeModal(), 2000);
