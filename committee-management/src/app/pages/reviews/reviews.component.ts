@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from "@angular/core";
+import { Component, OnInit, computed, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
@@ -23,6 +23,24 @@ export class ReviewsComponent implements OnInit {
   reviewingUser = signal<any>(null);
   submitting = signal(false);
   activeTab = signal<"received"|"sent"|"write">("received");
+
+  // Live-computed reputation derived from the actual review rows the
+  // recipient has received.  This is the source of truth for the
+  // reputation card — the stored `profiles.reputation_score` /
+  // `review_count` snapshot stays in sync via the after-insert
+  // trigger added in scripts/migration-review-reputation-trigger.sql,
+  // but RLS used to silently block cross-user writes from the
+  // submit-review code path, which is why the upper card could show
+  // 0 reviews even when reviews existed.  Deriving the display from
+  // the live list guarantees correctness regardless of what's
+  // persisted on the profile row.
+  displayedReviewCount = computed(() => this.receivedReviews().length);
+  displayedReputationScore = computed(() => {
+    const list = this.receivedReviews();
+    if (!list.length) return 0;
+    const sum = list.reduce((s: number, r: any) => s + (Number(r.rating) || 0), 0);
+    return Math.round((sum / list.length) * 10) / 10;
+  });
 
   reviewForm = {
     rating: 0, communication_rating: 0, reliability_rating: 0,
@@ -381,7 +399,12 @@ export class ReviewsComponent implements OnInit {
         wrapped.code = (error as any).code;
         throw wrapped;
       }
-      await this.updateReputationScore(reviewedAuthId);
+      // The recipient's profiles.reputation_score / review_count are kept
+      // in sync by a SECURITY DEFINER trigger on the reviews table —
+      // see scripts/migration-review-reputation-trigger.sql.  We used to
+      // do the recalc client-side here, but the UPDATE was silently
+      // dropped by profiles RLS (cross-user write) and the snapshot
+      // never reflected new reviews.
       await this.supabase.client.from("notifications").insert({
         user_id: reviewedAuthId,
         title: "New Review Received ⭐",
@@ -412,13 +435,6 @@ export class ReviewsComponent implements OnInit {
       }
     }
     finally { this.submitting.set(false); }
-  }
-
-  private async updateReputationScore(userId: string) {
-    const { data: reviews } = await this.supabase.client.from("reviews").select("rating").eq("reviewed_user_id", userId);
-    if (!reviews?.length) return;
-    const avg = reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length;
-    await this.supabase.client.from("profiles").update({ reputation_score: Math.round(avg * 10) / 10, review_count: reviews.length }).eq("id", userId);
   }
 
   getReputationLevel(score: number) {

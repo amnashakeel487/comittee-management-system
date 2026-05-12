@@ -18,14 +18,14 @@
           </div>
           <div class="rep-score-row">
             <div class="rep-stars">
-              <span *ngFor="let s of getStars(myProfile()?.reputation_score||0)" class="material-icons star-icon" [class.filled]="s">star</span>
+              <span *ngFor="let s of getStars(displayedReputationScore())" class="material-icons star-icon" [class.filled]="s">star</span>
             </div>
-            <span class="rep-score-num" style="color:#0F172A">{{ (myProfile()?.reputation_score||0).toFixed(1) }}</span>
-            <span class="rep-level" [style.color]="getReputationLevel(myProfile()?.reputation_score||0).color">
-              {{ getReputationLevel(myProfile()?.reputation_score||0).label }}
+            <span class="rep-score-num" style="color:#0F172A">{{ displayedReputationScore().toFixed(1) }}</span>
+            <span class="rep-level" [style.color]="getReputationLevel(displayedReputationScore()).color">
+              {{ getReputationLevel(displayedReputationScore()).label }}
             </span>
           </div>
-          <div class="rep-meta" style="color:#64748B">{{ myProfile()?.review_count || 0 }} reviews</div>
+          <div class="rep-meta" style="color:#64748B">{{ displayedReviewCount() }} reviews</div>
         </div>
       </div>
       <div class="rep-stats">
@@ -38,7 +38,7 @@
           <div class="rs-lbl" style="color:#64748B">Late Payments</div>
         </div>
         <div class="rep-stat">
-          <div class="rs-val blue">{{ myProfile()?.review_count || 0 }}</div>
+          <div class="rs-val blue">{{ displayedReviewCount() }}</div>
           <div class="rs-lbl" style="color:#64748B">Total Reviews</div>
         </div>
       </div>
