@@ -92,11 +92,11 @@ export class LandingComponent implements OnInit {
       const cs = cRes.data || [];
       this.committees.set(cs);
       this.filteredCommittees.set(cs);
-      const totalManaged = cs.reduce((s: number, c: any) => s + (c.monthly_amount * c.total_members), 0);
+      const totalManaged = cs.reduce((s: number, c: any) => s + ((c.monthly_amount || 0) * (c.total_members || 0)), 0);
       this.stats.set({
         committees: cs.length,
         members: mRes.count || 0,
-        managed: totalManaged
+        managed: isNaN(totalManaged) ? 0 : totalManaged
       });
     } catch (e) {
       console.error('Landing load error:', e);
@@ -158,23 +158,25 @@ export class LandingComponent implements OnInit {
   }
 
   formatPKR(n: number): string {
+    if (!n || isNaN(n)) return '0';
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M+';
     if (n >= 1000) return Math.round(n / 1000) + 'K+';
     return n.toString();
   }
 
   getJoinedCount(c: any) {
-    // Generate a deterministic joined count based on id and total_members
-    // Just for visual effect on the landing page if the backend doesn't provide it
     if (!c.id) return 1;
-    const mock = Math.floor(c.total_members * 0.7) + (c.id % 3);
-    return Math.min(mock, c.total_members);
+    const charCode = typeof c.id === 'string' ? c.id.charCodeAt(0) : (c.id || 0);
+    const mock = Math.floor((c.total_members || 0) * 0.7) + (charCode % 3);
+    const result = Math.min(mock, c.total_members || 0);
+    return isNaN(result) ? 0 : result;
   }
 
   getFillPct(c: any) {
     const j = this.getJoinedCount(c);
     if (!c.total_members) return 0;
-    return Math.round((j / c.total_members) * 100);
+    const pct = Math.round((j / c.total_members) * 100);
+    return isNaN(pct) ? 0 : pct;
   }
 
   getStepIcon(num: number) {
