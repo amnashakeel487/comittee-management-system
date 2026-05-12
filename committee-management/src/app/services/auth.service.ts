@@ -31,11 +31,15 @@ export class AuthService {
       // (including the public Login page's guestGuard) to a profile network round-trip.
       if (data?.session?.user) {
         // Set a minimal user immediately from the session so isAuthenticated() works.
+        // user_metadata is typed as an index signature on @supabase/supabase-js, so
+        // properties must be accessed via bracket notation (TS4111) — `.role` /
+        // `.name` here previously broke the Angular production build under strict TS.
         const u = data.session.user;
-        const metaRole = u.user_metadata?.role;
+        const meta = (u.user_metadata || {}) as Record<string, any>;
+        const metaRole = meta['role'];
         this.currentUser.set({
           id: u.id,
-          name: u.user_metadata?.name || u.email?.split('@')[0] || 'User',
+          name: meta['name'] || u.email?.split('@')[0] || 'User',
           email: u.email || '',
           role: metaRole === 'super_admin' ? 'super_admin' : 'sub_admin',
           status: 'active',
