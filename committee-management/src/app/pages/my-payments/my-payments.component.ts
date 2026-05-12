@@ -212,8 +212,12 @@ export class MyPaymentsComponent implements OnInit {
   }
 
   private async loadPayments() {
-    const email = this.auth.currentUser()?.email;
-    const { data: memberRecs } = await this.supabase.client.from('members').select('id').eq('email', email || '');
+    const email = (this.auth.currentUser()?.email || '').trim();
+    if (!email) return;
+    // Case-insensitive email match — see joined-committees for the
+    // same fix; an .eq() miss here would make a user's own approved
+    // payments invisible on their My Payments page.
+    const { data: memberRecs } = await this.supabase.client.from('members').select('id').ilike('email', email);
     if (!memberRecs?.length) return;
     const ids = memberRecs.map((m: any) => m.id);
     const { data } = await this.supabase.client
@@ -223,8 +227,9 @@ export class MyPaymentsComponent implements OnInit {
   }
 
   private async loadJoinedCommittees() {
-    const email = this.auth.currentUser()?.email;
-    const { data: memberRecs } = await this.supabase.client.from('members').select('id').eq('email', email || '');
+    const email = (this.auth.currentUser()?.email || '').trim();
+    if (!email) return;
+    const { data: memberRecs } = await this.supabase.client.from('members').select('id').ilike('email', email);
     if (!memberRecs?.length) return;
     const ids = memberRecs.map((m: any) => m.id);
     const { data } = await this.supabase.client

@@ -245,17 +245,30 @@ export class JoinRequestsComponent implements OnInit {
         .update({ status: 'approved', reviewed_by: userId, reviewed_at: new Date().toISOString() })
         .eq('id', req.id);
 
-      // 2. Enroll member in committee (payout_order = 0, unassigned)
-      const { error: enrollError } = await this.supabase.client
+      // 2. Enroll member in committee (payout_order = 0, unassigned).
+      // We .select() after the upsert so we can detect when RLS
+      // silently filtered the write — without this, an empty success
+      // response would let approval "succeed" while the member never
+      // actually got enrolled, leaving them with a happy notification
+      // but an empty Joined Committees page.
+      const enrollRes = await this.supabase.client
         .from('committee_members')
         .upsert({
           committee_id: req.committee_id,
           member_id: req.member_id,
           payout_order: 0,
           status: 'active'
-        }, { onConflict: 'committee_id,member_id' });
+        }, { onConflict: 'committee_id,member_id' })
+        .select('id, committee_id, member_id');
 
-      if (enrollError) throw new Error(enrollError.message);
+      if (enrollRes.error) throw new Error(enrollRes.error.message);
+      if (!enrollRes.data?.length) {
+        throw new Error(
+          'Enrollment was blocked (no committee_members row written). '
+          + 'Likely an RLS issue — confirm the policy allows committee '
+          + 'admins to INSERT/UPDATE rows for their own committees.'
+        );
+      }
 
       // 3. Notify the member (find their auth user_id via profile)
       const { data: profile } = await this.supabase.client

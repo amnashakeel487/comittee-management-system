@@ -155,31 +155,68 @@ export class JoinedCommitteesComponent implements OnInit {
       const userId = this.auth.currentUser()?.id;
       if (!userId) return;
 
-      // Find member records linked to this user's email
-      const email = this.auth.currentUser()?.email;
+      const email = (this.auth.currentUser()?.email || '').trim();
+      if (!email) { this.memberships.set([]); return; }
+
+      // Look up members rows case-insensitively. The case of an email in
+      // members can differ from the auth.users email (e.g. "Maida@..."
+      // vs "maida@..."), and a plain .eq() would silently miss the row,
+      // making the page look empty even after an approved join.
       const { data: memberRecords } = await this.supabase.client
-        .from('members').select('id').eq('email', email || '');
+        .from('members').select('id').ilike('email', email);
 
       if (!memberRecords?.length) { this.memberships.set([]); return; }
-
       const memberIds = memberRecords.map((m: any) => m.id);
 
-      // Get committee_members for these member records
+      // Fetch committee_members WITHOUT the `committees(...)` embed. The
+      // embed silently returns null whenever RLS forbids the user from
+      // reading the parent committee row, and the previous filter
+      // `cm.committees !== null` would then drop that row — even though
+      // the membership itself is fine. We pull the committee + admin
+      // profile data in separate queries and stitch them client-side.
       const { data: cms } = await this.supabase.client
         .from('committee_members')
-        .select('*, committees(*, profiles(name, email))')
+        .select('member_id, committee_id, payout_order, status, joined_at')
         .in('member_id', memberIds)
         .order('joined_at', { ascending: false });
 
       if (!cms?.length) { this.memberships.set([]); return; }
 
-      // Filter out null committees and committees created by this user
-      const valid = cms.filter((cm: any) =>
-        cm.committees !== null && cm.committees?.created_by !== userId
-      );
+      const committeeIds = [...new Set(cms.map((cm: any) => cm.committee_id).filter(Boolean))];
+      const { data: committees } = await this.supabase.client
+        .from('committees')
+        .select('id, name, description, monthly_amount, total_members, duration_months, status, current_month, created_by')
+        .in('id', committeeIds);
 
-      // Enrich with payment data
-      const enriched = await Promise.all(valid.map(async (cm: any) => {
+      const committeeMap = new Map((committees || []).map((c: any) => [c.id, c]));
+
+      const adminIds = [...new Set((committees || []).map((c: any) => c.created_by).filter(Boolean))];
+      let adminMap = new Map<string, any>();
+      if (adminIds.length) {
+        const { data: profiles } = await this.supabase.client
+          .from('profiles').select('id, name, email').in('id', adminIds);
+        adminMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      }
+
+      // Attach committee + admin profile in the shape the template
+      // expects ({ committee: { ..., profiles: { name, email } } }),
+      // then drop committees we created ourselves (already shown under
+      // "My Committees").
+      const stitched = cms
+        .map((cm: any) => {
+          const committee = committeeMap.get(cm.committee_id);
+          if (!committee) return null;
+          return {
+            ...cm,
+            committee: {
+              ...committee,
+              profiles: adminMap.get(committee.created_by) || null
+            }
+          };
+        })
+        .filter((cm: any) => cm && cm.committee?.created_by !== userId);
+
+      const enriched = await Promise.all(stitched.map(async (cm: any) => {
         const [paymentsRes, payoutRes] = await Promise.all([
           this.supabase.client.from('payments').select('status').eq('member_id', cm.member_id).eq('committee_id', cm.committee_id),
           this.supabase.client.from('payouts').select('*').eq('member_id', cm.member_id).eq('committee_id', cm.committee_id).maybeSingle()
