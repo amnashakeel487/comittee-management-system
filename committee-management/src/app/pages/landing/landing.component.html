@@ -456,7 +456,7 @@
 
 <!-- ADMIN TRUST PROFILE MODAL -->
 <div class="overlay" [class.on]="showAdminProfile()" (click)="closeAdminProfile()">
-  <div class="modal trust-modal" (click)="$event.stopPropagation()" *ngIf="adminProfile() as ap" style="max-width:560px">
+  <div class="modal trust-modal" (click)="$event.stopPropagation()" *ngIf="adminProfile() as ap" style="max-width:720px">
     <div class="m-head">
       <div class="m-title">Admin Trust Profile</div>
       <button class="m-close" (click)="closeAdminProfile()"><span class="material-icons" style="font-size:16px">close</span></button>
@@ -488,7 +488,36 @@
         </div>
       </div>
 
-      <div *ngIf="ap.review_count > 0" style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--txt2);padding:0 1.25rem .5rem">Recent reviews</div>
+      <!-- =========== Automated System Review (Payment Reliability) =========== -->
+      <div class="trust-system-section">
+        <div class="trust-system-label">
+          <span class="material-icons" style="font-size:14px">policy</span>
+          <span>System Review · Payment Reliability</span>
+          <span class="auto-tag">AUTO</span>
+        </div>
+
+        <div *ngIf="systemReviewLoading()" class="trust-system-loading">
+          <div class="spinner-mini" style="width:18px;height:18px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div>
+          <span>Analyzing payment history...</span>
+        </div>
+
+        <div *ngIf="!systemReviewLoading() && systemReview() as sr"
+             class="trust-system-card" [ngClass]="'tone-' + sr.tone">
+          <div class="ts-icon"><span class="material-icons">{{ sr.icon }}</span></div>
+          <div class="ts-info">
+            <div class="ts-verdict">{{ sr.verdict }}</div>
+            <p class="ts-detail">{{ sr.detail }}</p>
+            <div class="ts-stats" *ngIf="sr.total > 0">
+              <span class="ts-stat ok"><strong>{{ sr.onTime }}</strong> on time</span>
+              <span class="ts-stat warn" *ngIf="sr.late > 0"><strong>{{ sr.late }}</strong> late</span>
+              <span class="ts-stat bad" *ngIf="sr.rejected > 0"><strong>{{ sr.rejected }}</strong> rejected</span>
+              <span class="ts-stat" *ngIf="sr.pending > 0"><strong>{{ sr.pending }}</strong> pending</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="ap.review_count > 0" style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--txt2);padding:0 1.25rem .5rem">Recent reviews from members</div>
 
       <div *ngIf="adminReviewsLoading()" style="display:flex;justify-content:center;padding:1.25rem"><div class="spinner-mini" style="width:22px;height:22px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div></div>
 

@@ -227,7 +227,36 @@ import { ToastService } from '../../services/toast.service';
           </div>
         </div>
 
-        <div class="trust-reviews-title" *ngIf="ap.review_count > 0">Recent reviews</div>
+        <!-- ============ Automated System Review (Payment Reliability) ============ -->
+        <div class="trust-system-section">
+          <div class="trust-system-label">
+            <span class="material-icons">policy</span>
+            <span>System Review · Payment Reliability</span>
+            <span class="auto-tag">AUTO</span>
+          </div>
+
+          <div *ngIf="systemReviewLoading()" class="trust-system-loading">
+            <div class="spinner" style="width:20px;height:20px;border-width:2px"></div>
+            <span>Analyzing payment history...</span>
+          </div>
+
+          <div *ngIf="!systemReviewLoading() && systemReview() as sr"
+               class="trust-system-card" [ngClass]="'tone-' + sr.tone">
+            <div class="ts-icon"><span class="material-icons">{{ sr.icon }}</span></div>
+            <div class="ts-info">
+              <div class="ts-verdict">{{ sr.verdict }}</div>
+              <p class="ts-detail">{{ sr.detail }}</p>
+              <div class="ts-stats" *ngIf="sr.total > 0">
+                <span class="ts-stat ok"><strong>{{ sr.onTime }}</strong> on time</span>
+                <span class="ts-stat warn" *ngIf="sr.late > 0"><strong>{{ sr.late }}</strong> late</span>
+                <span class="ts-stat bad" *ngIf="sr.rejected > 0"><strong>{{ sr.rejected }}</strong> rejected</span>
+                <span class="ts-stat" *ngIf="sr.pending > 0"><strong>{{ sr.pending }}</strong> pending</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="trust-reviews-title" *ngIf="ap.review_count > 0">Recent reviews from members</div>
 
         <div *ngIf="adminReviewsLoading()" class="trust-review-loading">
           <div class="spinner" style="width:24px;height:24px"></div>
@@ -333,10 +362,10 @@ import { ToastService } from '../../services/toast.service';
     .detail-admin-chev { color: var(--gray-400); font-size: 22px; }
 
     /* Admin Trust Profile modal */
-    .trust-modal { max-width: 560px; }
+    .trust-modal { max-width: 720px; }
     .trust-body { padding: 0 !important; }
-    .trust-hero { display: flex; align-items: center; gap: 16px; padding: 22px 22px 18px; border-bottom: 1px solid var(--gray-100); }
-    .trust-avatar { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: white; flex-shrink: 0; }
+    .trust-hero { display: flex; align-items: center; gap: 18px; padding: 26px 26px 22px; border-bottom: 1px solid var(--gray-100); }
+    .trust-avatar { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: white; flex-shrink: 0; }
     .trust-identity { flex: 1; }
     .trust-name { display: flex; align-items: center; font-size: 20px; font-weight: 800; color: var(--gray-900); }
     .trust-role { margin-top: 2px; font-size: 13px; color: var(--gray-500); }
@@ -359,7 +388,34 @@ import { ToastService } from '../../services/toast.service';
     .trust-review-tags { display: flex; flex-wrap: wrap; gap: 4px; }
     .trust-tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: var(--gray-200); color: var(--gray-600); &.positive { background: #d1fae5; color: #065f46; } &.negative { background: #fee2e2; color: #991b1b; } }
     .trust-empty { text-align: center; padding: 28px 22px; color: var(--gray-400); .material-icons { font-size: 42px; color: var(--gray-300); display: block; margin-bottom: 8px; } p { font-size: 13px; } }
-    .trust-foot { padding: 12px 22px 18px !important; gap: 8px; }
+    .trust-foot { padding: 14px 26px 20px !important; gap: 10px; }
+
+    /* Automated System Review (Payment Reliability) */
+    .trust-system-section { padding: 4px 26px 14px; }
+    .trust-system-label { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-500); margin-bottom: 10px; .material-icons { font-size: 16px; color: #1E3A5F; } }
+    .auto-tag { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 10px; background: #EEF3FA; color: #1E3A5F; letter-spacing: 0.08em; }
+    .trust-system-loading { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--gray-50); border: 1px dashed var(--gray-200); border-radius: 12px; color: var(--gray-500); font-size: 13px; }
+    .trust-system-card { display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; border-radius: 14px; border: 1.5px solid; box-shadow: 0 2px 8px rgba(15,23,42,0.05); }
+    .trust-system-card.tone-excellent { background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%); border-color: #34d399; color: #065f46; }
+    .trust-system-card.tone-good { background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%); border-color: #6ee7b7; color: #065f46; }
+    .trust-system-card.tone-caution { background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%); border-color: #fbbf24; color: #92400e; }
+    .trust-system-card.tone-concern { background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%); border-color: #ef4444; color: #991b1b; box-shadow: 0 4px 14px rgba(239,68,68,0.18); }
+    .trust-system-card.tone-nohistory { background: var(--gray-50); border-color: var(--gray-200); color: var(--gray-600); }
+    .trust-system-card .ts-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.6); flex-shrink: 0; .material-icons { font-size: 26px; } }
+    .trust-system-card.tone-excellent .ts-icon .material-icons { color: #059669; }
+    .trust-system-card.tone-good .ts-icon .material-icons { color: #059669; }
+    .trust-system-card.tone-caution .ts-icon .material-icons { color: #d97706; }
+    .trust-system-card.tone-concern .ts-icon .material-icons { color: #dc2626; }
+    .trust-system-card.tone-nohistory .ts-icon .material-icons { color: var(--gray-400); }
+    .trust-system-card .ts-info { flex: 1; }
+    .trust-system-card .ts-verdict { font-size: 16px; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+    .trust-system-card .ts-detail { font-size: 13px; line-height: 1.5; opacity: 0.85; margin: 0 0 10px 0; }
+    .trust-system-card .ts-stats { display: flex; flex-wrap: wrap; gap: 8px; }
+    .trust-system-card .ts-stat { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.6); }
+    .trust-system-card .ts-stat.ok { color: #065f46; }
+    .trust-system-card .ts-stat.warn { color: #92400e; background: rgba(252,211,77,0.4); }
+    .trust-system-card .ts-stat.bad { color: #991b1b; background: rgba(252,165,165,0.4); }
+    .trust-system-card .ts-stat strong { font-weight: 800; }
   `]
 })
 export class BrowseCommitteesComponent implements OnInit {
@@ -385,6 +441,10 @@ export class BrowseCommitteesComponent implements OnInit {
   showAdminProfile = signal(false);
   adminProfile = signal<any>(null);
   adminReviewsLoading = signal(false);
+  // Automated "System Review" — payment-reliability verdict computed
+  // from the admin's own history of paying their committee dues.
+  systemReview = signal<any>(null);
+  systemReviewLoading = signal(false);
   private colors = ['#2563eb','#7c3aed','#db2777','#059669','#d97706','#dc2626'];
 
   constructor(
@@ -546,6 +606,9 @@ export class BrowseCommitteesComponent implements OnInit {
     });
     this.showAdminProfile.set(true);
     this.adminReviewsLoading.set(true);
+    // System reliability runs in parallel — independent of star reviews.
+    this.systemReview.set(null);
+    this.loadSystemReview(c.created_by);
     try {
       // Most-recent 3 reviews of this admin.  Profile lookup for the
       // reviewers happens separately because reviews.reviewer_id has an
@@ -581,6 +644,108 @@ export class BrowseCommitteesComponent implements OnInit {
   closeAdminProfile() {
     this.showAdminProfile.set(false);
     this.adminProfile.set(null);
+    this.systemReview.set(null);
+  }
+
+  /**
+   * Compute an objective "System Review" of an admin's payment
+   * reliability from the actual payments table — independent of
+   * subjective member reviews.  A payment is considered LATE when it
+   * was submitted more than 14 days after its expected due date
+   * (committee.start_date + (month-1) months).  REJECTED payments are
+   * also flagged.
+   *
+   * Verdict tiers:
+   *   excellent | good | caution | concern | nohistory
+   */
+  private async loadSystemReview(adminAuthId: string) {
+    this.systemReviewLoading.set(true);
+    try {
+      const { data: prof } = await this.supabase.client
+        .from('profiles').select('email').eq('id', adminAuthId).maybeSingle();
+      const email = (prof?.email || '').trim();
+      if (!email) { this.systemReview.set(this.neutralReview()); return; }
+
+      const { data: memberRows } = await this.supabase.client
+        .from('members').select('id').ilike('email', email);
+      const memberIds = (memberRows || []).map((m: any) => m.id);
+      if (!memberIds.length) { this.systemReview.set(this.neutralReview()); return; }
+
+      const { data: pays } = await this.supabase.client
+        .from('payments')
+        .select('status, month, payment_date, created_at, committee_id, committees(start_date)')
+        .in('member_id', memberIds);
+
+      this.systemReview.set(this.computeReview(pays || []));
+    } catch {
+      // RLS may legitimately hide payments from anonymous viewers —
+      // fall back to a neutral verdict instead of erroring out.
+      this.systemReview.set(this.neutralReview());
+    } finally {
+      this.systemReviewLoading.set(false);
+    }
+  }
+
+  private neutralReview() {
+    return {
+      verdict: 'No payment history yet',
+      detail: "This admin hasn't made any committee payments through the platform yet.",
+      tone: 'nohistory',
+      icon: 'help_outline',
+      total: 0, onTime: 0, late: 0, rejected: 0, pending: 0
+    };
+  }
+
+  private computeReview(pays: any[]) {
+    let onTime = 0, late = 0, rejected = 0, pending = 0;
+    for (const p of pays) {
+      if (p.status === 'rejected') { rejected++; continue; }
+      if (p.status === 'pending' || p.status === 'under_review') { pending++; continue; }
+      // approved (or anything else treated as accepted) — check timeliness
+      const start = p.committees?.start_date ? new Date(p.committees.start_date) : null;
+      const submitted = p.payment_date ? new Date(p.payment_date) : (p.created_at ? new Date(p.created_at) : null);
+      if (!start || !submitted || isNaN(start.getTime()) || isNaN(submitted.getTime())) {
+        onTime++; continue;
+      }
+      const due = new Date(start);
+      due.setMonth(due.getMonth() + ((p.month || 1) - 1));
+      const diffDays = (submitted.getTime() - due.getTime()) / 86_400_000;
+      if (diffDays > 14) late++;
+      else onTime++;
+    }
+    const total = onTime + late + rejected + pending;
+    if (total === 0) return this.neutralReview();
+
+    if (late === 0 && rejected === 0 && onTime >= 3) {
+      return {
+        verdict: 'Excellent payment record',
+        detail: `Always paid on time — ${onTime} on-time payment${onTime === 1 ? '' : 's'} verified by the system, with no late or rejected submissions.`,
+        tone: 'excellent', icon: 'verified_user',
+        total, onTime, late, rejected, pending
+      };
+    }
+    if (late === 0 && rejected === 0) {
+      return {
+        verdict: 'Good — payments on time',
+        detail: `${onTime} on-time payment${onTime === 1 ? '' : 's'} so far. No late or rejected payments detected.`,
+        tone: 'good', icon: 'thumb_up',
+        total, onTime, late, rejected, pending
+      };
+    }
+    if (late + rejected >= 3) {
+      return {
+        verdict: 'Frequent late payments — be cautious',
+        detail: `${late} late payment${late === 1 ? '' : 's'} and ${rejected} rejected submission${rejected === 1 ? '' : 's'} detected. Consider this before joining.`,
+        tone: 'concern', icon: 'report',
+        total, onTime, late, rejected, pending
+      };
+    }
+    return {
+      verdict: 'Some late payments observed',
+      detail: `${late} late payment${late === 1 ? '' : 's'}${rejected ? ` and ${rejected} rejected` : ''} detected out of ${total} total payment${total === 1 ? '' : 's'}.`,
+      tone: 'caution', icon: 'warning_amber',
+      total, onTime, late, rejected, pending
+    };
   }
 
   joinFromAdminProfile() {

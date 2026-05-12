@@ -32,6 +32,8 @@ export class LandingComponent implements OnInit {
   showAdminProfile = signal(false);
   adminProfile = signal<any>(null);
   adminReviewsLoading = signal(false);
+  systemReview = signal<any>(null);
+  systemReviewLoading = signal(false);
   isLoggedIn = signal(false);
   currentUserEmail = signal<string>('');
   selectedC = signal<any>(null);
@@ -294,6 +296,8 @@ export class LandingComponent implements OnInit {
     });
     this.showAdminProfile.set(true);
     this.adminReviewsLoading.set(true);
+    this.systemReview.set(null);
+    this.loadSystemReview(c.created_by);
     try {
       const { data: revs } = await sb
         .from('reviews')
@@ -324,6 +328,75 @@ export class LandingComponent implements OnInit {
   closeAdminProfile() {
     this.showAdminProfile.set(false);
     this.adminProfile.set(null);
+    this.systemReview.set(null);
+  }
+
+  /** Automated payment-reliability verdict — same logic as browse page. */
+  private async loadSystemReview(adminAuthId: string) {
+    this.systemReviewLoading.set(true);
+    try {
+      const { data: prof } = await sb.from('profiles').select('email').eq('id', adminAuthId).maybeSingle();
+      const email = (prof?.email || '').trim();
+      if (!email) { this.systemReview.set(this.neutralReview()); return; }
+
+      const { data: memberRows } = await sb.from('members').select('id').ilike('email', email);
+      const memberIds = (memberRows || []).map((m: any) => m.id);
+      if (!memberIds.length) { this.systemReview.set(this.neutralReview()); return; }
+
+      const { data: pays } = await sb
+        .from('payments')
+        .select('status, month, payment_date, created_at, committee_id, committees(start_date)')
+        .in('member_id', memberIds);
+      this.systemReview.set(this.computeReview(pays || []));
+    } catch {
+      this.systemReview.set(this.neutralReview());
+    } finally {
+      this.systemReviewLoading.set(false);
+    }
+  }
+
+  private neutralReview() {
+    return {
+      verdict: 'No payment history yet',
+      detail: "This admin hasn't made any committee payments through the platform yet.",
+      tone: 'nohistory', icon: 'help_outline',
+      total: 0, onTime: 0, late: 0, rejected: 0, pending: 0
+    };
+  }
+
+  private computeReview(pays: any[]) {
+    let onTime = 0, late = 0, rejected = 0, pending = 0;
+    for (const p of pays) {
+      if (p.status === 'rejected') { rejected++; continue; }
+      if (p.status === 'pending' || p.status === 'under_review') { pending++; continue; }
+      const start = p.committees?.start_date ? new Date(p.committees.start_date) : null;
+      const submitted = p.payment_date ? new Date(p.payment_date) : (p.created_at ? new Date(p.created_at) : null);
+      if (!start || !submitted || isNaN(start.getTime()) || isNaN(submitted.getTime())) { onTime++; continue; }
+      const due = new Date(start);
+      due.setMonth(due.getMonth() + ((p.month || 1) - 1));
+      const diffDays = (submitted.getTime() - due.getTime()) / 86_400_000;
+      if (diffDays > 14) late++; else onTime++;
+    }
+    const total = onTime + late + rejected + pending;
+    if (total === 0) return this.neutralReview();
+    if (late === 0 && rejected === 0 && onTime >= 3) {
+      return { verdict: 'Excellent payment record',
+               detail: `Always paid on time — ${onTime} on-time payment${onTime === 1 ? '' : 's'} verified by the system, with no late or rejected submissions.`,
+               tone: 'excellent', icon: 'verified_user', total, onTime, late, rejected, pending };
+    }
+    if (late === 0 && rejected === 0) {
+      return { verdict: 'Good — payments on time',
+               detail: `${onTime} on-time payment${onTime === 1 ? '' : 's'} so far. No late or rejected payments detected.`,
+               tone: 'good', icon: 'thumb_up', total, onTime, late, rejected, pending };
+    }
+    if (late + rejected >= 3) {
+      return { verdict: 'Frequent late payments — be cautious',
+               detail: `${late} late payment${late === 1 ? '' : 's'} and ${rejected} rejected submission${rejected === 1 ? '' : 's'} detected. Consider this before joining.`,
+               tone: 'concern', icon: 'report', total, onTime, late, rejected, pending };
+    }
+    return { verdict: 'Some late payments observed',
+             detail: `${late} late payment${late === 1 ? '' : 's'}${rejected ? ` and ${rejected} rejected` : ''} detected out of ${total} total payment${total === 1 ? '' : 's'}.`,
+             tone: 'caution', icon: 'warning_amber', total, onTime, late, rejected, pending };
   }
 
   joinFromAdminProfile() {
