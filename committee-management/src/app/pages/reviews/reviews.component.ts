@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, signal } from "@angular/core";
+import { Component, OnInit, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
@@ -197,27 +197,29 @@ export class ReviewsComponent implements OnInit {
     const item = this.reviewingUser();
     if (!item) return;
 
-    // The member.id from committee_members is the members table ID, NOT auth user ID
-    // We need to find the auth user ID from profiles table using email
-    let reviewedAuthId = item.member?.id;
-
-    // If this is a member from the members table (not a profile), look up their auth ID by email
-    if (item.type === 'member' || item.type === 'participant') {
-      const memberEmail = item.member?.email;
-      if (memberEmail) {
-        const { data: profile } = await this.supabase.client
-          .from('profiles').select('id').eq('email', memberEmail).maybeSingle();
-        if (profile?.id) {
-          reviewedAuthId = profile.id;
-        } else {
-          // No auth account found for this member — they can't be reviewed yet
-          this.toast.error(`${item.member?.name} doesn't have an account yet and cannot be reviewed.`);
-          return;
-        }
-      }
+    // reviews.reviewed_user_id has a FK to auth.users(id), so we MUST insert a valid auth user id.
+    // Always resolve via profiles by email (case-insensitive) regardless of `type` — for
+    // type='member'/'participant' the member.id is a members-table id (not an auth id), and even
+    // for type='creator' an email-based lookup protects against orphaned/stale ids.
+    const memberEmail = (item.member?.email || '').trim();
+    if (!memberEmail) {
+      this.toast.error(`Cannot review ${item.member?.name || 'this user'} — no email on record.`);
+      return;
     }
 
-    if (!reviewedAuthId) { this.toast.error("Cannot identify user to review"); return; }
+    const { data: profile, error: profErr } = await this.supabase.client
+      .from('profiles')
+      .select('id')
+      .ilike('email', memberEmail)
+      .maybeSingle();
+
+    if (profErr) { this.toast.error("Could not look up user: " + profErr.message); return; }
+    if (!profile?.id) {
+      this.toast.error(`${item.member?.name} doesn't have an account yet and cannot be reviewed.`);
+      return;
+    }
+
+    const reviewedAuthId = profile.id;
     if (reviewedAuthId === this.auth.currentUser()?.id) { this.toast.error("You cannot review yourself"); return; }
 
     this.submitting.set(true);
