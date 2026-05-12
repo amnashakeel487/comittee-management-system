@@ -26,7 +26,7 @@ export class AuthService {
     }).catch(() => this._resolve());
 
     this.supabase.onAuthStateChange(async (event, session) => {
-      if (event === 'TOKEN_REFRESHED' && session?.user) {
+      if ((event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session?.user) {
         this.loadUserProfile(session.user).catch(() => {});
       } else if (event === 'SIGNED_OUT') {
         this.currentUser.set(null);

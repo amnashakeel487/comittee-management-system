@@ -71,8 +71,13 @@ import { DataService } from '../../services/data.service';
           <button class="user-menu-btn" (click)="toggleUserMenu()">
             <div class="avatar avatar-sm user-avatar">{{ getUserInitials() }}</div>
             <div class="user-info">
-              <span class="user-name">{{ auth.currentUser()?.name || 'User' }}</span>
-              <span class="user-role">Admin</span>
+              <span class="user-name">
+                {{ auth.currentUser()?.name || 'User' }}
+                <span class="verified-badge-nav" *ngIf="auth.currentUser()?.verified" title="Verified">
+                  <span class="material-icons">verified</span>
+                </span>
+              </span>
+              <span class="user-role">{{ auth.currentUser()?.role === 'super_admin' ? 'Super Admin' : 'Admin' }}</span>
             </div>
             <span class="material-icons chevron">expand_more</span>
           </button>
@@ -263,8 +268,9 @@ import { DataService } from '../../services/data.service';
       text-align: left;
     }
 
-    .user-name { font-size: 13px; font-weight: 600; color: #0F172A; }
-    .user-role { font-size: 11px; color: #2E5490; }
+    .user-name { font-size: 13px; font-weight: 600; color: #f0f4ff; display: flex; align-items: center; gap: 4px; }
+    .verified-badge-nav { display: inline-flex; align-items: center; .material-icons { font-size: 14px; color: #2d8cff; } }
+    .user-role { font-size: 11px; color: rgba(255,255,255,0.4); }
     .chevron { font-size: 18px; color: #94A3B8; }
 
     .user-dropdown { width: 200px; padding: 8px; }

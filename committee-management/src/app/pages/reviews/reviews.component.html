@@ -1,0 +1,183 @@
+<div class="rv-page">
+  <div class="page-header">
+    <h1>Reviews & Reputation</h1>
+    <p>Your public reputation score and reviews from committee members</p>
+  </div>
+
+  <div *ngIf="loading()" class="rv-loading"><div class="rv-spinner"></div></div>
+
+  <ng-container *ngIf="!loading()">
+    <!-- Reputation Card -->
+    <div class="rep-card" *ngIf="myProfile()">
+      <div class="rep-left">
+        <div class="rep-avatar" [style.background]="getColor(myProfile()?.name||'')">{{ getInitials(myProfile()?.name||'U') }}</div>
+        <div class="rep-info">
+          <div class="rep-name">
+            {{ myProfile()?.name }}
+            <span class="rep-verified" *ngIf="myProfile()?.verified"><span class="material-icons">verified</span></span>
+          </div>
+          <div class="rep-score-row">
+            <div class="rep-stars">
+              <span *ngFor="let s of getStars(myProfile()?.reputation_score||0)" class="material-icons star-icon" [class.filled]="s">star</span>
+            </div>
+            <span class="rep-score-num">{{ (myProfile()?.reputation_score||0).toFixed(1) }}</span>
+            <span class="rep-level" [style.color]="getReputationLevel(myProfile()?.reputation_score||0).color">
+              {{ getReputationLevel(myProfile()?.reputation_score||0).label }}
+            </span>
+          </div>
+          <div class="rep-meta">{{ myProfile()?.review_count || 0 }} reviews</div>
+        </div>
+      </div>
+      <div class="rep-stats">
+        <div class="rep-stat">
+          <div class="rs-val green">{{ (myProfile()?.on_time_payment_percentage||0).toFixed(0) }}%</div>
+          <div class="rs-lbl">On-Time Payments</div>
+        </div>
+        <div class="rep-stat">
+          <div class="rs-val red">{{ (myProfile()?.late_payment_percentage||0).toFixed(0) }}%</div>
+          <div class="rs-lbl">Late Payments</div>
+        </div>
+        <div class="rep-stat">
+          <div class="rs-val blue">{{ myProfile()?.review_count || 0 }}</div>
+          <div class="rs-lbl">Total Reviews</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="rv-tabs">
+      <button class="rv-tab" [class.active]="activeTab()==='received'" (click)="activeTab.set('received')">
+        <span class="material-icons">reviews</span> Reviews Received ({{ receivedReviews().length }})
+      </button>
+      <button class="rv-tab" [class.active]="activeTab()==='write'" (click)="activeTab.set('write')">
+        <span class="material-icons">rate_review</span> Write a Review ({{ committeeMembers().length }} available)
+      </button>
+    </div>
+
+    <!-- Received Reviews -->
+    <div *ngIf="activeTab()==='received'">
+      <div *ngIf="receivedReviews().length===0" class="rv-empty">
+        <span class="material-icons">reviews</span>
+        <h3>No reviews yet</h3>
+        <p>Reviews from committee members will appear here</p>
+      </div>
+      <div class="rv-list">
+        <div *ngFor="let r of receivedReviews()" class="rv-card">
+          <div class="rv-card-header">
+            <div class="rv-reviewer">
+              <div class="rv-av" [style.background]="getColor(r.reviewer?.name||'')">{{ getInitials(r.reviewer?.name||'R') }}</div>
+              <div>
+                <div class="rv-reviewer-name">{{ r.reviewer?.name || 'Anonymous' }}</div>
+                <div class="rv-committee">{{ r.committee?.name || 'Committee' }}</div>
+              </div>
+            </div>
+            <div class="rv-date">{{ r.created_at | date:'MMM d, y' }}</div>
+          </div>
+          <div class="rv-stars-row">
+            <span *ngFor="let s of getStars(r.rating)" class="material-icons star-icon" [class.filled]="s">star</span>
+            <span class="rv-rating-num">{{ r.rating }}/5</span>
+          </div>
+          <div class="rv-sub-ratings" *ngIf="r.communication_rating || r.reliability_rating || r.payment_behavior_rating">
+            <div class="rv-sub" *ngIf="r.communication_rating"><span>Communication</span><div class="rv-sub-stars"><span *ngFor="let s of getStars(r.communication_rating)" class="material-icons mini-star" [class.filled]="s">star</span></div></div>
+            <div class="rv-sub" *ngIf="r.reliability_rating"><span>Reliability</span><div class="rv-sub-stars"><span *ngFor="let s of getStars(r.reliability_rating)" class="material-icons mini-star" [class.filled]="s">star</span></div></div>
+            <div class="rv-sub" *ngIf="r.payment_behavior_rating"><span>Payment</span><div class="rv-sub-stars"><span *ngFor="let s of getStars(r.payment_behavior_rating)" class="material-icons mini-star" [class.filled]="s">star</span></div></div>
+          </div>
+          <p class="rv-message" *ngIf="r.review_message">"{{ r.review_message }}"</p>
+          <div class="rv-tags" *ngIf="r.tags?.length">
+            <span *ngFor="let tag of r.tags" class="rv-tag" [class.positive]="['trusted','cooperative','responsive','recommended'].includes(tag)" [class.negative]="['late_payer','fraud_risk'].includes(tag)">{{ tag | titlecase }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Write Review -->
+    <div *ngIf="activeTab()==='write'">
+      <div *ngIf="committeeMembers().length===0" class="rv-empty">
+        <span class="material-icons">rate_review</span>
+        <h3>No members to review</h3>
+        <p>You can review members after participating in a committee together. Already reviewed members won't appear here.</p>
+      </div>
+      <div class="write-grid">
+        <div *ngFor="let item of committeeMembers()" class="write-card">
+          <div class="wc-user">
+            <div class="rv-av" [style.background]="getColor(item.member?.name||'')">{{ getInitials(item.member?.name||'M') }}</div>
+            <div>
+              <div class="wc-name">{{ item.member?.name }}</div>
+              <div class="wc-committee">{{ item.committee?.name }}</div>
+            </div>
+          </div>
+          <button class="wc-btn" (click)="openReviewModal(item)">
+            <span class="material-icons">rate_review</span> Write Review
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Review Modal -->
+  <div class="rv-overlay" *ngIf="showReviewModal()" (click)="closeReviewModal()">
+    <div class="rv-modal" (click)="$event.stopPropagation()">
+      <div class="rv-modal-head">
+        <h3>Review {{ reviewingUser()?.member?.name }}</h3>
+        <button class="rv-close" (click)="closeReviewModal()">✕</button>
+      </div>
+      <div class="rv-modal-body">
+        <div class="rv-modal-user">
+          <div class="rv-av" [style.background]="getColor(reviewingUser()?.member?.name||'')">{{ getInitials(reviewingUser()?.member?.name||'M') }}</div>
+          <div><strong>{{ reviewingUser()?.member?.name }}</strong><span>{{ reviewingUser()?.committee?.name }}</span></div>
+        </div>
+
+        <!-- Overall Rating -->
+        <div class="rating-section">
+          <label>Overall Rating *</label>
+          <div class="star-picker">
+            <span *ngFor="let i of [1,2,3,4,5]" class="material-icons star-pick" [class.active]="reviewForm.rating>=i" (click)="setRating('rating',i)">star</span>
+          </div>
+        </div>
+
+        <!-- Sub Ratings -->
+        <div class="sub-ratings-grid">
+          <div class="sub-rating-item">
+            <label>Communication</label>
+            <div class="star-picker sm">
+              <span *ngFor="let i of [1,2,3,4,5]" class="material-icons star-pick sm" [class.active]="reviewForm.communication_rating>=i" (click)="setRating('communication_rating',i)">star</span>
+            </div>
+          </div>
+          <div class="sub-rating-item">
+            <label>Reliability</label>
+            <div class="star-picker sm">
+              <span *ngFor="let i of [1,2,3,4,5]" class="material-icons star-pick sm" [class.active]="reviewForm.reliability_rating>=i" (click)="setRating('reliability_rating',i)">star</span>
+            </div>
+          </div>
+          <div class="sub-rating-item">
+            <label>Payment Behavior</label>
+            <div class="star-picker sm">
+              <span *ngFor="let i of [1,2,3,4,5]" class="material-icons star-pick sm" [class.active]="reviewForm.payment_behavior_rating>=i" (click)="setRating('payment_behavior_rating',i)">star</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="tags-section">
+          <label>Tags (optional)</label>
+          <div class="tags-grid">
+            <button *ngFor="let tag of availableTags" class="tag-btn" [class.selected]="hasTag(tag.key)" [style.border-color]="hasTag(tag.key) ? tag.color : ''" [style.color]="hasTag(tag.key) ? tag.color : ''" (click)="toggleTag(tag.key)">{{ tag.label }}</button>
+          </div>
+        </div>
+
+        <!-- Message -->
+        <div class="rv-fg">
+          <label>Review Message (optional)</label>
+          <textarea class="rv-input" rows="3" [(ngModel)]="reviewForm.review_message" placeholder="Share your experience working with this person..."></textarea>
+        </div>
+      </div>
+      <div class="rv-modal-foot">
+        <button class="rv-btn-primary" (click)="submitReview()" [disabled]="submitting()">
+          <span class="material-icons">{{ submitting() ? 'hourglass_empty' : 'send' }}</span>
+          {{ submitting() ? 'Submitting...' : 'Submit Review' }}
+        </button>
+        <button class="rv-btn-ghost" (click)="closeReviewModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

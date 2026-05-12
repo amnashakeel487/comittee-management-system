@@ -58,6 +58,7 @@ export const routes: Routes = [
       { path: "payments", loadComponent: () => import("./pages/payments/payments.component").then(m => m.PaymentsComponent) },
       { path: "my-payments", loadComponent: () => import("./pages/my-payments/my-payments.component").then(m => m.MyPaymentsComponent) },
       { path: "verification", loadComponent: () => import("./pages/verification/verification-request.component").then(m => m.VerificationRequestComponent) },
+      { path: "reviews", loadComponent: () => import("./pages/reviews/reviews.component").then(m => m.ReviewsComponent) },
       { path: "join-requests", loadComponent: () => import("./pages/join-requests/join-requests.component").then(m => m.JoinRequestsComponent) },
       { path: "payouts", loadComponent: () => import("./pages/payouts/payouts.component").then(m => m.PayoutsComponent) },
       { path: "reports", loadComponent: () => import("./pages/reports/reports.component").then(m => m.ReportsComponent) },

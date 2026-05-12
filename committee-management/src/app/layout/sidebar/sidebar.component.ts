@@ -91,6 +91,10 @@ interface NavItem {
             <span class="nav-label" *ngIf="!collapsed">Get Verified</span>
             <span class="nav-badge" *ngIf="!collapsed && !auth.currentUser()?.verified" style="background:#f59e0b">!</span>
           </a>
+          <a routerLink="/reviews" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Reviews' : ''">
+            <span class="material-icons nav-icon">reviews</span>
+            <span class="nav-label" *ngIf="!collapsed">Reviews & Reputation</span>
+          </a>
         </div>
 
         <div class="nav-section nav-bottom">
@@ -112,7 +116,12 @@ interface NavItem {
           {{ getUserInitials() }}
         </div>
         <div class="user-info">
-          <span class="user-name">{{ auth.currentUser()?.name || 'User' }}</span>
+          <span class="user-name">
+            {{ auth.currentUser()?.name || 'User' }}
+            <span class="sb-verified" *ngIf="auth.currentUser()?.verified" title="Verified">
+              <span class="material-icons">verified</span>
+            </span>
+          </span>
           <span class="user-email">{{ auth.currentUser()?.email || '' }}</span>
         </div>
       </div>
@@ -297,7 +306,12 @@ interface NavItem {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
+
+    .sb-verified { display: inline-flex; align-items: center; flex-shrink: 0; .material-icons { font-size: 13px; color: #2d8cff; } }
 
     .user-email {
       font-size: 11px;
