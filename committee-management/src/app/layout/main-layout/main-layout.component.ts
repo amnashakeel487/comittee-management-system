@@ -68,11 +68,15 @@ export class MainLayoutComponent {
     '/dashboard': 'Dashboard',
     '/committees': 'My Committees',
     '/committees/create': 'Create Committee',
+    '/joined-committees': 'Joined Committees',
+    '/browse': 'Browse & Join',
     '/members': 'Members',
     '/payments': 'Payments',
+    '/my-payments': 'My Payments',
     '/payouts': 'Payouts',
     '/reports': 'Reports',
     '/profile': 'Profile',
+    '/join-requests': 'Join Requests',
   };
 
   currentPageTitle = signal('Dashboard');

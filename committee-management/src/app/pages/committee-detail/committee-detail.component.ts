@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -103,7 +103,7 @@ export class CommitteeDetailComponent implements OnInit {
           email: currentUser.email || '',
           phone: currentUser.phone || '0000000000',
           cnic: currentUser.cnic || '00000-0000000-0',
-          role: 'admin',
+          role: 'sub_admin',
           payout_order: 1,
           status: 'active'
         });
@@ -111,12 +111,12 @@ export class CommitteeDetailComponent implements OnInit {
         this.allMembers.update(list => [...list, adminMember!]);
       }
 
-      // Assign admin to Turn #1 — this also auto-generates the payout record
+      // Assign admin to Turn #1 � this also auto-generates the payout record
       const cm = await this.dataService.assignMemberToCommittee(
         adminMember.id, committee.id, 1, 'manual'
       );
 
-      this.toast.success(`You've been added as Turn #1 — Month 1 payout scheduled for you`);
+      this.toast.success(`You've been added as Turn #1 � Month 1 payout scheduled for you`);
       return [cm];
     } catch (e: any) {
       console.warn('Auto-enroll admin warning:', e?.message);
@@ -165,7 +165,7 @@ export class CommitteeDetailComponent implements OnInit {
     return Math.round(((c.current_month || 0) / c.duration_months) * 100);
   }
 
-  // ── Add member to committee ───────────────────────────────────
+  // -- Add member to committee -----------------------------------
   openAddMemberModal() {
     this.selectedMemberIdToAdd = '';
     this.showAddMemberModal.set(true);
@@ -214,7 +214,7 @@ export class CommitteeDetailComponent implements OnInit {
     }
   }
 
-  // ── Manual assignment from dropdown ──────────────────────────
+  // -- Manual assignment from dropdown --------------------------
   async assignManually(slot: PayoutSlot, memberId: string) {
     if (!memberId || !this.committee()?.id) return;
     const cid = this.committee()!.id;
@@ -244,12 +244,12 @@ export class CommitteeDetailComponent implements OnInit {
     }
   }
 
-  // ── Remove assignment from a slot (keep member enrolled) ─────
+  // -- Remove assignment from a slot (keep member enrolled) -----
   async removeSlotAssignment(slot: PayoutSlot) {
     if (!slot.assigned || !this.committee()?.id) return;
     if (!confirm(`Remove ${slot.assigned.member?.name} from Month ${slot.month}?`)) return;
     try {
-      // Reset payout_order to 0 — member stays enrolled but unassigned
+      // Reset payout_order to 0 � member stays enrolled but unassigned
       await this.dataService.assignMemberToCommittee(slot.assigned.member_id, this.committee()!.id, 0, 'manual');
       this.committeeMembers.update(l => l.map(cm =>
         cm.member_id === slot.assigned!.member_id ? { ...cm, payout_order: 0 } : cm
@@ -263,7 +263,7 @@ export class CommitteeDetailComponent implements OnInit {
     }
   }
 
-  // ── Spin Wheel for a specific month ──────────────────────────
+  // -- Spin Wheel for a specific month --------------------------
   openSpinForMonth(month: number) {
     if (this.unassignedMembers().length === 0) {
       this.toast.warning('No unassigned enrolled members. Add members to the committee first.');
@@ -314,7 +314,7 @@ export class CommitteeDetailComponent implements OnInit {
       ctx.font = 'bold 12px Inter, sans-serif';
       ctx.shadowColor = 'rgba(0,0,0,0.4)';
       ctx.shadowBlur = 3;
-      const label = m.name.length > 11 ? m.name.slice(0, 10) + '…' : m.name;
+      const label = m.name.length > 11 ? m.name.slice(0, 10) + '�' : m.name;
       ctx.fillText(label, r - 10, 5);
       ctx.restore();
     });
@@ -389,7 +389,7 @@ export class CommitteeDetailComponent implements OnInit {
       this.payoutSlots.update(slots =>
         slots.map(s => s.month === month ? { ...s, assigned: cm } : s)
       );
-      this.toast.success(`🎉 Month ${month}: ${winner.name} selected by Spin Wheel!`);
+      this.toast.success(`?? Month ${month}: ${winner.name} selected by Spin Wheel!`);
       this.closeSpinModal();
     } catch (e: any) {
       this.toast.error('Failed: ' + (e?.message || ''));
@@ -398,7 +398,7 @@ export class CommitteeDetailComponent implements OnInit {
 
   spinAgain() { this.spinResult.set(null); this.spinAngle = 0; this.drawWheel(); }
 
-  // ── Activate / Complete ───────────────────────────────────────
+  // -- Activate / Complete ---------------------------------------
   async activateCommittee() {
     const c = this.committee();
     if (!c) return;

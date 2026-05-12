@@ -7,9 +7,10 @@ export interface User {
   address?: string;
   cnic?: string;
   avatar?: string;
-  role: 'admin' | 'super_admin';
+  role: 'sub_admin' | 'super_admin';
   status?: 'active' | 'suspended' | 'banned';
   verified?: boolean;
+  trust_score?: number;
   created_at?: string;
 }
 
@@ -31,21 +32,7 @@ export interface Committee {
   current_month?: number;
 }
 
-// ── Committee Participant (replaces Member) ───────────────────
-// Now references profiles (auth users) directly
-export interface CommitteeParticipant {
-  id: string;
-  committee_id: string;
-  user_id: string;           // references profiles.id
-  payout_order: number;
-  turn_assigned_by?: 'manual' | 'spin';
-  status: 'active' | 'inactive';
-  joined_at?: string;
-  profile?: User;            // joined profile data
-  committee?: Committee;
-}
-
-// ── Legacy Member (kept for backward compat with existing data) ──
+// ── Member (legacy DB table — still used for committee participants) ──
 export interface Member {
   id: string;
   committee_id?: string | null;
@@ -56,7 +43,7 @@ export interface Member {
   address?: string;
   cnic?: string;
   profile_image?: string;
-  role: 'admin' | 'member';
+  role: 'sub_admin' | 'member';
   payout_order: number;
   status: 'active' | 'inactive';
   login_password?: string;
@@ -64,7 +51,7 @@ export interface Member {
   created_at?: string;
 }
 
-// ── CommitteeMember (junction — kept for DB compat) ──────────
+// ── CommitteeMember (junction table) ─────────────────────────
 export interface CommitteeMember {
   id: string;
   committee_id: string;
@@ -145,4 +132,5 @@ export interface DashboardStats {
   paidPayments: number;
   totalCollected: number;
   upcomingPayout?: Payout;
+  joinedCommittees?: number;
 }

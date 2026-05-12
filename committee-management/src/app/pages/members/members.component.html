@@ -1,4 +1,4 @@
-ï»¿<div class="members-page">
+<div class="members-page">
   <div class="page-header">
     <div class="page-title">
       <h1>Members</h1>
@@ -69,8 +69,8 @@
             <td class="text-sm">{{ member.phone }}</td>
             <td class="text-sm text-muted">{{ member.cnic }}</td>
             <td>
-              <span class="badge" [ngClass]="member.role === 'admin' ? 'badge-primary' : 'badge-gray'">
-                <span class="material-icons" style="font-size:11px">{{ member.role === 'admin' ? 'admin_panel_settings' : 'person' }}</span>
+              <span class="badge" [ngClass]="member.role === 'sub_admin' ? 'badge-primary' : 'badge-gray'">
+                <span class="material-icons" style="font-size:11px">{{ member.role === 'sub_admin' ? 'admin_panel_settings' : 'person' }}</span>
                 {{ member.role | titlecase }}
               </span>
             </td>
@@ -86,7 +86,7 @@
                       title="View login credentials">
                 <span class="material-icons">key</span> View
               </button>
-              <span *ngIf="!hasCredential(member)" class="no-cred-text">â€”</span>
+              <span *ngIf="!hasCredential(member)" class="no-cred-text">—</span>
             </td>
             <td>
               <div class="action-btns">
@@ -224,7 +224,7 @@
             </div>
             <div class="cred-value-row">
               <span class="cred-value password-value">
-                {{ showPassword() ? creds.password : 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' }}
+                {{ showPassword() ? creds.password : '••••••••••' }}
               </span>
               <button class="copy-btn" (click)="copyToClipboard(creds.password, 'password')" [class.copied]="copiedField() === 'password'">
                 <span class="material-icons">{{ copiedField() === 'password' ? 'check' : 'content_copy' }}</span>

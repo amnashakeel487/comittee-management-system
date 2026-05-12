@@ -32,16 +32,59 @@ interface NavItem {
       <nav class="sidebar-nav">
         <div class="nav-section">
           <span class="nav-section-label" *ngIf="!collapsed">MAIN MENU</span>
-          <a *ngFor="let item of navItems"
-             [routerLink]="item.route"
-             routerLinkActive="active"
-             class="nav-item"
-             [title]="collapsed ? item.label : ''">
-            <span class="material-icons nav-icon">{{ item.icon }}</span>
-            <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
-            <span class="nav-badge" *ngIf="item.badgeSignal && item.badgeSignal() > 0 && !collapsed">
-              {{ item.badgeSignal() }}
-            </span>
+          <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Dashboard' : ''">
+            <span class="material-icons nav-icon">dashboard</span>
+            <span class="nav-label" *ngIf="!collapsed">Dashboard</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-label" *ngIf="!collapsed">MY COMMITTEES</span>
+          <a routerLink="/committees" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'My Committees' : ''">
+            <span class="material-icons nav-icon">groups</span>
+            <span class="nav-label" *ngIf="!collapsed">My Committees</span>
+          </a>
+          <a routerLink="/committees/create" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Create Committee' : ''">
+            <span class="material-icons nav-icon">add_circle</span>
+            <span class="nav-label" *ngIf="!collapsed">Create Committee</span>
+          </a>
+          <a routerLink="/members" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Members' : ''">
+            <span class="material-icons nav-icon">people</span>
+            <span class="nav-label" *ngIf="!collapsed">Members</span>
+          </a>
+          <a routerLink="/payments" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Payments' : ''">
+            <span class="material-icons nav-icon">payments</span>
+            <span class="nav-label" *ngIf="!collapsed">Payments</span>
+            <span class="nav-badge" *ngIf="pendingPaymentsCount() > 0 && !collapsed">{{ pendingPaymentsCount() }}</span>
+          </a>
+          <a routerLink="/join-requests" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Join Requests' : ''">
+            <span class="material-icons nav-icon">person_add</span>
+            <span class="nav-label" *ngIf="!collapsed">Join Requests</span>
+            <span class="nav-badge" *ngIf="pendingRequestsCount() > 0 && !collapsed">{{ pendingRequestsCount() }}</span>
+          </a>
+          <a routerLink="/payouts" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Payouts' : ''">
+            <span class="material-icons nav-icon">account_balance_wallet</span>
+            <span class="nav-label" *ngIf="!collapsed">Payouts</span>
+          </a>
+          <a routerLink="/reports" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Reports' : ''">
+            <span class="material-icons nav-icon">bar_chart</span>
+            <span class="nav-label" *ngIf="!collapsed">Reports</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-label" *ngIf="!collapsed">PARTICIPATION</span>
+          <a routerLink="/joined-committees" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Joined Committees' : ''">
+            <span class="material-icons nav-icon">how_to_reg</span>
+            <span class="nav-label" *ngIf="!collapsed">Joined Committees</span>
+          </a>
+          <a routerLink="/browse" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Browse & Join' : ''">
+            <span class="material-icons nav-icon">explore</span>
+            <span class="nav-label" *ngIf="!collapsed">Browse & Join</span>
+          </a>
+          <a routerLink="/my-payments" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'My Payments' : ''">
+            <span class="material-icons nav-icon">receipt_long</span>
+            <span class="nav-label" *ngIf="!collapsed">My Payments</span>
           </a>
         </div>
 
@@ -268,6 +311,7 @@ export class SidebarComponent implements OnInit {
 
   navItems: NavItem[] = [
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
+    // MY COMMITTEES section
     { label: 'My Committees', icon: 'groups', route: '/committees' },
     { label: 'Create Committee', icon: 'add_circle', route: '/committees/create' },
     { label: 'Members', icon: 'people', route: '/members' },

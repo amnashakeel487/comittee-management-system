@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, signal } from "@angular/core";
+import { Component, OnInit, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { DataService } from "../../services/data.service";
@@ -35,7 +35,7 @@ export class MembersComponent implements OnInit {
 
   memberForm = {
     name: "", phone: "", email: "", cnic: "" as string | undefined,
-    role: "member" as "admin" | "member",
+    role: "member" as "sub_admin" | "member",
     payout_order: 1
   };
 
@@ -54,7 +54,7 @@ export class MembersComponent implements OnInit {
     }
   }
 
-  // ── Credential Storage ──────────────────────────────────────
+  // -- Credential Storage --------------------------------------
 
   getCredential(member: Member): StoredCredential | null {
     if (!member.login_password) return null;
@@ -87,10 +87,10 @@ export class MembersComponent implements OnInit {
     this.viewingCredentials.set(null);
   }
 
-  // ── Members CRUD ────────────────────────────────────────────
+  // -- Members CRUD --------------------------------------------
 
   activeCount() { return this.members().filter(m => m.status === "active").length; }
-  adminCount() { return this.members().filter(m => m.role === "admin").length; }
+  adminCount() { return this.members().filter(m => m.role === "sub_admin").length; }
 
   onSearch(event: Event) {
     const q = (event.target as HTMLInputElement).value.toLowerCase();

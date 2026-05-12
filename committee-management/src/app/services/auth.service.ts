@@ -21,9 +21,7 @@ export class AuthService {
 
   private initAuth() {
     this.supabase.getSession().then(async ({ data }) => {
-      if (data?.session?.user) {
-        await this.loadUserProfile(data.session.user);
-      }
+      if (data?.session?.user) await this.loadUserProfile(data.session.user);
       this._resolve();
     }).catch(() => this._resolve());
 
@@ -43,12 +41,16 @@ export class AuthService {
     }
   }
 
-  private async loadUserProfile(supabaseUser: any) {
+  async loadUserProfile(supabaseUser: any) {
     try {
       const { data: profile, error } = await this.supabase.client
         .from('profiles').select('*').eq('id', supabaseUser.id).single();
 
       if (profile && !error) {
+        // Map old 'admin' role to 'sub_admin' for backward compatibility
+        let role = profile.role as string;
+        if (role === 'admin') role = 'sub_admin';
+
         this.currentUser.set({
           id: supabaseUser.id,
           name: profile.name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0],
@@ -57,9 +59,10 @@ export class AuthService {
           address: profile.address,
           cnic: profile.cnic,
           avatar: profile.profile_image,
-          role: (profile.role as any) || 'admin',
+          role: role as 'sub_admin' | 'super_admin',
           status: (profile.status as any) || 'active',
-          verified: profile.verified || false
+          verified: profile.verified || false,
+          trust_score: profile.trust_score || 100
         });
         return;
       }
@@ -67,30 +70,27 @@ export class AuthService {
       console.warn('loadUserProfile error:', e);
     }
 
-    // Fallback — use metadata but also try to detect super_admin from email pattern
+    // Fallback
     const metaRole = supabaseUser.user_metadata?.role;
     this.currentUser.set({
       id: supabaseUser.id,
       name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'User',
       email: supabaseUser.email || '',
-      role: metaRole === 'super_admin' ? 'super_admin' : 'admin',
-      status: 'active'
+      role: metaRole === 'super_admin' ? 'super_admin' : 'sub_admin',
+      status: 'active',
+      trust_score: 100
     });
   }
 
-  // ── LOGIN — no role selector, single form ─────────────────
   async login(email: string, password: string): Promise<{ success: boolean; error?: string; role?: string }> {
     this.isLoading.set(true);
     try {
       const { data, error } = await this.supabase.signIn(email, password);
       if (error) return { success: false, error: error.message };
 
-      const user = data.user!;
-      await this.loadUserProfile(user);
-
+      await this.loadUserProfile(data.user!);
       const profile = this.currentUser();
 
-      // Block suspended/banned accounts
       if (profile?.status === 'suspended') {
         await this.supabase.signOut();
         this.currentUser.set(null);
@@ -102,7 +102,7 @@ export class AuthService {
         return { success: false, error: '🚫 Your account has been banned.' };
       }
 
-      return { success: true, role: profile?.role || 'admin' };
+      return { success: true, role: profile?.role || 'sub_admin' };
     } catch (e: any) {
       return { success: false, error: e?.message || 'Login failed' };
     } finally {
@@ -114,9 +114,22 @@ export class AuthService {
     this.isLoading.set(true);
     try {
       const { data, error } = await this.supabase.signUp(email, password, name, {
-        role: 'admin', phone: phone || '', cnic: cnic || ''
+        role: 'sub_admin', phone: phone || '', cnic: cnic || ''
       });
       if (error) return { success: false, error: error.message };
+
+      // Upsert profile with sub_admin role
+      if (data.user) {
+        await this.supabase.client.from('profiles').upsert({
+          id: data.user.id,
+          name, email,
+          phone: phone || null,
+          cnic: cnic || null,
+          role: 'sub_admin',
+          status: 'active',
+          trust_score: 100
+        }, { onConflict: 'id' });
+      }
       return { success: true };
     } catch (e: any) {
       return { success: false, error: e?.message || 'Registration failed' };
@@ -142,6 +155,8 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean { return !!this.currentUser(); }
-  isAdmin(): boolean { return this.currentUser()?.role === 'admin' || this.currentUser()?.role === 'super_admin'; }
+  isSubAdmin(): boolean { return this.currentUser()?.role === 'sub_admin'; }
   isSuperAdmin(): boolean { return this.currentUser()?.role === 'super_admin'; }
+  // Keep isAdmin as alias for backward compat with existing components
+  isAdmin(): boolean { return this.isSubAdmin() || this.isSuperAdmin(); }
 }

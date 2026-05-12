@@ -11,16 +11,18 @@ export const authGuard: CanActivateFn = async () => {
   return false;
 };
 
-export const adminGuard: CanActivateFn = async () => {
+export const subAdminGuard: CanActivateFn = async () => {
   const router = inject(Router);
   const auth = inject(AuthService);
   await auth.waitForAuth();
-  if (auth.isAdmin()) return true;
+  if (auth.isSubAdmin()) return true;
+  if (auth.isSuperAdmin()) { router.navigate(['/super-admin']); return false; }
   router.navigate(['/auth/login']);
   return false;
 };
 
-// alias
+// Keep adminGuard as alias for backward compat
+export const adminGuard = subAdminGuard;
 export const memberGuard = authGuard;
 
 export const superAdminGuard: CanActivateFn = async () => {
