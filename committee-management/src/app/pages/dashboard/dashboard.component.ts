@@ -21,7 +21,7 @@ import { DashboardStats, Payment, Payout } from '../../models';
         <div class="grid grid-4 stats-grid">
           <div class="stat-card">
             <div class="stat-icon" style="background:#dbeafe">
-              <span class="material-icons" style="color:#2563eb">groups</span>
+              <span class="material-icons" style="color:var(--primary)">groups</span>
             </div>
             <div class="stat-value">{{ stats()?.totalCommittees || 0 }}</div>
             <div class="stat-label">Total Committees</div>
