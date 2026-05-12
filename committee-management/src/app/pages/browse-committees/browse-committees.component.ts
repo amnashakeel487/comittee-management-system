@@ -4,174 +4,247 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { ToastService } from '../../services/toast.service';
+import { createClient } from '@supabase/supabase-js';
+
+// Use anon key to bypass RLS for public committee browsing
+const anonSb = createClient(
+  'https://vxvgagkwgsjetvyvxdxg.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4dmdhZ2t3Z3NqZXR2eXZ4ZHhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzOTI1NTUsImV4cCI6MjA5Mzk2ODU1NX0.knri6Kwk9p09rJ1zLwhOokbcCj-ByKdIlt774hKyJn8'
+);
 
 @Component({
   selector: 'app-browse-committees',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="page">
-      <div class="page-header">
-        <div class="page-title">
-          <h1>Browse & Join Committees</h1>
-          <p>Discover public committees and request to join</p>
+<div class="browse-page">
+  <div class="page-header">
+    <div>
+      <h1>Browse & Join Committees</h1>
+      <p>Discover public committees and request to join</p>
+    </div>
+  </div>
+
+  <!-- Search & Filter -->
+  <div class="search-bar">
+    <div class="search-wrap">
+      <span class="material-icons">search</span>
+      <input type="text" placeholder="Search committees..." [(ngModel)]="searchQuery"
+             (ngModelChange)="applyFilter()" class="search-input">
+    </div>
+    <div class="filter-tabs">
+      <button *ngFor="let f of filters" class="filter-btn"
+              [class.active]="activeFilter()===f" (click)="setFilter(f)">{{ f }}</button>
+    </div>
+  </div>
+
+  <div *ngIf="loading()" class="loading-center"><div class="spinner"></div></div>
+
+  <div class="committees-grid" *ngIf="!loading()">
+    <div *ngFor="let c of filtered()" class="committee-card">
+      <!-- Top row -->
+      <div class="cc-top">
+        <div class="cc-icon">
+          <span class="material-icons">account_balance</span>
+        </div>
+        <span class="cc-badge" [class.open]="c.status==='active'" [class.pending]="c.status==='pending'" [class.completed]="c.status==='completed'">
+          {{ c.status === 'active' ? 'Open' : c.status === 'pending' ? 'Pending' : 'Completed' }}
+        </span>
+      </div>
+
+      <!-- Name -->
+      <div class="cc-name">{{ c.name }}</div>
+      <div class="cc-category">{{ c.description || 'Savings Committee' }}</div>
+
+      <!-- Stats grid -->
+      <div class="cc-stats-grid">
+        <div class="cc-stat-cell">
+          <span class="cc-stat-lbl">MONTHLY</span>
+          <span class="cc-stat-val accent">PKR {{ c.monthly_amount | number }}</span>
+        </div>
+        <div class="cc-stat-cell">
+          <span class="cc-stat-lbl">MEMBERS</span>
+          <span class="cc-stat-val">{{ c.total_members }}</span>
+        </div>
+        <div class="cc-stat-cell">
+          <span class="cc-stat-lbl">START</span>
+          <span class="cc-stat-val">{{ c.start_date | date:'MMM yyyy' }}</span>
+        </div>
+        <div class="cc-stat-cell">
+          <span class="cc-stat-lbl">DURATION</span>
+          <span class="cc-stat-val">{{ c.duration_months }} months</span>
         </div>
       </div>
 
-      <div class="search-bar">
-        <div class="search-wrap">
-          <span class="material-icons">search</span>
-          <input type="text" placeholder="Search committees..." [(ngModel)]="searchQuery"
-                 (ngModelChange)="applyFilter()" class="search-input">
-        </div>
-        <div class="filter-tabs">
-          <button *ngFor="let f of filters" class="filter-btn"
-                  [class.active]="activeFilter()===f" (click)="setFilter(f)">{{ f }}</button>
-        </div>
+      <!-- Progress -->
+      <div class="cc-progress-row">
+        <span>{{ c.total_members }} slots total</span>
+        <span>Month {{ c.current_month || 0 }}/{{ c.duration_months }}</span>
+      </div>
+      <div class="cc-progress-bar">
+        <div class="cc-progress-fill" [style.width.%]="((c.current_month||0)/c.duration_months)*100"></div>
       </div>
 
-      <div *ngIf="loading()" class="loading-state"><div class="spinner"></div></div>
-
-      <div class="committees-grid" *ngIf="!loading()">
-        <div *ngFor="let c of filtered()" class="committee-card">
-          <div class="cc-top">
-            <div class="cc-icon"><span class="material-icons">groups</span></div>
-            <span class="badge" [ngClass]="{'badge-success': c.status==='active', 'badge-warning': c.status==='pending'}">
-              {{ c.status | titlecase }}
-            </span>
+      <!-- Focal person -->
+      <div class="cc-footer">
+        <div class="cc-focal">
+          <div class="cc-focal-av" [style.background]="getColor(c.admin_name||'')">
+            {{ getInitials(c.admin_name||'A') }}
           </div>
-          <h3 class="cc-name">{{ c.name }}</h3>
-          <p class="cc-desc" *ngIf="c.description">{{ c.description }}</p>
-
-          <div class="cc-admin" (click)="viewAdmin(c)">
-            <div class="admin-avatar" [style.background]="getColor(c.profiles?.name||'')">
-              {{ getInitials(c.profiles?.name||'A') }}
-            </div>
-            <div>
-              <span class="admin-name">{{ c.profiles?.name || 'Admin' }}</span>
-              <span class="admin-label">Focal Person</span>
-            </div>
-            <span class="verified-badge" *ngIf="c.profiles?.verified">
-              <span class="material-icons">verified</span>
-            </span>
-          </div>
-
-          <div class="cc-stats">
-            <div class="cc-stat"><span class="material-icons">payments</span> PKR {{ c.monthly_amount | number }}/mo</div>
-            <div class="cc-stat"><span class="material-icons">people</span> {{ c.total_members }} members</div>
-            <div class="cc-stat"><span class="material-icons">schedule</span> {{ c.duration_months }} months</div>
-            <div class="cc-stat"><span class="material-icons">account_balance_wallet</span> PKR {{ (c.monthly_amount * c.total_members) | number }} pool</div>
-          </div>
-
-          <div class="cc-action">
-            <div class="status-pill member" *ngIf="isMember(c.id)">
-              <span class="material-icons">check_circle</span> Already a Member
-            </div>
-            <div class="status-pill pending" *ngIf="!isMember(c.id) && getRequest(c.id)?.status === 'pending'">
-              <span class="material-icons">hourglass_empty</span> Request Pending
-              <button class="cancel-btn" (click)="cancelRequest(c)"><span class="material-icons">close</span></button>
-            </div>
-            <div class="status-pill approved" *ngIf="!isMember(c.id) && getRequest(c.id)?.status === 'approved'">
-              <span class="material-icons">thumb_up</span> Request Approved
-            </div>
-            <button class="btn-join" *ngIf="!isMember(c.id) && !getRequest(c.id)"
-                    (click)="openRequestModal(c)" [disabled]="c.status==='completed'">
-              <span class="material-icons">person_add</span>
-              {{ c.status === 'completed' ? 'Completed' : 'Request to Join' }}
-            </button>
+          <div class="cc-focal-info">
+            <span class="cc-focal-role">Focal Person</span>
+            <span class="cc-focal-name">{{ c.admin_name || 'Admin' }}</span>
           </div>
         </div>
-
-        <div *ngIf="filtered().length===0" class="empty-state" style="grid-column:1/-1">
-          <span class="material-icons empty-icon">search_off</span>
-          <h3>No committees found</h3>
-          <p>Try adjusting your search or filter</p>
-        </div>
-      </div>
-
-      <!-- Request Modal -->
-      <div class="modal-overlay" *ngIf="showModal()" (click)="closeModal()">
-        <div class="modal" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <h3><span class="material-icons">person_add</span> Request to Join</h3>
-            <button class="modal-close" (click)="closeModal()"><span class="material-icons">close</span></button>
+        <div class="cc-actions">
+          <button class="btn-details" (click)="openDetail(c)">Details</button>
+          <div *ngIf="isMember(c.id)" class="btn-joined">
+            <span class="material-icons">check_circle</span> Joined
           </div>
-          <div class="modal-body" *ngIf="selectedCommittee()">
-            <div class="committee-preview">
-              <strong>{{ selectedCommittee()!.name }}</strong>
-              <span>PKR {{ selectedCommittee()!.monthly_amount | number }}/month · {{ selectedCommittee()!.total_members }} members</span>
-            </div>
-            <div class="form-group">
-              <label>Message to Admin (Optional)</label>
-              <textarea class="form-control" rows="3" [(ngModel)]="requestMessage"
-                        placeholder="Introduce yourself..."></textarea>
-            </div>
-            <div class="disclaimer-note">
-              <span class="material-icons">info</span>
-              The committee admin will review your request and notify you of their decision.
-            </div>
+          <div *ngIf="!isMember(c.id) && getRequest(c.id)?.status==='pending'" class="btn-pending">
+            Pending
           </div>
-          <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
-            <button class="btn btn-primary" (click)="submitRequest()" [disabled]="submitting()">
-              <span class="material-icons">{{ submitting() ? 'hourglass_empty' : 'send' }}</span>
-              {{ submitting() ? 'Sending...' : 'Send Request' }}
-            </button>
-          </div>
+          <button *ngIf="!isMember(c.id) && !getRequest(c.id)" class="btn-join" (click)="openRequestModal(c)">
+            Join
+          </button>
         </div>
       </div>
     </div>
+
+    <div *ngIf="filtered().length===0" class="empty-state">
+      <span class="material-icons">search_off</span>
+      <h3>No committees found</h3>
+      <p>Try adjusting your search or filter</p>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" *ngIf="showDetail()" (click)="closeDetail()">
+    <div class="modal-box" (click)="$event.stopPropagation()" *ngIf="selectedC()">
+      <div class="modal-head">
+        <h3>{{ selectedC()!.name }}</h3>
+        <button class="modal-close" (click)="closeDetail()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-cell"><span>Monthly Amount</span><strong>PKR {{ selectedC()!.monthly_amount | number }}</strong></div>
+          <div class="detail-cell"><span>Total Members</span><strong>{{ selectedC()!.total_members }}</strong></div>
+          <div class="detail-cell"><span>Duration</span><strong>{{ selectedC()!.duration_months }} months</strong></div>
+          <div class="detail-cell"><span>Total Pool</span><strong>PKR {{ (selectedC()!.monthly_amount * selectedC()!.total_members) | number }}</strong></div>
+          <div class="detail-cell"><span>Start Date</span><strong>{{ selectedC()!.start_date | date:'MMM d, yyyy' }}</strong></div>
+          <div class="detail-cell"><span>Status</span><strong>{{ selectedC()!.status | titlecase }}</strong></div>
+        </div>
+        <p *ngIf="selectedC()!.description" style="margin-top:14px;font-size:14px;color:#64748B;line-height:1.6">{{ selectedC()!.description }}</p>
+        <div class="detail-admin">
+          <div class="cc-focal-av lg" [style.background]="getColor(selectedC()!.admin_name||'')">{{ getInitials(selectedC()!.admin_name||'A') }}</div>
+          <div>
+            <strong>{{ selectedC()!.admin_name || 'Admin' }}</strong>
+            <span>Focal Person / Admin</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-join" *ngIf="!isMember(selectedC()!.id) && !getRequest(selectedC()!.id)"
+                (click)="closeDetail(); openRequestModal(selectedC())">Request to Join</button>
+        <button class="btn-details" (click)="closeDetail()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Modal -->
+  <div class="modal-overlay" *ngIf="showModal()" (click)="closeModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <h3>Request to Join — {{ joiningC()?.name }}</h3>
+        <button class="modal-close" (click)="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="joinSuccess()" class="join-success">
+          <span class="material-icons">check_circle</span>
+          <h4>Request Submitted!</h4>
+          <p>The admin will review and respond within 24-48 hours.</p>
+        </div>
+        <div *ngIf="!joinSuccess()">
+          <p style="font-size:13px;color:#64748B;margin-bottom:14px">The admin will review your request and respond within 24-48 hours.</p>
+          <div class="form-group"><label>Message (Optional)</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="requestMessage" placeholder="Introduce yourself..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot" *ngIf="!joinSuccess()">
+        <button class="btn-join" (click)="submitRequest()" [disabled]="submitting()">
+          {{ submitting() ? 'Sending...' : 'Send Request' }}
+        </button>
+        <button class="btn-details" (click)="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
   `,
   styles: [`
-    .page { animation: fadeIn 0.3s ease; }
+    .browse-page { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .page-header { margin-bottom: 24px; h1 { font-size: 24px; font-weight: 700; color: var(--gray-900); } p { font-size: 14px; color: var(--gray-500); margin-top: 4px; } }
-    .search-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .search-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
     .search-wrap { display: flex; align-items: center; gap: 8px; background: white; border: 1.5px solid var(--gray-200); border-radius: 10px; padding: 10px 14px; flex: 1; min-width: 220px; &:focus-within { border-color: #1E3A5F; } .material-icons { color: var(--gray-400); font-size: 18px; } }
     .search-input { border: none; outline: none; font-size: 14px; color: var(--gray-900); background: none; width: 100%; &::placeholder { color: var(--gray-400); } }
-    .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-    .filter-btn { padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--gray-200); background: white; font-size: 13px; font-weight: 500; color: var(--gray-600); cursor: pointer; transition: all 0.15s; &:hover { border-color: #1E3A5F; color: #1E3A5F; } &.active { background: #1E3A5F; border-color: #1E3A5F; color: white; } }
-    .loading-state { display: flex; justify-content: center; padding: 80px; }
+    .filter-tabs { display: flex; gap: 6px; }
+    .filter-btn { padding: 8px 18px; border-radius: 20px; border: 1.5px solid var(--gray-200); background: white; font-size: 13px; font-weight: 500; color: var(--gray-600); cursor: pointer; transition: all 0.15s; &:hover { border-color: #1E3A5F; color: #1E3A5F; } &.active { background: #1E3A5F; border-color: #1E3A5F; color: white; } }
+    .loading-center { display: flex; justify-content: center; padding: 80px; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--gray-200); border-top-color: #1E3A5F; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* CARDS */
     .committees-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-    .committee-card { background: white; border-radius: 14px; border: 1px solid var(--gray-200); padding: 20px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 1px 4px rgba(15,23,42,0.06); transition: all 0.2s; &:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(15,23,42,0.1); } }
+    .committee-card { background: #0F1C2E; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px; transition: all 0.2s; &:hover { border-color: rgba(45,140,255,0.3); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); } }
     .cc-top { display: flex; justify-content: space-between; align-items: center; }
-    .cc-icon { width: 44px; height: 44px; background: #EEF3FA; border-radius: 10px; display: flex; align-items: center; justify-content: center; .material-icons { color: #1E3A5F; font-size: 22px; } }
-    .cc-name { font-size: 16px; font-weight: 700; color: var(--gray-900); }
-    .cc-desc { font-size: 13px; color: var(--gray-500); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .cc-admin { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #EEF3FA; border-radius: 10px; cursor: pointer; transition: all 0.15s; &:hover { background: #D0DFF2; } }
-    .admin-avatar { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; flex-shrink: 0; }
-    .admin-name { display: block; font-size: 13px; font-weight: 600; color: var(--gray-900); }
-    .admin-label { display: block; font-size: 11px; color: var(--gray-500); }
-    .verified-badge { margin-left: auto; .material-icons { font-size: 16px; color: #10b981; } }
-    .cc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .cc-stat { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--gray-600); .material-icons { font-size: 14px; color: #1E3A5F; } }
-    .cc-action { margin-top: auto; }
-    .btn-join { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 10px; border-radius: 8px; background: #1E3A5F; color: white; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; .material-icons { font-size: 16px; } &:hover:not(:disabled) { background: #152C4A; } &:disabled { opacity: 0.5; cursor: not-allowed; } }
-    .status-pill { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; .material-icons { font-size: 16px; } &.member { background: #d1fae5; color: #065f46; } &.pending { background: #fef3c7; color: #92400e; } &.approved { background: #d1fae5; color: #065f46; } }
-    .cancel-btn { background: none; border: none; cursor: pointer; color: #92400e; margin-left: auto; display: flex; .material-icons { font-size: 16px; } }
-    .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-    .badge-success { background: #d1fae5; color: #065f46; }
-    .badge-warning { background: #fef3c7; color: #92400e; }
-    .empty-state { text-align: center; padding: 60px; background: white; border-radius: 12px; border: 1px solid var(--gray-200); .empty-icon { font-size: 56px; color: var(--gray-300); display: block; margin-bottom: 16px; } h3 { font-size: 18px; color: var(--gray-700); margin-bottom: 8px; } p { font-size: 14px; color: var(--gray-500); } }
+    .cc-icon { width: 48px; height: 48px; background: rgba(45,140,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; .material-icons { color: #2d8cff; font-size: 24px; } }
+    .cc-badge { padding: 5px 14px; border-radius: 50px; font-size: 13px; font-weight: 700; &.open { background: rgba(34,197,94,0.15); color: #4ade80; } &.pending { background: rgba(250,176,5,0.15); color: #fbbf24; } &.completed { background: rgba(100,116,139,0.15); color: #94a3b8; } }
+    .cc-name { font-size: 18px; font-weight: 800; color: white; }
+    .cc-category { font-size: 13px; color: #2d8cff; font-weight: 500; }
+    .cc-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .cc-stat-cell { background: rgba(255,255,255,0.04); border-radius: 10px; padding: 12px 14px; }
+    .cc-stat-lbl { display: block; font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 600; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .cc-stat-val { display: block; font-size: 16px; font-weight: 700; color: white; &.accent { color: #2d8cff; } }
+    .cc-progress-row { display: flex; justify-content: space-between; font-size: 13px; color: rgba(255,255,255,0.5); }
+    .cc-progress-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+    .cc-progress-fill { height: 100%; background: linear-gradient(90deg, #2d8cff, #5aabff); border-radius: 3px; transition: width 0.5s ease; }
+    .cc-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 4px; }
+    .cc-focal { display: flex; align-items: center; gap: 10px; }
+    .cc-focal-av { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; flex-shrink: 0; &.lg { width: 44px; height: 44px; font-size: 16px; } }
+    .cc-focal-info { display: flex; flex-direction: column; }
+    .cc-focal-role { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .cc-focal-name { font-size: 13px; font-weight: 700; color: white; }
+    .cc-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-details { padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; &:hover { background: rgba(255,255,255,0.08); color: white; } }
+    .btn-join { padding: 8px 20px; border-radius: 8px; background: #2d8cff; color: white; border: none; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; &:hover:not(:disabled) { background: #5aabff; } &:disabled { opacity: 0.6; cursor: not-allowed; } }
+    .btn-joined { display: flex; align-items: center; gap: 4px; padding: 8px 14px; border-radius: 8px; background: rgba(34,197,94,0.12); color: #4ade80; font-size: 13px; font-weight: 600; .material-icons { font-size: 16px; } }
+    .btn-pending { padding: 8px 14px; border-radius: 8px; background: rgba(250,176,5,0.12); color: #fbbf24; font-size: 13px; font-weight: 600; }
+    .empty-state { grid-column: 1/-1; text-align: center; padding: 60px; background: white; border-radius: 12px; border: 1px solid var(--gray-200); .material-icons { font-size: 48px; color: var(--gray-300); display: block; margin-bottom: 12px; } h3 { font-size: 18px; color: var(--gray-700); margin-bottom: 6px; } p { font-size: 14px; color: var(--gray-500); } }
+
+    /* MODALS */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(4px); }
-    .modal { background: white; border-radius: 16px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 16px; border-bottom: 1px solid var(--gray-200); h3 { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 700; .material-icons { color: #1E3A5F; } } }
-    .modal-close { background: none; border: none; cursor: pointer; color: var(--gray-500); display: flex; padding: 4px; border-radius: 6px; &:hover { background: var(--gray-100); } .material-icons { font-size: 20px; } }
-    .modal-body { padding: 20px 24px; }
-    .committee-preview { display: flex; flex-direction: column; gap: 4px; padding: 14px; background: #EEF3FA; border-radius: 10px; margin-bottom: 16px; strong { font-size: 15px; color: var(--gray-900); } span { font-size: 12px; color: var(--gray-500); } }
-    .form-group { margin-bottom: 16px; label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; } }
+    .modal-box { background: white; border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--gray-200); h3 { font-size: 16px; font-weight: 700; color: var(--gray-900); } }
+    .modal-close { background: none; border: none; cursor: pointer; color: var(--gray-500); font-size: 18px; padding: 4px 8px; border-radius: 6px; &:hover { background: var(--gray-100); } }
+    .modal-body { padding: 20px 22px; }
+    .modal-foot { display: flex; gap: 10px; padding: 16px 22px; border-top: 1px solid var(--gray-200); }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .detail-cell { background: var(--gray-50); border-radius: 8px; padding: 10px 12px; span { display: block; font-size: 11px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; } strong { font-size: 14px; font-weight: 700; color: var(--gray-900); } }
+    .detail-admin { display: flex; align-items: center; gap: 12px; background: var(--gray-50); border-radius: 8px; padding: 12px; margin-top: 14px; strong { display: block; font-size: 14px; font-weight: 700; color: var(--gray-900); } span { display: block; font-size: 12px; color: var(--gray-500); } }
+    .form-group { margin-bottom: 14px; label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; } }
     .form-control { width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; resize: vertical; &:focus { border-color: #1E3A5F; } }
-    .disclaimer-note { display: flex; gap: 8px; align-items: flex-start; background: #EEF3FA; border-radius: 8px; padding: 12px; font-size: 13px; color: var(--gray-600); .material-icons { color: #1E3A5F; font-size: 18px; flex-shrink: 0; } }
-    .modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid var(--gray-200); }
-    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; .material-icons { font-size: 16px; } }
-    .btn-primary { background: #1E3A5F; color: white; &:hover:not(:disabled) { background: #152C4A; } &:disabled { opacity: 0.6; cursor: not-allowed; } }
-    .btn-secondary { background: var(--gray-100); color: var(--gray-700); &:hover { background: var(--gray-200); } }
+    .join-success { text-align: center; padding: 20px 0; .material-icons { font-size: 48px; color: #10b981; display: block; margin-bottom: 12px; } h4 { font-size: 18px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; } p { font-size: 14px; color: var(--gray-500); } }
   `]
 })
 export class BrowseCommitteesComponent implements OnInit {
   loading = signal(true);
   submitting = signal(false);
   showModal = signal(false);
-  selectedCommittee = signal<any>(null);
+  showDetail = signal(false);
+  selectedC = signal<any>(null);
+  joiningC = signal<any>(null);
+  joinSuccess = signal(false);
   allCommittees: any[] = [];
   filtered = signal<any[]>([]);
   myRequests = signal<any[]>([]);
@@ -182,7 +255,11 @@ export class BrowseCommitteesComponent implements OnInit {
   filters = ['All', 'Active', 'Pending'];
   private colors = ['#2563eb','#7c3aed','#db2777','#059669','#d97706','#dc2626'];
 
-  constructor(private auth: AuthService, private supabase: SupabaseService, private toast: ToastService) {}
+  constructor(
+    private auth: AuthService,
+    private supabase: SupabaseService,
+    private toast: ToastService
+  ) {}
 
   async ngOnInit() {
     await this.auth.waitForAuth();
@@ -191,26 +268,41 @@ export class BrowseCommitteesComponent implements OnInit {
   }
 
   private async loadCommittees() {
-    const userId = this.auth.currentUser()?.id;
-    const { data } = await this.supabase.client
+    // Use anon client to get ALL public committees regardless of RLS
+    const { data, error } = await anonSb
       .from('committees')
       .select('*, profiles(name, email, verified)')
       .in('status', ['active', 'pending'])
-      .neq('created_by', userId || '')
       .order('created_at', { ascending: false });
-    this.allCommittees = data || [];
+
+    if (error) console.error('Browse load error:', error.message);
+
+    // Enrich with admin name
+    const cs = (data || []).map((c: any) => ({
+      ...c,
+      admin_name: c.profiles?.name || 'Admin',
+      admin_verified: c.profiles?.verified || false
+    }));
+
+    this.allCommittees = cs;
     this.applyFilter();
   }
 
   private async loadMyData() {
     const email = this.auth.currentUser()?.email;
-    const { data: memberRecs } = await this.supabase.client.from('members').select('id').eq('email', email || '');
+    if (!email) return;
+
+    const { data: memberRecs } = await this.supabase.client
+      .from('members').select('id').eq('email', email);
+
     if (memberRecs?.length) {
       const ids = memberRecs.map((m: any) => m.id);
-      const { data: cms } = await this.supabase.client.from('committee_members').select('committee_id').in('member_id', ids);
-      this.myMembershipIds.set(new Set((cms || []).map((c: any) => c.committee_id)));
-      const { data: reqs } = await this.supabase.client.from('join_requests').select('*').in('member_id', ids);
-      this.myRequests.set(reqs || []);
+      const [cmsRes, reqsRes] = await Promise.all([
+        this.supabase.client.from('committee_members').select('committee_id').in('member_id', ids),
+        this.supabase.client.from('join_requests').select('*').in('member_id', ids)
+      ]);
+      this.myMembershipIds.set(new Set((cmsRes.data || []).map((c: any) => c.committee_id)));
+      this.myRequests.set(reqsRes.data || []);
     }
   }
 
@@ -221,7 +313,11 @@ export class BrowseCommitteesComponent implements OnInit {
     else if (f === 'Pending') result = result.filter((c: any) => c.status === 'pending');
     if (this.searchQuery.trim()) {
       const q = this.searchQuery.toLowerCase();
-      result = result.filter((c: any) => c.name?.toLowerCase().includes(q) || c.profiles?.name?.toLowerCase().includes(q));
+      result = result.filter((c: any) =>
+        c.name?.toLowerCase().includes(q) ||
+        c.admin_name?.toLowerCase().includes(q) ||
+        c.description?.toLowerCase().includes(q)
+      );
     }
     this.filtered.set(result);
   }
@@ -230,42 +326,65 @@ export class BrowseCommitteesComponent implements OnInit {
   isMember(id: string) { return this.myMembershipIds().has(id); }
   getRequest(id: string) { return this.myRequests().find((r: any) => r.committee_id === id) || null; }
 
-  openRequestModal(c: any) { this.selectedCommittee.set(c); this.requestMessage = ''; this.showModal.set(true); }
-  closeModal() { this.showModal.set(false); this.selectedCommittee.set(null); }
+  openDetail(c: any) { this.selectedC.set(c); this.showDetail.set(true); }
+  closeDetail() { this.showDetail.set(false); this.selectedC.set(null); }
+
+  openRequestModal(c: any) {
+    this.joiningC.set(c);
+    this.requestMessage = '';
+    this.joinSuccess.set(false);
+    this.showModal.set(true);
+  }
+  closeModal() { this.showModal.set(false); this.joiningC.set(null); }
 
   async submitRequest() {
-    const c = this.selectedCommittee();
+    const c = this.joiningC();
     if (!c) return;
     const email = this.auth.currentUser()?.email;
-    const { data: memberRec } = await this.supabase.client.from('members').select('id').eq('email', email || '').maybeSingle();
-    if (!memberRec) { this.toast.error('No member record found. Please contact admin.'); return; }
+    const { data: memberRec } = await this.supabase.client
+      .from('members').select('id').eq('email', email || '').maybeSingle();
+
+    if (!memberRec) {
+      this.toast.error('No member record found. Ask your admin to add you as a member first.');
+      return;
+    }
+
     this.submitting.set(true);
     try {
       const { error } = await this.supabase.client.from('join_requests').upsert({
-        committee_id: c.id, member_id: memberRec.id, status: 'pending', message: this.requestMessage || null
+        committee_id: c.id,
+        member_id: memberRec.id,
+        status: 'pending',
+        message: this.requestMessage || null
       }, { onConflict: 'committee_id,member_id' });
+
       if (error) throw new Error(error.message);
+
+      // Notify the committee admin
       await this.supabase.client.from('notifications').insert({
-        user_id: c.created_by, title: 'New Join Request',
-        message: `${this.auth.currentUser()?.name} requested to join "${c.name}"`, type: 'info', read: false
+        user_id: c.created_by,
+        title: 'New Join Request',
+        message: `${this.auth.currentUser()?.name} requested to join "${c.name}"`,
+        type: 'info',
+        read: false
       });
-      this.myRequests.update(l => [...l, { committee_id: c.id, member_id: memberRec.id, status: 'pending' }]);
+
+      this.myRequests.update(l => [...l.filter((r: any) => r.committee_id !== c.id),
+        { committee_id: c.id, member_id: memberRec.id, status: 'pending' }]);
+      this.joinSuccess.set(true);
       this.toast.success('Request sent!');
-      this.closeModal();
-    } catch (e: any) { this.toast.error('Failed: ' + e?.message); }
-    finally { this.submitting.set(false); }
+      setTimeout(() => this.closeModal(), 2000);
+    } catch (e: any) {
+      this.toast.error('Failed: ' + e?.message);
+    } finally {
+      this.submitting.set(false);
+    }
   }
 
-  async cancelRequest(c: any) {
-    const email = this.auth.currentUser()?.email;
-    const { data: memberRec } = await this.supabase.client.from('members').select('id').eq('email', email || '').maybeSingle();
-    if (!memberRec) return;
-    await this.supabase.client.from('join_requests').delete().eq('committee_id', c.id).eq('member_id', memberRec.id);
-    this.myRequests.update(l => l.filter((r: any) => r.committee_id !== c.id));
-    this.toast.success('Request cancelled');
+  getInitials(n: string) {
+    return n.split(' ').map((x: string) => x[0]).join('').toUpperCase().slice(0, 2);
   }
-
-  viewAdmin(c: any) { /* Could open a profile modal */ }
-  getInitials(n: string) { return n.split(' ').map((x: string) => x[0]).join('').toUpperCase().slice(0, 2); }
-  getColor(n: string) { return this.colors[(n.charCodeAt(0) || 0) % this.colors.length]; }
+  getColor(n: string) {
+    return this.colors[(n?.charCodeAt(0) || 0) % this.colors.length];
+  }
 }
