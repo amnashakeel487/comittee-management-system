@@ -181,7 +181,7 @@ export class LoginComponent {
       if (result.success) {
         if (result.role === "super_admin") {
           this.toast.success("Welcome, Super Admin!");
-          this.router.navigate(["/super-admin"]);
+          this.router.navigate(["/super-admin/dashboard"]);
         } else {
           this.toast.success("Welcome back!");
           this.router.navigate(["/dashboard"]);

@@ -139,9 +139,11 @@ export class AuthService {
   }
 
   async logout() {
+    const isSA = this.isSuperAdmin();
     try { await this.supabase.signOut(); } catch (e) {}
     this.currentUser.set(null);
-    this.router.navigate(['/auth/login']);
+    if (isSA) this.router.navigate(['/super-admin/login']);
+    else this.router.navigate(['/auth/login']);
   }
 
   async forgotPassword(email: string): Promise<{ success: boolean; error?: string }> {

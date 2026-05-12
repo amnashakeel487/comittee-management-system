@@ -1,11 +1,11 @@
 ﻿import { Routes } from "@angular/router";
-import { authGuard, subAdminGuard, guestGuard, superAdminGuard } from "./guards/auth.guard";
+import { subAdminGuard, guestGuard, superAdminGuard, superAdminGuestGuard } from "./guards/auth.guard";
 
 export const routes: Routes = [
   // Public landing page
   { path: "", loadComponent: () => import("./pages/landing/landing.component").then(m => m.LandingComponent) },
 
-  // Auth
+  // Sub-Admin Auth
   {
     path: "auth",
     children: [
@@ -16,31 +16,43 @@ export const routes: Routes = [
     ]
   },
 
-  // Super Admin — completely separate dashboard
+  // ── SUPER ADMIN — completely separate section ──────────────
   {
     path: "super-admin",
-    canActivate: [superAdminGuard],
-    loadComponent: () => import("./pages/super-admin/super-admin.component").then(m => m.SuperAdminComponent)
+    children: [
+      // Dedicated super admin login page
+      { path: "login", canActivate: [superAdminGuestGuard], loadComponent: () => import("./pages/super-admin/super-admin-login.component").then(m => m.SuperAdminLoginComponent) },
+      // Super admin dashboard (protected)
+      { path: "dashboard", canActivate: [superAdminGuard], loadComponent: () => import("./pages/super-admin/super-admin-shell.component").then(m => m.SuperAdminShellComponent),
+        children: [
+          { path: "", redirectTo: "overview", pathMatch: "full" },
+          { path: "overview", loadComponent: () => import("./pages/super-admin/pages/sa-overview.component").then(m => m.SaOverviewComponent) },
+          { path: "users", loadComponent: () => import("./pages/super-admin/pages/sa-users.component").then(m => m.SaUsersComponent) },
+          { path: "committees", loadComponent: () => import("./pages/super-admin/pages/sa-committees.component").then(m => m.SaCommitteesComponent) },
+          { path: "fraud", loadComponent: () => import("./pages/super-admin/pages/sa-fraud.component").then(m => m.SaFraudComponent) },
+          { path: "payments", loadComponent: () => import("./pages/super-admin/pages/sa-payments.component").then(m => m.SaPaymentsComponent) },
+          { path: "announcements", loadComponent: () => import("./pages/super-admin/pages/sa-announcements.component").then(m => m.SaAnnouncementsComponent) },
+        ]
+      },
+      // Redirect /super-admin → /super-admin/login
+      { path: "", redirectTo: "login", pathMatch: "full" },
+      { path: "**", redirectTo: "login" }
+    ]
   },
 
-  // Sub Admin dashboard — all authenticated sub_admin users
+  // Sub Admin dashboard
   {
     path: "",
     canActivate: [subAdminGuard],
     loadComponent: () => import("./layout/main-layout/main-layout.component").then(m => m.MainLayoutComponent),
     children: [
       { path: "dashboard", loadComponent: () => import("./pages/dashboard/dashboard.component").then(m => m.DashboardComponent) },
-      // MY COMMITTEES — committees created by this sub_admin
       { path: "committees", loadComponent: () => import("./pages/committees/committees.component").then(m => m.CommitteesComponent) },
       { path: "committees/create", loadComponent: () => import("./pages/create-committee/create-committee.component").then(m => m.CreateCommitteeComponent) },
       { path: "committees/:id", loadComponent: () => import("./pages/committee-detail/committee-detail.component").then(m => m.CommitteeDetailComponent) },
-      // JOINED COMMITTEES — committees this sub_admin participates in
       { path: "joined-committees", loadComponent: () => import("./pages/joined-committees/joined-committees.component").then(m => m.JoinedCommitteesComponent) },
-      // BROWSE — public committees to join
       { path: "browse", loadComponent: () => import("./pages/browse-committees/browse-committees.component").then(m => m.BrowseCommitteesComponent) },
-      // MEMBERS — people in my committees
       { path: "members", loadComponent: () => import("./pages/members/members.component").then(m => m.MembersComponent) },
-      // PAYMENTS — approve payments for my committees + upload my own payments
       { path: "payments", loadComponent: () => import("./pages/payments/payments.component").then(m => m.PaymentsComponent) },
       { path: "my-payments", loadComponent: () => import("./pages/my-payments/my-payments.component").then(m => m.MyPaymentsComponent) },
       { path: "join-requests", loadComponent: () => import("./pages/join-requests/join-requests.component").then(m => m.JoinRequestsComponent) },
