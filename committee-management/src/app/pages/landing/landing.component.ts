@@ -29,6 +29,9 @@ export class LandingComponent implements OnInit {
   showDetail = signal(false);
   showJoin = signal(false);
   showAuthGate = signal(false);
+  showAdminProfile = signal(false);
+  adminProfile = signal<any>(null);
+  adminReviewsLoading = signal(false);
   isLoggedIn = signal(false);
   currentUserEmail = signal<string>('');
   selectedC = signal<any>(null);
@@ -126,15 +129,19 @@ export class LandingComponent implements OnInit {
       const creatorIds = [...new Set(cs.map((c: any) => c.created_by).filter(Boolean))];
       let profileMap: Record<string, any> = {};
       if (creatorIds.length > 0) {
-        const pRes = await sb.from('profiles').select('id, name, verified').in('id', creatorIds);
+        const pRes = await sb.from('profiles')
+          .select('id, name, verified, reputation_score, review_count')
+          .in('id', creatorIds);
         (pRes.data || []).forEach((p: any) => { profileMap[p.id] = p; });
       }
 
-      // Step 3: enrich committees with admin info
+      // Step 3: enrich committees with admin info + reputation snapshot
       const enriched = cs.map((c: any) => ({
         ...c,
-        admin_name: profileMap[c.created_by]?.name || 'Admin',
-        admin_verified: profileMap[c.created_by]?.verified || false
+        admin_name:         profileMap[c.created_by]?.name             || 'Admin',
+        admin_verified:     profileMap[c.created_by]?.verified         || false,
+        admin_reputation:   Number(profileMap[c.created_by]?.reputation_score || 0),
+        admin_review_count: Number(profileMap[c.created_by]?.review_count     || 0)
       }));
 
       this.committees.set(enriched);
@@ -270,6 +277,69 @@ export class LandingComponent implements OnInit {
     this.toastVisible.set(true);
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => this.toastVisible.set(false), 4000);
+  }
+
+  // --- Admin Trust profile ----------------------------------------------
+
+  async openAdminProfile(c: any) {
+    if (!c?.created_by) return;
+    this.adminProfile.set({
+      id: c.created_by,
+      name: c.admin_name,
+      verified: c.admin_verified,
+      reputation: c.admin_reputation || 0,
+      review_count: c.admin_review_count || 0,
+      committee: c,
+      reviews: []
+    });
+    this.showAdminProfile.set(true);
+    this.adminReviewsLoading.set(true);
+    try {
+      const { data: revs } = await sb
+        .from('reviews')
+        .select('id, rating, review_message, tags, created_at, reviewer_id, committee_id')
+        .eq('reviewed_user_id', c.created_by)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      const reviewerIds = [...new Set((revs || []).map((r: any) => r.reviewer_id).filter(Boolean))];
+      let reviewerMap = new Map<string, any>();
+      if (reviewerIds.length) {
+        const { data: profiles } = await sb
+          .from('profiles').select('id, name').in('id', reviewerIds);
+        reviewerMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      }
+      const stitched = (revs || []).map((r: any) => ({
+        ...r,
+        reviewer: reviewerMap.get(r.reviewer_id) || null
+      }));
+      this.adminProfile.update(curr => ({ ...curr, reviews: stitched }));
+    } catch {
+      // ignore — reputation card still renders without reviews
+    } finally {
+      this.adminReviewsLoading.set(false);
+    }
+  }
+
+  closeAdminProfile() {
+    this.showAdminProfile.set(false);
+    this.adminProfile.set(null);
+  }
+
+  joinFromAdminProfile() {
+    const ap = this.adminProfile();
+    if (!ap?.committee) return;
+    this.closeAdminProfile();
+    this.openJoin(ap.committee);
+  }
+
+  getStars(n: number) { return Array(5).fill(0).map((_, i) => i < Math.round(n)); }
+  getReputationLevel(score: number) {
+    if (score >= 4.5) return { label: 'Excellent', color: '#22c55e' };
+    if (score >= 3.5) return { label: 'Trusted',   color: '#60A5FA' };
+    if (score >= 2.5) return { label: 'Average',   color: '#fbbf24' };
+    if (score > 0)    return { label: 'Risky',     color: '#f87171' };
+    return { label: 'New Admin', color: '#94a3b8' };
   }
 
   getStatusClass(status: string) {

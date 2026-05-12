@@ -94,6 +94,8 @@ h2{font-size:clamp(1.75rem,3.5vw,2.4rem);font-weight:700;margin-bottom:.45rem;}
 .cc-bar{margin:.8rem 0 .25rem;}
 .cc-foot{display:flex;align-items:center;justify-content:space-between;padding-top:.8rem;border-top:1px solid var(--border);}
 .fp-row{display:flex;align-items:center;gap:.42rem;}
+.fp-btn{all:unset;cursor:pointer;padding:.25rem;border-radius:8px;transition:background .15s;width:100%;box-sizing:border-box;&:hover{background:rgba(45,140,255,.08);}}
+.fp-rep{display:flex;align-items:center;gap:3px;font-size:.65rem;color:var(--txt2);margin-top:1px;.fp-rep-star{font-size:11px !important;color:#fbbf24;} em{font-style:normal;color:var(--txt2);opacity:.7;}&.no-rep{font-style:italic;opacity:.6;}}
 .fp-av{width:23px;height:23px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.56rem;font-weight:700;color:#fff;}
 .fp-inf{font-size:.78rem;color:var(--txt2);}
 .fp-inf strong{display:block;font-size:.82rem;color:var(--txt);font-weight:600;}

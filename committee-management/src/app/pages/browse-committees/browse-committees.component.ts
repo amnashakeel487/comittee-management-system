@@ -80,15 +80,26 @@ import { ToastService } from '../../services/toast.service';
 
       <!-- Focal person -->
       <div class="cc-footer">
-        <div class="cc-focal">
+        <button class="cc-focal cc-focal-btn" (click)="openAdminProfile(c)" type="button" [title]="'View ' + (c.admin_name || 'Admin') + '\\'s trust profile'">
           <div class="cc-focal-av" [style.background]="getColor(c.admin_name||'')">
             {{ getInitials(c.admin_name||'A') }}
           </div>
           <div class="cc-focal-info">
             <span class="cc-focal-role">Focal Person</span>
-            <span class="cc-focal-name">{{ c.admin_name || 'Admin' }}</span>
+            <span class="cc-focal-name">
+              {{ c.admin_name || 'Admin' }}
+              <span class="material-icons admin-verified-ic" *ngIf="c.admin_verified" title="Verified Admin">verified</span>
+            </span>
+            <span class="cc-focal-rep" *ngIf="c.admin_review_count > 0">
+              <span class="material-icons rep-star">star</span>
+              <span class="rep-num">{{ c.admin_reputation.toFixed(1) }}</span>
+              <span class="rep-count">· {{ c.admin_review_count }} review{{ c.admin_review_count === 1 ? '' : 's' }}</span>
+            </span>
+            <span class="cc-focal-rep no-rep" *ngIf="c.admin_review_count === 0">
+              No reviews yet
+            </span>
           </div>
-        </div>
+        </button>
         <div class="cc-actions">
           <button class="btn-details" (click)="openDetail(c)">Details</button>
           <div *ngIf="isMember(c.id)" class="btn-joined">
@@ -128,13 +139,22 @@ import { ToastService } from '../../services/toast.service';
           <div class="detail-cell"><span>Status</span><strong>{{ selectedC()!.status | titlecase }}</strong></div>
         </div>
         <p *ngIf="selectedC()!.description" style="margin-top:14px;font-size:14px;color:#64748B;line-height:1.6">{{ selectedC()!.description }}</p>
-        <div class="detail-admin">
+        <button type="button" class="detail-admin detail-admin-btn" (click)="openAdminProfile(selectedC())">
           <div class="cc-focal-av lg" [style.background]="getColor(selectedC()!.admin_name||'')">{{ getInitials(selectedC()!.admin_name||'A') }}</div>
-          <div>
-            <strong>{{ selectedC()!.admin_name || 'Admin' }}</strong>
-            <span>Focal Person / Admin</span>
+          <div class="detail-admin-info">
+            <strong>
+              {{ selectedC()!.admin_name || 'Admin' }}
+              <span class="material-icons admin-verified-ic" *ngIf="selectedC()!.admin_verified" title="Verified Admin">verified</span>
+            </strong>
+            <span class="detail-admin-rep" *ngIf="selectedC()!.admin_review_count > 0">
+              <span class="material-icons rep-star">star</span>
+              {{ selectedC()!.admin_reputation.toFixed(1) }}
+              <em>· {{ selectedC()!.admin_review_count }} review{{ selectedC()!.admin_review_count === 1 ? '' : 's' }}</em>
+            </span>
+            <span class="detail-admin-rep no-rep" *ngIf="selectedC()!.admin_review_count === 0">No reviews yet</span>
           </div>
-        </div>
+          <span class="detail-admin-chev material-icons">chevron_right</span>
+        </button>
       </div>
       <div class="modal-foot">
         <button class="btn-join" *ngIf="!isMember(selectedC()!.id) && !getRequest(selectedC()!.id)"
@@ -169,6 +189,78 @@ import { ToastService } from '../../services/toast.service';
           {{ submitting() ? 'Sending...' : 'Send Request' }}
         </button>
         <button class="btn-details" (click)="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Trust Profile Modal -->
+  <div class="modal-overlay" *ngIf="showAdminProfile()" (click)="closeAdminProfile()">
+    <div class="modal-box trust-modal" (click)="$event.stopPropagation()" *ngIf="adminProfile() as ap">
+      <div class="modal-head">
+        <h3>Admin Trust Profile</h3>
+        <button class="modal-close" (click)="closeAdminProfile()">✕</button>
+      </div>
+      <div class="modal-body trust-body">
+        <div class="trust-hero">
+          <div class="trust-avatar" [style.background]="getColor(ap.name||'')">{{ getInitials(ap.name||'A') }}</div>
+          <div class="trust-identity">
+            <div class="trust-name">
+              {{ ap.name || 'Admin' }}
+              <span class="material-icons admin-verified-ic lg" *ngIf="ap.verified" title="Verified Admin">verified</span>
+            </div>
+            <div class="trust-role">Committee Focal Person · {{ ap.verified ? 'CNIC-Verified' : 'Not Verified' }}</div>
+          </div>
+        </div>
+
+        <div class="trust-score-card">
+          <div class="trust-score-main">
+            <div class="trust-score-num">{{ ap.reputation > 0 ? ap.reputation.toFixed(1) : '—' }}</div>
+            <div class="trust-stars">
+              <span *ngFor="let s of getStars(ap.reputation)" class="material-icons star-icon" [class.filled]="s">star</span>
+            </div>
+          </div>
+          <div class="trust-score-meta">
+            <span class="trust-level" [style.color]="getReputationLevel(ap.reputation).color">
+              {{ ap.review_count > 0 ? getReputationLevel(ap.reputation).label : 'New Admin' }}
+            </span>
+            <span class="trust-count">{{ ap.review_count }} {{ ap.review_count === 1 ? 'review' : 'reviews' }}</span>
+          </div>
+        </div>
+
+        <div class="trust-reviews-title" *ngIf="ap.review_count > 0">Recent reviews</div>
+
+        <div *ngIf="adminReviewsLoading()" class="trust-review-loading">
+          <div class="spinner" style="width:24px;height:24px"></div>
+        </div>
+
+        <div *ngIf="!adminReviewsLoading() && ap.reviews?.length" class="trust-reviews-list">
+          <div *ngFor="let r of ap.reviews" class="trust-review">
+            <div class="trust-review-head">
+              <span class="trust-review-name">{{ r.reviewer?.name || 'Anonymous' }}</span>
+              <div class="trust-review-stars">
+                <span *ngFor="let s of getStars(r.rating)" class="material-icons mini-star" [class.filled]="s">star</span>
+              </div>
+              <span class="trust-review-date">{{ r.created_at | date:'MMM d, y' }}</span>
+            </div>
+            <p class="trust-review-msg" *ngIf="r.review_message">"{{ r.review_message }}"</p>
+            <div class="trust-review-tags" *ngIf="r.tags?.length">
+              <span *ngFor="let tag of r.tags" class="trust-tag" [class.positive]="['trusted','cooperative','responsive','recommended'].includes(tag)" [class.negative]="['late_payer','fraud_risk'].includes(tag)">{{ tag | titlecase }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!adminReviewsLoading() && !ap.reviews?.length && ap.review_count === 0" class="trust-empty">
+          <span class="material-icons">rate_review</span>
+          <p>This admin hasn't received any reviews yet.</p>
+        </div>
+      </div>
+      <div class="modal-foot trust-foot" *ngIf="ap.committee">
+        <button class="btn-join"
+                *ngIf="!isMember(ap.committee.id) && !getRequest(ap.committee.id)"
+                (click)="joinFromAdminProfile()">
+          Request to Join "{{ ap.committee.name }}"
+        </button>
+        <button class="btn-details" (click)="closeAdminProfile()">Close</button>
       </div>
     </div>
   </div>
@@ -228,6 +320,46 @@ import { ToastService } from '../../services/toast.service';
     .form-group { margin-bottom: 14px; label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; } }
     .form-control { width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; resize: vertical; &:focus { border-color: #1E3A5F; } }
     .join-success { text-align: center; padding: 20px 0; .material-icons { font-size: 48px; color: #10b981; display: block; margin-bottom: 12px; } h4 { font-size: 18px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; } p { font-size: 14px; color: var(--gray-500); } }
+
+    /* Admin reputation inline on the card */
+    .cc-focal-btn { all: unset; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 4px; border-radius: 10px; transition: background 0.15s; &:hover { background: rgba(45,140,255,0.08); } &:focus-visible { outline: 2px solid #2d8cff; outline-offset: 2px; } }
+    .admin-verified-ic { font-size: 14px !important; color: #2d8cff; vertical-align: middle; margin-left: 3px; &.lg { font-size: 20px !important; margin-left: 6px; } }
+    .cc-focal-rep { display: flex; align-items: center; gap: 4px; font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; .rep-star { font-size: 13px !important; color: #fbbf24; } .rep-num { font-weight: 700; color: white; } .rep-count { color: rgba(255,255,255,0.45); } &.no-rep { color: rgba(255,255,255,0.35); font-style: italic; } }
+
+    /* Detail-modal admin card */
+    .detail-admin-btn { all: unset; cursor: pointer; width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 12px; background: var(--gray-50); border-radius: 8px; padding: 12px; margin-top: 14px; transition: background 0.15s; &:hover { background: #EEF3FA; } }
+    .detail-admin-info { flex: 1; display: flex; flex-direction: column; gap: 2px; strong { display: flex; align-items: center; font-size: 14px; font-weight: 700; color: var(--gray-900); } }
+    .detail-admin-rep { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--gray-600); .rep-star { font-size: 14px !important; color: #fbbf24; margin-right: 2px; } em { color: var(--gray-400); font-style: normal; } &.no-rep { color: var(--gray-400); font-style: italic; } }
+    .detail-admin-chev { color: var(--gray-400); font-size: 22px; }
+
+    /* Admin Trust Profile modal */
+    .trust-modal { max-width: 560px; }
+    .trust-body { padding: 0 !important; }
+    .trust-hero { display: flex; align-items: center; gap: 16px; padding: 22px 22px 18px; border-bottom: 1px solid var(--gray-100); }
+    .trust-avatar { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: white; flex-shrink: 0; }
+    .trust-identity { flex: 1; }
+    .trust-name { display: flex; align-items: center; font-size: 20px; font-weight: 800; color: var(--gray-900); }
+    .trust-role { margin-top: 2px; font-size: 13px; color: var(--gray-500); }
+    .trust-score-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 18px 22px; padding: 18px 20px; background: linear-gradient(135deg, #1E3A5F 0%, #2E5490 100%); border-radius: 14px; color: white; }
+    .trust-score-main { display: flex; align-items: center; gap: 12px; }
+    .trust-score-num { font-size: 36px; font-weight: 800; line-height: 1; }
+    .trust-stars { display: flex; gap: 1px; .star-icon { font-size: 18px !important; color: rgba(255,255,255,0.25); &.filled { color: #fbbf24; } } }
+    .trust-score-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .trust-level { font-weight: 700; font-size: 14px; }
+    .trust-count { font-size: 12px; color: rgba(255,255,255,0.65); }
+    .trust-reviews-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-500); padding: 0 22px 8px; }
+    .trust-review-loading { display: flex; justify-content: center; padding: 20px; }
+    .trust-reviews-list { display: flex; flex-direction: column; gap: 10px; padding: 0 22px 8px; }
+    .trust-review { background: var(--gray-50); border-radius: 10px; padding: 12px 14px; }
+    .trust-review-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .trust-review-name { font-size: 13px; font-weight: 700; color: var(--gray-900); flex: 1; }
+    .trust-review-stars { display: flex; gap: 1px; .mini-star { font-size: 14px !important; color: var(--gray-300); &.filled { color: #fbbf24; } } }
+    .trust-review-date { font-size: 11px; color: var(--gray-400); }
+    .trust-review-msg { font-size: 13px; color: var(--gray-700); font-style: italic; line-height: 1.5; margin: 4px 0 6px; }
+    .trust-review-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .trust-tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: var(--gray-200); color: var(--gray-600); &.positive { background: #d1fae5; color: #065f46; } &.negative { background: #fee2e2; color: #991b1b; } }
+    .trust-empty { text-align: center; padding: 28px 22px; color: var(--gray-400); .material-icons { font-size: 42px; color: var(--gray-300); display: block; margin-bottom: 8px; } p { font-size: 13px; } }
+    .trust-foot { padding: 12px 22px 18px !important; gap: 8px; }
   `]
 })
 export class BrowseCommitteesComponent implements OnInit {
@@ -246,6 +378,13 @@ export class BrowseCommitteesComponent implements OnInit {
   activeFilter = signal('All');
   requestMessage = '';
   filters = ['All', 'Active', 'Pending'];
+  // Admin Trust profile modal — populated by openAdminProfile() with the
+  // admin's name / verified / reputation_score / review_count plus their
+  // 3 most recent reviews fetched on demand (we don't pre-fetch reviews
+  // for every card because it would be wasteful).
+  showAdminProfile = signal(false);
+  adminProfile = signal<any>(null);
+  adminReviewsLoading = signal(false);
   private colors = ['#2563eb','#7c3aed','#db2777','#059669','#d97706','#dc2626'];
 
   constructor(
@@ -278,15 +417,17 @@ export class BrowseCommitteesComponent implements OnInit {
     if (creatorIds.length > 0) {
       const { data: profiles } = await this.supabase.client
         .from('profiles')
-        .select('id, name, verified')
+        .select('id, name, verified, reputation_score, review_count')
         .in('id', creatorIds);
       (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
     }
 
     const enriched = cs.map((c: any) => ({
       ...c,
-      admin_name: profileMap[c.created_by]?.name || 'Admin',
-      admin_verified: profileMap[c.created_by]?.verified || false
+      admin_name:         profileMap[c.created_by]?.name             || 'Admin',
+      admin_verified:     profileMap[c.created_by]?.verified         || false,
+      admin_reputation:   Number(profileMap[c.created_by]?.reputation_score || 0),
+      admin_review_count: Number(profileMap[c.created_by]?.review_count     || 0)
     }));
 
     this.allCommittees = enriched;
@@ -387,6 +528,75 @@ export class BrowseCommitteesComponent implements OnInit {
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  // --- Admin Trust profile ----------------------------------------------
+
+  async openAdminProfile(c: any) {
+    if (!c?.created_by) return;
+    this.adminProfile.set({
+      id: c.created_by,
+      name: c.admin_name,
+      verified: c.admin_verified,
+      reputation: c.admin_reputation || 0,
+      review_count: c.admin_review_count || 0,
+      committee: c, // remember which committee triggered the open, so the
+                    // "Request to Join" CTA inside the modal works.
+      reviews: []
+    });
+    this.showAdminProfile.set(true);
+    this.adminReviewsLoading.set(true);
+    try {
+      // Most-recent 3 reviews of this admin.  Profile lookup for the
+      // reviewers happens separately because reviews.reviewer_id has an
+      // FK to auth.users (outside the public schema) and PostgREST
+      // embeds against that schema would return null.
+      const { data: revs } = await this.supabase.client
+        .from('reviews')
+        .select('id, rating, review_message, tags, created_at, reviewer_id, committee_id')
+        .eq('reviewed_user_id', c.created_by)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      const reviewerIds = [...new Set((revs || []).map((r: any) => r.reviewer_id).filter(Boolean))];
+      let reviewerMap = new Map<string, any>();
+      if (reviewerIds.length) {
+        const { data: profiles } = await this.supabase.client
+          .from('profiles').select('id, name').in('id', reviewerIds);
+        reviewerMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      }
+      const stitched = (revs || []).map((r: any) => ({
+        ...r,
+        reviewer: reviewerMap.get(r.reviewer_id) || null
+      }));
+      this.adminProfile.update(curr => ({ ...curr, reviews: stitched }));
+    } catch {
+      // Non-fatal — just leave reviews empty so the rest of the card
+      // can still render the reputation score.
+    } finally {
+      this.adminReviewsLoading.set(false);
+    }
+  }
+
+  closeAdminProfile() {
+    this.showAdminProfile.set(false);
+    this.adminProfile.set(null);
+  }
+
+  joinFromAdminProfile() {
+    const ap = this.adminProfile();
+    if (!ap?.committee) return;
+    this.closeAdminProfile();
+    this.openRequestModal(ap.committee);
+  }
+
+  getStars(n: number) { return Array(5).fill(0).map((_, i) => i < Math.round(n)); }
+  getReputationLevel(score: number) {
+    if (score >= 4.5) return { label: 'Excellent', color: '#22c55e' };
+    if (score >= 3.5) return { label: 'Trusted',   color: '#60A5FA' };
+    if (score >= 2.5) return { label: 'Average',   color: '#fbbf24' };
+    if (score > 0)    return { label: 'Risky',     color: '#f87171' };
+    return { label: 'New Admin', color: '#94a3b8' };
   }
 
   getInitials(n: string) {

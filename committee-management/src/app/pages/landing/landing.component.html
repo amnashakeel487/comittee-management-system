@@ -57,7 +57,7 @@
       <div class="bar-lb"><span>{{ heroC()!.total_members }} slots</span><span>{{ getProgress(heroC()) }}%</span></div>
       <div class="bar-tr"><div class="bar-fi" [style.width.%]="getProgress(heroC())"></div></div>
       <div class="hc-foot">
-        <div style="display:flex;align-items:center;gap:.45rem;">
+        <button type="button" class="hero-fp-btn" (click)="openAdminProfile(heroC()!)" [title]="'View ' + heroC()!.admin_name + ' trust profile'" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:.45rem;padding:.25rem;border-radius:8px;transition:background .15s">
           <div class="mini-av" [style.background]="getColor(heroC()!.admin_name)">{{ getInitials(heroC()!.admin_name) }}</div>
           <div class="fp-n">
             <span style="font-size:.68rem;">Focal Person</span>
@@ -65,8 +65,13 @@
               {{ heroC()!.admin_name }}
               <span class="material-icons admin-verified-ic" *ngIf="heroC()!.admin_verified" title="Verified Admin">verified</span>
             </strong>
+            <span class="hero-rep" *ngIf="heroC()!.admin_review_count > 0" style="display:flex;align-items:center;gap:3px;font-size:.7rem;color:var(--txt2);margin-top:1px">
+              <span class="material-icons" style="font-size:11px;color:#fbbf24">star</span>
+              {{ heroC()!.admin_reputation.toFixed(1) }}
+              <em style="font-style:normal;color:var(--txt2);opacity:.7">· {{ heroC()!.admin_review_count }} review{{ heroC()!.admin_review_count === 1 ? '' : 's' }}</em>
+            </span>
           </div>
-        </div>
+        </button>
         <button class="btn btn-sm btn-primary" (click)="openJoin(heroC())">Request Join</button>
       </div>
     </div>
@@ -109,7 +114,7 @@
           <div class="bar-tr"><div class="bar-fi" [style.width.%]="getProgress(c)"></div></div>
         </div>
         <div class="cc-foot">
-          <div class="fp-row">
+          <button class="fp-row fp-btn" type="button" (click)="$event.stopPropagation(); openAdminProfile(c)" [title]="'View ' + c.admin_name + ' trust profile'">
             <div class="fp-av" [style.background]="getColor(c.admin_name)">{{ getInitials(c.admin_name) }}</div>
             <div class="fp-inf">
               <span>Focal Person</span>
@@ -117,8 +122,14 @@
                 {{ c.admin_name }}
                 <span class="material-icons admin-verified-ic" *ngIf="c.admin_verified" title="Verified Admin">verified</span>
               </strong>
+              <span class="fp-rep" *ngIf="c.admin_review_count > 0">
+                <span class="material-icons fp-rep-star">star</span>
+                {{ c.admin_reputation.toFixed(1) }}
+                <em>· {{ c.admin_review_count }} review{{ c.admin_review_count === 1 ? '' : 's' }}</em>
+              </span>
+              <span class="fp-rep no-rep" *ngIf="c.admin_review_count === 0">No reviews yet</span>
             </div>
-          </div>
+          </button>
           <div class="cc-btns" (click)="$event.stopPropagation()">
             <button class="btn btn-sm btn-ghost" (click)="openDetail(c)">Details</button>
             <button class="btn btn-sm btn-primary" (click)="openJoin(c)">Join</button>
@@ -341,16 +352,24 @@
       </div>
       <div class="m-sec">
         <div class="m-sec-t">Managed By</div>
-        <div style="display:flex;align-items:center;gap:.75rem;background:var(--card);border-radius:9px;padding:.85rem;">
+        <button type="button" (click)="openAdminProfile(selectedC()!)" style="all:unset;cursor:pointer;width:100%;box-sizing:border-box;display:flex;align-items:center;gap:.75rem;background:var(--card);border-radius:9px;padding:.85rem;transition:background .15s">
           <div class="fp-av" style="width:38px;height:38px;font-size:.75rem" [style.background]="getColor(selectedC()!.admin_name)">{{ getInitials(selectedC()!.admin_name) }}</div>
-          <div>
+          <div style="flex:1">
             <div style="font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:4px">
               {{ selectedC()!.admin_name }}
               <span class="material-icons admin-verified-ic" *ngIf="selectedC()!.admin_verified" title="Verified Admin">verified</span>
             </div>
-            <div style="font-size:.75rem;color:var(--txt2)">Focal Person / Admin</div>
+            <div style="font-size:.75rem;color:var(--txt2);display:flex;align-items:center;gap:4px;margin-top:2px">
+              <ng-container *ngIf="selectedC()!.admin_review_count > 0; else noRep">
+                <span class="material-icons" style="font-size:13px;color:#fbbf24">star</span>
+                {{ selectedC()!.admin_reputation.toFixed(1) }}
+                <span style="opacity:.7">· {{ selectedC()!.admin_review_count }} review{{ selectedC()!.admin_review_count === 1 ? '' : 's' }}</span>
+              </ng-container>
+              <ng-template #noRep><span style="opacity:.7;font-style:italic">No reviews yet</span></ng-template>
+            </div>
           </div>
-        </div>
+          <span class="material-icons" style="color:var(--txt2);font-size:18px">chevron_right</span>
+        </button>
       </div>
       <div class="m-disc"><span class="material-icons" style="font-size:14px;vertical-align:middle">warning</span> CommitteeHub only manages records. Verify all payments personally. Not liable for financial disputes.</div>
       <div class="m-acts">
@@ -431,6 +450,76 @@
           </div>
         </form>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN TRUST PROFILE MODAL -->
+<div class="overlay" [class.on]="showAdminProfile()" (click)="closeAdminProfile()">
+  <div class="modal trust-modal" (click)="$event.stopPropagation()" *ngIf="adminProfile() as ap" style="max-width:560px">
+    <div class="m-head">
+      <div class="m-title">Admin Trust Profile</div>
+      <button class="m-close" (click)="closeAdminProfile()"><span class="material-icons" style="font-size:16px">close</span></button>
+    </div>
+    <div class="m-body" style="padding:0">
+      <!-- Hero -->
+      <div style="display:flex;align-items:center;gap:1rem;padding:1.25rem 1.25rem 1rem;border-bottom:1px solid var(--card-bd)">
+        <div class="fp-av" style="width:64px;height:64px;font-size:1.2rem;font-weight:800" [style.background]="getColor(ap.name||'')">{{ getInitials(ap.name||'A') }}</div>
+        <div style="flex:1">
+          <div style="font-size:1.15rem;font-weight:800;display:flex;align-items:center;gap:6px">
+            {{ ap.name || 'Admin' }}
+            <span class="material-icons admin-verified-ic" *ngIf="ap.verified" title="Verified Admin" style="font-size:18px !important">verified</span>
+          </div>
+          <div style="margin-top:2px;font-size:.78rem;color:var(--txt2)">Committee Focal Person · {{ ap.verified ? 'CNIC-Verified' : 'Not Verified' }}</div>
+        </div>
+      </div>
+
+      <!-- Score card -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:1rem 1.25rem;padding:1.1rem 1.2rem;background:linear-gradient(135deg,#1E3A5F 0%,#2E5490 100%);border-radius:14px;color:#fff">
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <div style="font-size:2.1rem;font-weight:800;line-height:1">{{ ap.reputation > 0 ? ap.reputation.toFixed(1) : '—' }}</div>
+          <div style="display:flex;gap:1px">
+            <span *ngFor="let s of getStars(ap.reputation)" class="material-icons" [style.color]="s ? '#fbbf24' : 'rgba(255,255,255,.25)'" style="font-size:18px">star</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+          <span style="font-weight:700;font-size:.82rem" [style.color]="getReputationLevel(ap.reputation).color">{{ ap.review_count > 0 ? getReputationLevel(ap.reputation).label : 'New Admin' }}</span>
+          <span style="font-size:.7rem;color:rgba(255,255,255,.65)">{{ ap.review_count }} {{ ap.review_count === 1 ? 'review' : 'reviews' }}</span>
+        </div>
+      </div>
+
+      <div *ngIf="ap.review_count > 0" style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--txt2);padding:0 1.25rem .5rem">Recent reviews</div>
+
+      <div *ngIf="adminReviewsLoading()" style="display:flex;justify-content:center;padding:1.25rem"><div class="spinner-mini" style="width:22px;height:22px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div></div>
+
+      <div *ngIf="!adminReviewsLoading() && ap.reviews?.length" style="display:flex;flex-direction:column;gap:.6rem;padding:0 1.25rem .5rem">
+        <div *ngFor="let r of ap.reviews" style="background:var(--card);border:1px solid var(--card-bd);border-radius:10px;padding:.7rem .8rem">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem">
+            <span style="font-size:.78rem;font-weight:700;flex:1">{{ r.reviewer?.name || 'Anonymous' }}</span>
+            <div style="display:flex;gap:1px">
+              <span *ngFor="let s of getStars(r.rating)" class="material-icons" [style.color]="s ? '#fbbf24' : 'rgba(255,255,255,.2)'" style="font-size:13px">star</span>
+            </div>
+            <span style="font-size:.65rem;color:var(--txt2)">{{ r.created_at | date:'MMM d, y' }}</span>
+          </div>
+          <p *ngIf="r.review_message" style="font-size:.78rem;color:var(--txt2);font-style:italic;line-height:1.45;margin:.2rem 0">"{{ r.review_message }}"</p>
+          <div *ngIf="r.tags?.length" style="display:flex;flex-wrap:wrap;gap:3px;margin-top:.3rem">
+            <span *ngFor="let tag of r.tags" style="font-size:.58rem;font-weight:600;padding:1px 7px;border-radius:9px;text-transform:capitalize"
+                  [style.background]="['trusted','cooperative','responsive','recommended'].includes(tag) ? 'rgba(34,197,94,.18)' : (['late_payer','fraud_risk'].includes(tag) ? 'rgba(248,113,113,.18)' : 'rgba(255,255,255,.08)')"
+                  [style.color]="['trusted','cooperative','responsive','recommended'].includes(tag) ? '#4ade80' : (['late_payer','fraud_risk'].includes(tag) ? '#f87171' : 'var(--txt2)')">{{ tag }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!adminReviewsLoading() && !ap.reviews?.length && ap.review_count === 0" style="text-align:center;padding:1.5rem 1.25rem">
+        <span class="material-icons" style="font-size:2rem;color:var(--txt2);opacity:.5;display:block;margin-bottom:.4rem">rate_review</span>
+        <p style="font-size:.8rem;color:var(--txt2)">This admin hasn't received any reviews yet.</p>
+      </div>
+    </div>
+    <div class="m-acts" style="padding:.8rem 1.25rem 1.1rem;gap:.5rem" *ngIf="ap.committee">
+      <button type="button" class="btn btn-primary" style="flex:1;justify-content:center" (click)="joinFromAdminProfile()">
+        Request to Join "{{ ap.committee.name }}"
+      </button>
+      <button type="button" class="btn btn-ghost" (click)="closeAdminProfile()">Close</button>
     </div>
   </div>
 </div>
