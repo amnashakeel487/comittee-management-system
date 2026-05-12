@@ -52,9 +52,12 @@
       <button class="rv-tab" [class.active]="activeTab()==='sent'" (click)="activeTab.set('sent')">
         <span class="material-icons">send</span> Reviews I Wrote ({{ sentReviews().length }})
       </button>
-      <button class="rv-tab" [class.active]="activeTab()==='write'" (click)="activeTab.set('write')">
-        <span class="material-icons">rate_review</span> Write a Review ({{ committeeMembers().length }} available)
-      </button>
+    </div>
+    <div class="rv-hint">
+      <span class="material-icons">info</span>
+      Want to review someone? Open a committee from
+      <a routerLink="/joined-committees" class="rv-hint-link">Joined Committees</a>
+      and use the <strong>Write Review</strong> button next to each member.
     </div>
 
     <!-- Received Reviews -->
@@ -129,33 +132,6 @@
       </div>
     </div>
 
-    <!-- Write Review -->
-    <div *ngIf="activeTab()==='write'">
-      <div *ngIf="committeeMembers().length===0" class="rv-empty">
-        <span class="material-icons">rate_review</span>
-        <h3>No members to review</h3>
-        <p>You can review members after participating in a committee together. Already reviewed members won't appear here.</p>
-      </div>
-      <div class="write-grid">
-        <div *ngFor="let item of committeeMembers()" class="write-card">
-          <div class="wc-user">
-            <div class="rv-av" [style.background]="getColor(item.member?.name||'')">{{ getInitials(item.member?.name||'M') }}</div>
-            <div>
-              <div class="wc-name">{{ item.member?.name }}</div>
-              <div class="wc-committee">
-                {{ item.committee?.name }}
-                <span class="wc-type" *ngIf="item.type==='creator'"> · Committee Admin</span>
-                <span class="wc-type" *ngIf="item.type==='participant'"> · Your Member</span>
-                <span class="wc-type" *ngIf="item.type==='member'"> · Co-Member</span>
-              </div>
-            </div>
-          </div>
-          <button class="wc-btn" (click)="openReviewModal(item)">
-            <span class="material-icons">rate_review</span> Write Review
-          </button>
-        </div>
-      </div>
-    </div>
   </ng-container>
 
   <!-- Review Modal -->

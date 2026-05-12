@@ -22,7 +22,7 @@ export class ReviewsComponent implements OnInit {
   showReviewModal = signal(false);
   reviewingUser = signal<any>(null);
   submitting = signal(false);
-  activeTab = signal<"received"|"sent"|"write">("received");
+  activeTab = signal<"received"|"sent">("received");
 
   // Live-computed reputation derived from the actual review rows the
   // recipient has received.  This is the source of truth for the
