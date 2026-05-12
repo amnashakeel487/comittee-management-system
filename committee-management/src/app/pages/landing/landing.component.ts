@@ -130,21 +130,36 @@ export class LandingComponent implements OnInit {
       // Step 2: fetch admin names from profiles separately
       const creatorIds = [...new Set(cs.map((c: any) => c.created_by).filter(Boolean))];
       let profileMap: Record<string, any> = {};
+      // Compute reputation live from the reviews table so the small
+      // star/count on each card stays in sync with the actual reviews
+      // (profiles.reputation_score / review_count depends on a
+      // database trigger that may not have caught every row).
+      const reviewStats = new Map<string, { sum: number; count: number }>();
       if (creatorIds.length > 0) {
-        const pRes = await sb.from('profiles')
-          .select('id, name, verified, reputation_score, review_count')
-          .in('id', creatorIds);
+        const [pRes, rRes] = await Promise.all([
+          sb.from('profiles').select('id, name, verified').in('id', creatorIds),
+          sb.from('reviews').select('reviewed_user_id, rating').in('reviewed_user_id', creatorIds)
+        ]);
         (pRes.data || []).forEach((p: any) => { profileMap[p.id] = p; });
+        for (const r of rRes.data || []) {
+          const cur = reviewStats.get(r.reviewed_user_id) || { sum: 0, count: 0 };
+          cur.sum += r.rating || 0;
+          cur.count += 1;
+          reviewStats.set(r.reviewed_user_id, cur);
+        }
       }
 
       // Step 3: enrich committees with admin info + reputation snapshot
-      const enriched = cs.map((c: any) => ({
-        ...c,
-        admin_name:         profileMap[c.created_by]?.name             || 'Admin',
-        admin_verified:     profileMap[c.created_by]?.verified         || false,
-        admin_reputation:   Number(profileMap[c.created_by]?.reputation_score || 0),
-        admin_review_count: Number(profileMap[c.created_by]?.review_count     || 0)
-      }));
+      const enriched = cs.map((c: any) => {
+        const stat = reviewStats.get(c.created_by);
+        return {
+          ...c,
+          admin_name:         profileMap[c.created_by]?.name     || 'Admin',
+          admin_verified:     profileMap[c.created_by]?.verified || false,
+          admin_reputation:   stat && stat.count ? stat.sum / stat.count : 0,
+          admin_review_count: stat ? stat.count : 0
+        };
+      });
 
       this.committees.set(enriched);
       this.filtered.set(enriched);
@@ -299,27 +314,42 @@ export class LandingComponent implements OnInit {
     this.systemReview.set(null);
     this.loadSystemReview(c.created_by);
     try {
-      const { data: revs } = await sb
+      // Compute count + average from the reviews table directly so the
+      // score card never disagrees with the review list below it.
+      // profiles.reputation_score / review_count rely on a database
+      // trigger that may not have run for older rows.
+      const { data: allRevs } = await sb
         .from('reviews')
         .select('id, rating, review_message, tags, created_at, reviewer_id, committee_id')
         .eq('reviewed_user_id', c.created_by)
-        .order('created_at', { ascending: false })
-        .limit(3);
+        .order('created_at', { ascending: false });
 
-      const reviewerIds = [...new Set((revs || []).map((r: any) => r.reviewer_id).filter(Boolean))];
+      const total = allRevs?.length || 0;
+      const avg = total > 0
+        ? (allRevs!.reduce((s: number, r: any) => s + (r.rating || 0), 0) / total)
+        : 0;
+
+      const top = (allRevs || []).slice(0, 3);
+      const reviewerIds = [...new Set(top.map((r: any) => r.reviewer_id).filter(Boolean))];
       let reviewerMap = new Map<string, any>();
       if (reviewerIds.length) {
         const { data: profiles } = await sb
           .from('profiles').select('id, name').in('id', reviewerIds);
         reviewerMap = new Map((profiles || []).map((p: any) => [p.id, p]));
       }
-      const stitched = (revs || []).map((r: any) => ({
+      const stitched = top.map((r: any) => ({
         ...r,
         reviewer: reviewerMap.get(r.reviewer_id) || null
       }));
-      this.adminProfile.update(curr => ({ ...curr, reviews: stitched }));
+
+      this.adminProfile.update(curr => ({
+        ...curr,
+        reputation: avg,
+        review_count: total,
+        reviews: stitched
+      }));
     } catch {
-      // ignore — reputation card still renders without reviews
+      // ignore — keep the cached snapshot visible
     } finally {
       this.adminReviewsLoading.set(false);
     }

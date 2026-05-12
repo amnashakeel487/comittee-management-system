@@ -474,21 +474,43 @@ export class BrowseCommitteesComponent implements OnInit {
     const creatorIds = [...new Set(cs.map((c: any) => c.created_by).filter(Boolean))];
     let profileMap: Record<string, any> = {};
 
+    // Reputation stats computed live from the reviews table so the
+    // small star/count next to each admin's name never disagrees with
+    // the actual reviews shown when the trust profile is opened.
+    // profiles.reputation_score / review_count depend on a database
+    // trigger that may not have fired for all rows.
+    const reviewStats = new Map<string, { sum: number; count: number }>();
+
     if (creatorIds.length > 0) {
-      const { data: profiles } = await this.supabase.client
-        .from('profiles')
-        .select('id, name, verified, reputation_score, review_count')
-        .in('id', creatorIds);
+      const [{ data: profiles }, { data: revs }] = await Promise.all([
+        this.supabase.client
+          .from('profiles')
+          .select('id, name, verified')
+          .in('id', creatorIds),
+        this.supabase.client
+          .from('reviews')
+          .select('reviewed_user_id, rating')
+          .in('reviewed_user_id', creatorIds)
+      ]);
       (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
+      for (const r of revs || []) {
+        const cur = reviewStats.get(r.reviewed_user_id) || { sum: 0, count: 0 };
+        cur.sum += r.rating || 0;
+        cur.count += 1;
+        reviewStats.set(r.reviewed_user_id, cur);
+      }
     }
 
-    const enriched = cs.map((c: any) => ({
-      ...c,
-      admin_name:         profileMap[c.created_by]?.name             || 'Admin',
-      admin_verified:     profileMap[c.created_by]?.verified         || false,
-      admin_reputation:   Number(profileMap[c.created_by]?.reputation_score || 0),
-      admin_review_count: Number(profileMap[c.created_by]?.review_count     || 0)
-    }));
+    const enriched = cs.map((c: any) => {
+      const stat = reviewStats.get(c.created_by);
+      return {
+        ...c,
+        admin_name:         profileMap[c.created_by]?.name     || 'Admin',
+        admin_verified:     profileMap[c.created_by]?.verified || false,
+        admin_reputation:   stat && stat.count ? stat.sum / stat.count : 0,
+        admin_review_count: stat ? stat.count : 0
+      };
+    });
 
     this.allCommittees = enriched;
     this.applyFilter();
@@ -610,32 +632,46 @@ export class BrowseCommitteesComponent implements OnInit {
     this.systemReview.set(null);
     this.loadSystemReview(c.created_by);
     try {
-      // Most-recent 3 reviews of this admin.  Profile lookup for the
-      // reviewers happens separately because reviews.reviewer_id has an
-      // FK to auth.users (outside the public schema) and PostgREST
-      // embeds against that schema would return null.
-      const { data: revs } = await this.supabase.client
+      // Pull every review for this admin so we can compute the live
+      // count + average ourselves.  We cannot trust
+      // profiles.reputation_score / review_count because that pair is
+      // kept in sync by a database trigger that may not have been
+      // applied yet (or may have missed back-filled historical rows).
+      // Computing from the source of truth guarantees the score card
+      // matches the review list right below it.
+      const { data: allRevs } = await this.supabase.client
         .from('reviews')
         .select('id, rating, review_message, tags, created_at, reviewer_id, committee_id')
         .eq('reviewed_user_id', c.created_by)
-        .order('created_at', { ascending: false })
-        .limit(3);
+        .order('created_at', { ascending: false });
 
-      const reviewerIds = [...new Set((revs || []).map((r: any) => r.reviewer_id).filter(Boolean))];
+      const total = allRevs?.length || 0;
+      const avg = total > 0
+        ? (allRevs!.reduce((s: number, r: any) => s + (r.rating || 0), 0) / total)
+        : 0;
+
+      // Reviewer profiles for the top 3 (display only).
+      const top = (allRevs || []).slice(0, 3);
+      const reviewerIds = [...new Set(top.map((r: any) => r.reviewer_id).filter(Boolean))];
       let reviewerMap = new Map<string, any>();
       if (reviewerIds.length) {
         const { data: profiles } = await this.supabase.client
           .from('profiles').select('id, name').in('id', reviewerIds);
         reviewerMap = new Map((profiles || []).map((p: any) => [p.id, p]));
       }
-      const stitched = (revs || []).map((r: any) => ({
+      const stitched = top.map((r: any) => ({
         ...r,
         reviewer: reviewerMap.get(r.reviewer_id) || null
       }));
-      this.adminProfile.update(curr => ({ ...curr, reviews: stitched }));
+
+      this.adminProfile.update(curr => ({
+        ...curr,
+        reputation: avg,
+        review_count: total,
+        reviews: stitched
+      }));
     } catch {
-      // Non-fatal — just leave reviews empty so the rest of the card
-      // can still render the reputation score.
+      // Non-fatal — leave the snapshot from the card visible.
     } finally {
       this.adminReviewsLoading.set(false);
     }
