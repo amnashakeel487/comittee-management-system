@@ -53,11 +53,50 @@ export class ReviewsComponent implements OnInit {
   }
 
   private async loadReceivedReviews() {
-    const { data } = await this.supabase.client
-      .from("reviews").select("*, reviewer:reviewer_id(name, email), committee:committee_id(name)")
-      .eq("reviewed_user_id", this.auth.currentUser()?.id)
+    const myId = this.auth.currentUser()?.id;
+    if (!myId) { this.receivedReviews.set([]); return; }
+
+    // 1) Fetch the raw reviews. We cannot embed `reviewer:reviewer_id(...)` here
+    //    because reviews.reviewer_id has a FK to auth.users(id), and PostgREST
+    //    only exposes the public schema — that embed fails silently and the
+    //    whole query returns null, which is why the "Reviews Received" list
+    //    used to look empty even when rows existed.
+    const { data: rows, error } = await this.supabase.client
+      .from("reviews")
+      .select("*")
+      .eq("reviewed_user_id", myId)
       .order("created_at", { ascending: false });
-    this.receivedReviews.set(data || []);
+
+    if (error) {
+      this.toast.error("Failed to load reviews: " + error.message);
+      this.receivedReviews.set([]);
+      return;
+    }
+
+    const reviews = rows || [];
+    if (!reviews.length) { this.receivedReviews.set([]); return; }
+
+    // 2) Resolve reviewer (profiles) + committee names in parallel.
+    const reviewerIds  = [...new Set(reviews.map(r => r.reviewer_id).filter(Boolean))];
+    const committeeIds = [...new Set(reviews.map(r => r.committee_id).filter(Boolean))];
+
+    const [profilesRes, committeesRes] = await Promise.all([
+      reviewerIds.length
+        ? this.supabase.client.from('profiles').select('id, name, email').in('id', reviewerIds)
+        : Promise.resolve({ data: [] as any[], error: null }),
+      committeeIds.length
+        ? this.supabase.client.from('committees').select('id, name').in('id', committeeIds)
+        : Promise.resolve({ data: [] as any[], error: null })
+    ]);
+
+    const profileMap   = new Map((profilesRes.data   || []).map((p: any) => [p.id, p]));
+    const committeeMap = new Map((committeesRes.data || []).map((c: any) => [c.id, c]));
+
+    this.receivedReviews.set(reviews.map((r: any) => ({
+      ...r,
+      reviewer:  profileMap.get(r.reviewer_id)   || null,
+      committee: committeeMap.get(r.committee_id) || null
+    })));
   }
 
   private async loadCommitteeMembers() {
@@ -100,13 +139,19 @@ export class ReviewsComponent implements OnInit {
       .select('member_id, committee_id, members(id, name, email)')
       .in('committee_id', allCommitteeIds);
 
-    // Build email→authId map from profiles for all member emails
-    const memberEmails = [...new Set((allCMs || []).map((cm: any) => cm.members?.email).filter(Boolean))];
+    // Build email→authId map from profiles for all member emails.
+    // Keys are lower-cased so the lookup is case-insensitive — emails sometimes
+    // differ in casing between the members table and the profiles table.
+    const memberEmails = [...new Set(
+      (allCMs || []).map((cm: any) => (cm.members?.email || '').toLowerCase()).filter(Boolean)
+    )];
     let emailToAuthId: Record<string, string> = {};
     if (memberEmails.length > 0) {
       const { data: profilesByEmail } = await this.supabase.client
         .from('profiles').select('id, email').in('email', memberEmails);
-      (profilesByEmail || []).forEach((p: any) => { emailToAuthId[p.email] = p.id; });
+      (profilesByEmail || []).forEach((p: any) => {
+        if (p.email) emailToAuthId[p.email.toLowerCase()] = p.id;
+      });
     }
 
     // Get all committee creators (other sub-admins who created committees you joined)
@@ -128,13 +173,23 @@ export class ReviewsComponent implements OnInit {
 
     const unique = new Map();
 
-    // Add committee members (people in same committees via members table)
+    // Add committee members (people in same committees via members table).
+    // members.id is the members-table id (different from auth.users.id), so we
+    // must translate to the auth id via emailToAuthId before checking against
+    // `reviewed` (which is keyed by auth user id from reviews.reviewed_user_id).
     (allCMs || []).forEach((cm: any) => {
       const memberEmail = cm.members?.email;
       const memberId = cm.members?.id;
-      if (memberEmail && memberEmail !== email && memberId) {
+      if (memberEmail && memberEmail.toLowerCase() !== (email || '').toLowerCase() && memberId) {
+        const authId = emailToAuthId[memberEmail.toLowerCase()];
+        // Hide entries with no profile (we can't insert a review for them anyway
+        // — submitReview() requires a matching profiles row).
+        if (!authId) return;
+        // Hide entries already reviewed by me in this committee.
+        if (reviewed.has(`${authId}-${cm.committee_id}`)) return;
+
         const key = `${memberId}-${cm.committee_id}`;
-        if (!unique.has(key) && !reviewed.has(key)) {
+        if (!unique.has(key)) {
           const committee = (allCommittees || []).find((c: any) => c.id === cm.committee_id);
           unique.set(key, {
             member: cm.members,
@@ -163,14 +218,19 @@ export class ReviewsComponent implements OnInit {
         });
     });
 
-    // Add members of YOUR committees (people who joined your committees)
+    // Add members of YOUR committees (people who joined your committees).
+    // Same auth-id translation as above — members.id is NOT an auth user id.
     (allCMs || []).forEach((cm: any) => {
       const memberEmail = cm.members?.email;
       const memberId = cm.members?.id;
       const isMyCommittee = (myCreatedCommittees || []).some((c: any) => c.id === cm.committee_id);
-      if (isMyCommittee && memberEmail && memberEmail !== email && memberId) {
+      if (isMyCommittee && memberEmail && memberEmail.toLowerCase() !== (email || '').toLowerCase() && memberId) {
+        const authId = emailToAuthId[memberEmail.toLowerCase()];
+        if (!authId) return;
+        if (reviewed.has(`${authId}-${cm.committee_id}`)) return;
+
         const key = `${memberId}-${cm.committee_id}`;
-        if (!unique.has(key) && !reviewed.has(key)) {
+        if (!unique.has(key)) {
           const committee = (allCommittees || []).find((c: any) => c.id === cm.committee_id);
           unique.set(key, {
             member: cm.members,
@@ -246,7 +306,18 @@ export class ReviewsComponent implements OnInit {
       this.toast.success("Review submitted successfully!");
       this.closeReviewModal();
       await this.loadCommitteeMembers();
-    } catch (e: any) { this.toast.error("Failed: " + e?.message); }
+    } catch (e: any) {
+      const msg = e?.message || '';
+      // Unique constraint: reviewer × reviewed × committee. Re-syncing the lists
+      // will make the now-reviewed entry disappear from the "Write Review" tab.
+      if (msg.includes('duplicate key') || msg.includes('reviews_reviewer_id_reviewed_user_id_committee_id_key')) {
+        this.toast.warning("You've already reviewed this person for this committee.");
+        this.closeReviewModal();
+        await Promise.all([this.loadReceivedReviews(), this.loadCommitteeMembers()]);
+      } else {
+        this.toast.error("Failed: " + msg);
+      }
+    }
     finally { this.submitting.set(false); }
   }
 

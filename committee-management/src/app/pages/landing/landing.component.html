@@ -41,7 +41,10 @@
       <div class="hc-top">
         <div>
           <div class="hc-name">{{ heroC()!.name }}</div>
-          <div class="hc-sub">Focal: {{ heroC()!.admin_name }}</div>
+          <div class="hc-sub">
+            Focal: {{ heroC()!.admin_name }}
+            <span class="material-icons admin-verified-ic" *ngIf="heroC()!.admin_verified" title="Verified Admin">verified</span>
+          </div>
         </div>
         <div class="sc" [class]="getStatusClass(heroC()!.status)">{{ getStatusLabel(heroC()!.status) }}</div>
       </div>
@@ -56,7 +59,13 @@
       <div class="hc-foot">
         <div style="display:flex;align-items:center;gap:.45rem;">
           <div class="mini-av" [style.background]="getColor(heroC()!.admin_name)">{{ getInitials(heroC()!.admin_name) }}</div>
-          <div class="fp-n"><span style="font-size:.68rem;">Focal Person</span><strong>{{ heroC()!.admin_name }}</strong></div>
+          <div class="fp-n">
+            <span style="font-size:.68rem;">Focal Person</span>
+            <strong>
+              {{ heroC()!.admin_name }}
+              <span class="material-icons admin-verified-ic" *ngIf="heroC()!.admin_verified" title="Verified Admin">verified</span>
+            </strong>
+          </div>
         </div>
         <button class="btn btn-sm btn-primary" (click)="openJoin(heroC())">Request Join</button>
       </div>
@@ -102,7 +111,13 @@
         <div class="cc-foot">
           <div class="fp-row">
             <div class="fp-av" [style.background]="getColor(c.admin_name)">{{ getInitials(c.admin_name) }}</div>
-            <div class="fp-inf"><span>Focal Person</span><strong>{{ c.admin_name }}</strong></div>
+            <div class="fp-inf">
+              <span>Focal Person</span>
+              <strong>
+                {{ c.admin_name }}
+                <span class="material-icons admin-verified-ic" *ngIf="c.admin_verified" title="Verified Admin">verified</span>
+              </strong>
+            </div>
           </div>
           <div class="cc-btns" (click)="$event.stopPropagation()">
             <button class="btn btn-sm btn-ghost" (click)="openDetail(c)">Details</button>
@@ -328,7 +343,13 @@
         <div class="m-sec-t">Managed By</div>
         <div style="display:flex;align-items:center;gap:.75rem;background:var(--card);border-radius:9px;padding:.85rem;">
           <div class="fp-av" style="width:38px;height:38px;font-size:.75rem" [style.background]="getColor(selectedC()!.admin_name)">{{ getInitials(selectedC()!.admin_name) }}</div>
-          <div><div style="font-size:.88rem;font-weight:700">{{ selectedC()!.admin_name }}</div><div style="font-size:.75rem;color:var(--txt2)">Focal Person / Admin</div></div>
+          <div>
+            <div style="font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:4px">
+              {{ selectedC()!.admin_name }}
+              <span class="material-icons admin-verified-ic" *ngIf="selectedC()!.admin_verified" title="Verified Admin">verified</span>
+            </div>
+            <div style="font-size:.75rem;color:var(--txt2)">Focal Person / Admin</div>
+          </div>
         </div>
       </div>
       <div class="m-disc"><span class="material-icons" style="font-size:14px;vertical-align:middle">warning</span> CommitteeHub only manages records. Verify all payments personally. Not liable for financial disputes.</div>

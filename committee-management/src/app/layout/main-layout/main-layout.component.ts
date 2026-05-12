@@ -70,7 +70,6 @@ export class MainLayoutComponent {
     '/committees/create': 'Create Committee',
     '/joined-committees': 'Joined Committees',
     '/browse': 'Browse & Join',
-    '/members': 'Members',
     '/payments': 'Payments',
     '/my-payments': 'My Payments',
     '/payouts': 'Payouts',

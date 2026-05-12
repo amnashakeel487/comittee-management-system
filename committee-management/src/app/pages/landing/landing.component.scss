@@ -26,6 +26,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .btn-outline{background:transparent;color:var(--accent);border:1.5px solid var(--accent);}
 .btn-outline:hover{background:var(--accent);color:#fff;}
 
+/* Blue verified tick rendered next to admin names on committee cards / hero / detail modal */
+.admin-verified-ic{font-size:14px !important;color:var(--accent);vertical-align:middle;margin-left:3px;}
+
 #hero{min-height:100vh;display:flex;align-items:center;padding:7rem 5% 4rem;position:relative;overflow:hidden;}
 [data-theme="dark"] #hero{background:linear-gradient(155deg,var(--bg3) 0%,var(--bg) 55%);}
 [data-theme="light"] #hero{background:linear-gradient(155deg,#d9e6f7 0%,var(--bg) 55%);}
