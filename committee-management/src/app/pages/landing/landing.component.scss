@@ -1,5 +1,6 @@
 /* Landing Page Styles */
 .landing { font-family: 'Inter', 'DM Sans', sans-serif; background: #020b18; color: #fff; min-height: 100vh; }
+.landing h1, .landing h2, .landing h3, .landing h4 { color: #fff; }
 
 /* NAV */
 .l-nav { position: sticky; top: 0; z-index: 100; background: rgba(2,11,24,0.95); border-bottom: 1px solid rgba(255,255,255,0.08); }

@@ -22,12 +22,12 @@ import { ToastService } from "../../../services/toast.service";
   <div class="auth-left">
     <a routerLink="/" class="auth-logo">Committee<span>Hub</span></a>
     <div class="auth-left-content">
-      <div class="auth-badge"><i class="ti ti-shield-check"></i> Trusted Committee Platform</div>
+      <div class="auth-badge"><span class="material-icons" style="font-size:14px">verified</span> Trusted Committee Platform</div>
       <h1 class="auth-title">Smart Committee<br><span class="accent">Management System</span></h1>
       <p class="auth-sub">Manage committees, payments, members, and monthly turns easily — with full transparency and trust.</p>
       <div class="auth-features">
         <div class="af-item" *ngFor="let f of features">
-          <div class="af-icon"><i [class]="'ti ' + f.icon"></i></div>
+          <div class="af-icon"><span class="material-icons">{{ f.icon }}</span></div>
           <div><div class="af-title">{{ f.title }}</div><div class="af-desc">{{ f.desc }}</div></div>
         </div>
       </div>
@@ -47,14 +47,14 @@ import { ToastService } from "../../../services/toast.service";
   <div class="auth-right">
     <div class="auth-card">
       <div class="auth-card-top">
-        <div class="auth-card-icon"><i class="ti ti-building-bank"></i></div>
+        <div class="auth-card-icon"><span class="material-icons">account_balance</span></div>
         <h2>Welcome Back</h2>
         <p>Sign in to your CommitteeHub account</p>
       </div>
 
       <form (ngSubmit)="onLogin()" class="auth-form">
         <div class="form-group">
-          <label class="form-label"><i class="ti ti-mail"></i> Email Address</label>
+          <label class="form-label"><span class="material-icons" style="font-size:15px">email</span> Email Address</label>
           <input class="form-input" type="email" placeholder="you@example.com"
                  [(ngModel)]="email" name="email" required
                  [class.error]="submitted() && !email">
@@ -63,7 +63,7 @@ import { ToastService } from "../../../services/toast.service";
 
         <div class="form-group">
           <div class="form-label-row">
-            <label class="form-label"><i class="ti ti-lock"></i> Password</label>
+            <label class="form-label"><span class="material-icons" style="font-size:15px">lock</span> Password</label>
             <a routerLink="/auth/forgot-password" class="forgot-link">Forgot password?</a>
           </div>
           <div class="input-wrap">
@@ -72,18 +72,18 @@ import { ToastService } from "../../../services/toast.service";
                    [(ngModel)]="password" name="password" required
                    [class.error]="submitted() && !password">
             <button type="button" class="pwd-toggle" (click)="showPwd.update(v=>!v)">
-              <i [class]="'ti ' + (showPwd() ? 'ti-eye-off' : 'ti-eye')"></i>
+              <span class="material-icons">{{ showPwd() ? 'visibility_off' : 'visibility' }}</span>
             </button>
           </div>
           <span class="form-err" *ngIf="submitted() && !password">Password is required</span>
         </div>
 
         <div class="form-error-msg" *ngIf="errorMsg()">
-          <i class="ti ti-alert-circle"></i> {{ errorMsg() }}
+          <span class="material-icons" style="font-size:16px">error</span> {{ errorMsg() }}
         </div>
 
         <button type="submit" class="btn-submit" [disabled]="loading()">
-          <span *ngIf="!loading()"><i class="ti ti-login"></i> Sign In</span>
+          <span *ngIf="!loading()"><span class="material-icons" style="font-size:18px">login</span> Sign In</span>
           <span *ngIf="loading()" class="btn-spinner"></span>
           <span *ngIf="loading()">Signing in...</span>
         </button>
@@ -91,7 +91,7 @@ import { ToastService } from "../../../services/toast.service";
 
       <div class="auth-card-footer">
         <p>Don't have an account? <a routerLink="/auth/register">Create Account</a></p>
-        <a routerLink="/" class="back-home"><i class="ti ti-arrow-left"></i> Back to Home</a>
+        <a routerLink="/" class="back-home"><span class="material-icons" style="font-size:15px">arrow_back</span> Back to Home</a>
       </div>
     </div>
   </div>
@@ -117,7 +117,7 @@ import { ToastService } from "../../../services/toast.service";
     .auth-sub { font-size: 1rem; color: rgba(255,255,255,0.55); margin-bottom: 2rem; font-weight: 300; line-height: 1.7; animation: fadeInUp .7s .2s ease both; }
     .auth-features { display: flex; flex-direction: column; gap: 1rem; animation: fadeInUp .7s .3s ease both; }
     .af-item { display: flex; gap: 12px; align-items: flex-start; }
-    .af-icon { width: 38px; height: 38px; min-width: 38px; border-radius: 10px; background: rgba(45,140,255,0.12); border: 1px solid rgba(45,140,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #2d8cff; }
+    .af-icon { width: 38px; height: 38px; min-width: 38px; border-radius: 10px; background: rgba(45,140,255,0.12); border: 1px solid rgba(45,140,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #2d8cff; .material-icons { font-size: 20px; } }
     .af-title { font-family: "Syne", sans-serif; font-size: .88rem; font-weight: 700; margin-bottom: 2px; }
     .af-desc { font-size: .78rem; color: rgba(255,255,255,0.5); font-weight: 300; }
     .auth-left-footer { font-size: .78rem; color: rgba(255,255,255,0.4); }
@@ -163,10 +163,10 @@ export class LoginComponent {
   });
 
   features = [
-    { icon: "ti-building-community", title: "Manage Committees", desc: "Create and manage multiple ROSCA committees effortlessly" },
-    { icon: "ti-receipt-2", title: "Track Payments", desc: "Monitor all contributions and payment statuses in real-time" },
-    { icon: "ti-rotate-clockwise-2", title: "Spin Wheel Turns", desc: "Fair, transparent turn selection with animated spin wheel" },
-    { icon: "ti-chart-bar", title: "Analytics & Reports", desc: "Get detailed insights into your committee performance" }
+    { icon: "groups", title: "Manage Committees", desc: "Create and manage multiple ROSCA committees effortlessly" },
+    { icon: "payments", title: "Track Payments", desc: "Monitor all contributions and payment statuses in real-time" },
+    { icon: "casino", title: "Spin Wheel Turns", desc: "Fair, transparent turn selection with animated spin wheel" },
+    { icon: "bar_chart", title: "Analytics & Reports", desc: "Get detailed insights into your committee performance" }
   ];
 
   constructor(private auth: AuthService, private toast: ToastService, private router: Router) {}
