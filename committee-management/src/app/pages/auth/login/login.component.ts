@@ -85,10 +85,10 @@ import { ToastService } from "../../../services/toast.service";
     .auth-wrap { min-height: 100vh; display: flex; background: #060e1a; color: #f0f4ff; font-family: 'Plus Jakarta Sans','Inter',sans-serif; }
 
     /* LEFT */
-    .auth-left { flex: 1; padding: 2.5rem 3.5rem; display: flex; flex-direction: column; background: linear-gradient(155deg, #0f2035 0%, #060e1a 60%); border-right: 1px solid rgba(255,255,255,0.06); }
+    .auth-left { flex: 1; padding: 2.5rem 4rem 2.5rem 5%; display: flex; flex-direction: column; background: linear-gradient(155deg, #0f2035 0%, #060e1a 60%); border-right: 1px solid rgba(255,255,255,0.06); }
     .auth-logo { font-weight: 700; font-size: 1.2rem; color: #f0f4ff; text-decoration: none; display: flex; align-items: center; gap: 7px; margin-bottom: 2.5rem; }
     .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #2d8cff; flex-shrink: 0; }
-    .auth-left-body { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; max-width: 460px; }
+    .auth-left-body { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; max-width: 480px; }
     .auth-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(45,140,255,0.12); border: 1px solid rgba(45,140,255,0.35); color: #2d8cff; padding: .26rem .72rem; border-radius: 50px; font-size: .73rem; font-weight: 600; margin-bottom: 1.2rem; }
     h1 { font-size: clamp(2rem,4vw,3rem); font-weight: 700; line-height: 1.2; margin-bottom: .9rem; color: #f0f4ff; }
     h1 em { font-style: normal; color: #2d8cff; }
@@ -101,7 +101,7 @@ import { ToastService } from "../../../services/toast.service";
     .auth-left-foot { margin-top: 2rem; font-size: .84rem; color: rgba(240,244,255,0.35); line-height: 1.7; a { color: #2d8cff; text-decoration: none; &:hover { text-decoration: underline; } } }
 
     /* RIGHT */
-    .auth-right { width: 460px; display: flex; align-items: center; justify-content: center; padding: 2rem; background: #060e1a; }
+    .auth-right { width: 520px; display: flex; align-items: center; justify-content: flex-start; padding: 2.5rem 5% 2.5rem 3rem; background: #060e1a; }
     .auth-card { width: 100%; max-width: 400px; background: rgba(255,255,255,0.04); border: 1px solid rgba(45,140,255,0.25); border-radius: 16px; padding: 2.25rem; }
     .auth-card-icon { width: 52px; height: 52px; background: rgba(45,140,255,0.15); border: 1px solid rgba(45,140,255,0.3); border-radius: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; .material-icons { color: #2d8cff; font-size: 26px; } }
     h2 { font-size: 1.7rem; font-weight: 700; color: #f0f4ff; text-align: center; margin-bottom: .3rem; }

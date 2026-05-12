@@ -129,7 +129,7 @@ import { ToastService } from '../../../services/toast.service';
     .auth-page { min-height: 100vh; display: flex; background: #060e1a; color: #f0f4ff; font-family: 'Plus Jakarta Sans','Inter',sans-serif; }
 
     /* LEFT */
-    .auth-left { flex: 1; padding: 2.5rem 3.5rem; display: flex; flex-direction: column; background: linear-gradient(155deg, #0f2035 0%, #060e1a 60%); border-right: 1px solid rgba(255,255,255,0.06); }
+    .auth-left { flex: 1; padding: 2.5rem 4rem 2.5rem 5%; display: flex; flex-direction: column; background: linear-gradient(155deg, #0f2035 0%, #060e1a 60%); border-right: 1px solid rgba(255,255,255,0.06); }
     .auth-brand { margin-bottom: 2rem; }
     .brand-icon { width: 52px; height: 52px; background: rgba(45,140,255,0.15); border: 1px solid rgba(45,140,255,0.3); border-radius: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
     .brand-icon .material-icons { color: #2d8cff; font-size: 26px; }
@@ -147,7 +147,7 @@ import { ToastService } from '../../../services/toast.service';
     .auth-footer-text p { font-size: .85rem; color: rgba(240,244,255,0.35); }
 
     /* RIGHT */
-    .auth-right { width: 480px; display: flex; align-items: center; justify-content: center; padding: 2rem; background: #060e1a; }
+    .auth-right { width: 520px; display: flex; align-items: center; justify-content: flex-start; padding: 2.5rem 5% 2.5rem 3rem; background: #060e1a; }
     .auth-card { width: 100%; max-width: 420px; background: rgba(255,255,255,0.04); border: 1px solid rgba(45,140,255,0.25); border-radius: 16px; padding: 2rem; }
     .auth-card-header { margin-bottom: 1.5rem; }
     .auth-card-header h2 { font-size: 1.7rem; font-weight: 700; color: #f0f4ff; margin-bottom: 4px; }

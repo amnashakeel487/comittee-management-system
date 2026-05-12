@@ -33,6 +33,7 @@ export const routes: Routes = [
           { path: "payments", loadComponent: () => import("./pages/super-admin/pages/sa-payments.component").then(m => m.SaPaymentsComponent) },
           { path: "announcements", loadComponent: () => import("./pages/super-admin/pages/sa-announcements.component").then(m => m.SaAnnouncementsComponent) },
           { path: "profile", loadComponent: () => import("./pages/super-admin/pages/sa-profile.component").then(m => m.SaProfileComponent) },
+          { path: "verification", loadComponent: () => import("./pages/super-admin/pages/sa-verification.component").then(m => m.SaVerificationComponent) },
         ]
       },
       // Redirect /super-admin → /super-admin/login
@@ -56,6 +57,7 @@ export const routes: Routes = [
       { path: "members", loadComponent: () => import("./pages/members/members.component").then(m => m.MembersComponent) },
       { path: "payments", loadComponent: () => import("./pages/payments/payments.component").then(m => m.PaymentsComponent) },
       { path: "my-payments", loadComponent: () => import("./pages/my-payments/my-payments.component").then(m => m.MyPaymentsComponent) },
+      { path: "verification", loadComponent: () => import("./pages/verification/verification-request.component").then(m => m.VerificationRequestComponent) },
       { path: "join-requests", loadComponent: () => import("./pages/join-requests/join-requests.component").then(m => m.JoinRequestsComponent) },
       { path: "payouts", loadComponent: () => import("./pages/payouts/payouts.component").then(m => m.PayoutsComponent) },
       { path: "reports", loadComponent: () => import("./pages/reports/reports.component").then(m => m.ReportsComponent) },

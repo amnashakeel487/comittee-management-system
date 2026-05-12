@@ -86,6 +86,11 @@ interface NavItem {
             <span class="material-icons nav-icon">receipt_long</span>
             <span class="nav-label" *ngIf="!collapsed">My Payments (Upload)</span>
           </a>
+          <a routerLink="/verification" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Get Verified' : ''">
+            <span class="material-icons nav-icon">verified_user</span>
+            <span class="nav-label" *ngIf="!collapsed">Get Verified</span>
+            <span class="nav-badge" *ngIf="!collapsed && !auth.currentUser()?.verified" style="background:#f59e0b">!</span>
+          </a>
         </div>
 
         <div class="nav-section nav-bottom">

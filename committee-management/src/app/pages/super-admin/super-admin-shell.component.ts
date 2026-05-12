@@ -51,6 +51,10 @@ import { AuthService } from '../../services/auth.service';
         <span class="material-icons">manage_accounts</span>
         <span *ngIf="!collapsed()">My Profile</span>
       </a>
+      <a routerLink="/super-admin/dashboard/verification" routerLinkActive="active" class="sa-nav-item" [title]="collapsed() ? 'Verifications' : ''">
+        <span class="material-icons">verified_user</span>
+        <span *ngIf="!collapsed()">Verifications</span>
+      </a>
     </nav>
 
     <div class="sa-sidebar-user" *ngIf="!collapsed()">
