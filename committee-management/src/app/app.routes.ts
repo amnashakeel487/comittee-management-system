@@ -32,6 +32,7 @@ export const routes: Routes = [
           { path: "fraud", loadComponent: () => import("./pages/super-admin/pages/sa-fraud.component").then(m => m.SaFraudComponent) },
           { path: "payments", loadComponent: () => import("./pages/super-admin/pages/sa-payments.component").then(m => m.SaPaymentsComponent) },
           { path: "announcements", loadComponent: () => import("./pages/super-admin/pages/sa-announcements.component").then(m => m.SaAnnouncementsComponent) },
+          { path: "profile", loadComponent: () => import("./pages/super-admin/pages/sa-profile.component").then(m => m.SaProfileComponent) },
         ]
       },
       // Redirect /super-admin → /super-admin/login

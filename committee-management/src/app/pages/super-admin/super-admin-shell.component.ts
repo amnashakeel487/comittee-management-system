@@ -47,6 +47,10 @@ import { AuthService } from '../../services/auth.service';
         <span class="material-icons">campaign</span>
         <span *ngIf="!collapsed()">Announcements</span>
       </a>
+      <a routerLink="/super-admin/dashboard/profile" routerLinkActive="active" class="sa-nav-item" [title]="collapsed() ? 'My Profile' : ''">
+        <span class="material-icons">manage_accounts</span>
+        <span *ngIf="!collapsed()">My Profile</span>
+      </a>
     </nav>
 
     <div class="sa-sidebar-user" *ngIf="!collapsed()">
