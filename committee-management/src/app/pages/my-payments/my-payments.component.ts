@@ -117,6 +117,58 @@ import { ToastService } from '../../services/toast.service';
                 </option>
               </select>
             </div>
+
+            <!-- Admin payment accounts (shown after a committee is selected) -->
+            <div class="admin-accounts" *ngIf="uploadForm.committeeId && (loadingAccounts() || adminAccounts().length > 0 || accountsError())">
+              <div class="aa-header">
+                <span class="material-icons">account_balance</span>
+                <span>Send your transfer to one of these admin accounts</span>
+              </div>
+
+              <div class="aa-loading" *ngIf="loadingAccounts()">
+                <div class="spinner" style="width:18px;height:18px;border-width:2px"></div>
+                <span>Loading payment accounts...</span>
+              </div>
+
+              <div class="aa-empty" *ngIf="!loadingAccounts() && accountsError()">
+                <span class="material-icons">info</span>
+                <span>Couldn't load admin accounts. Contact your admin directly for payment details.</span>
+              </div>
+
+              <div class="aa-empty" *ngIf="!loadingAccounts() && !accountsError() && adminAccounts().length === 0">
+                <span class="material-icons">account_balance_wallet</span>
+                <span>The committee admin hasn't added any payment accounts yet. Ask them to add one from their Profile page.</span>
+              </div>
+
+              <div class="aa-grid" *ngIf="!loadingAccounts() && adminAccounts().length > 0">
+                <div *ngFor="let acc of adminAccounts()" class="aa-card" [class.aa-primary]="acc.is_primary">
+                  <div class="aa-ic" [ngClass]="'aa-ic-' + acc.account_type">
+                    <span class="material-icons">{{ getAccountIcon(acc.account_type) }}</span>
+                  </div>
+                  <div class="aa-info">
+                    <div class="aa-title-row">
+                      <span class="aa-title">{{ acc.account_title }}</span>
+                      <span class="aa-primary-tag" *ngIf="acc.is_primary">Primary</span>
+                    </div>
+                    <span class="aa-type">{{ getAccountTypeLabel(acc.account_type) }}</span>
+                    <div class="aa-num-row">
+                      <span class="aa-number">{{ acc.account_number }}</span>
+                      <button type="button" class="aa-copy" (click)="copyToClipboard(acc.account_number)" title="Copy account number">
+                        <span class="material-icons">content_copy</span>
+                      </button>
+                    </div>
+                    <span class="aa-bank" *ngIf="acc.bank_name">{{ acc.bank_name }}</span>
+                    <div class="aa-iban-row" *ngIf="acc.iban">
+                      <span class="aa-iban">IBAN: {{ acc.iban }}</span>
+                      <button type="button" class="aa-copy" (click)="copyToClipboard(acc.iban)" title="Copy IBAN">
+                        <span class="material-icons">content_copy</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="form-group">
               <label>Month Number *</label>
               <input type="number" class="form-control" [(ngModel)]="uploadForm.month" min="1" placeholder="e.g. 1">
@@ -189,6 +241,32 @@ import { ToastService } from '../../services/toast.service';
     .form-control { width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; &:focus { border-color: #1E3A5F; } }
     .upload-area { border: 2px dashed var(--gray-300); border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--gray-500); .material-icons { font-size: 32px; } &:hover { border-color: #1E3A5F; color: #1E3A5F; } &.has-file { border-color: #10b981; color: #10b981; background: #f0fdf4; } }
     .modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid var(--gray-200); }
+
+    /* Admin payment accounts panel */
+    .admin-accounts { background: #EEF3FA; border: 1.5px solid #CBD5E1; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+    .aa-header { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 12px; .material-icons { font-size: 18px; color: #1E3A5F; } }
+    .aa-loading { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #2E5490; padding: 6px 0; }
+    .aa-empty { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #2E5490; padding: 6px 0; .material-icons { font-size: 18px; color: #94A3B8; flex-shrink: 0; } }
+    .aa-grid { display: flex; flex-direction: column; gap: 10px; }
+    .aa-card { display: flex; align-items: flex-start; gap: 12px; background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 12px 14px; transition: all 0.15s; &.aa-primary { border-color: #1E3A5F; background: #fff; box-shadow: 0 2px 6px rgba(30,58,95,0.08); } }
+    .aa-ic { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; .material-icons { font-size: 18px; } }
+    .aa-ic-bank { background: #dbeafe; .material-icons { color: #2563eb; } }
+    .aa-ic-easypaisa { background: #d1fae5; .material-icons { color: #059669; } }
+    .aa-ic-jazzcash { background: #fef3c7; .material-icons { color: #d97706; } }
+    .aa-ic-nayapay { background: #ede9fe; .material-icons { color: #7c3aed; } }
+    .aa-ic-sadapay { background: #fee2e2; .material-icons { color: #dc2626; } }
+    .aa-ic-other { background: var(--gray-100); .material-icons { color: var(--gray-600); } }
+    .aa-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .aa-title-row { display: flex; align-items: center; gap: 6px; }
+    .aa-title { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+    .aa-primary-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; background: #1E3A5F; color: white; padding: 1px 7px; border-radius: 10px; }
+    .aa-type { font-size: 11px; color: var(--gray-500); margin-bottom: 2px; }
+    .aa-num-row, .aa-iban-row { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+    .aa-number { font-size: 13px; font-weight: 700; color: var(--gray-900); font-family: 'Courier New', monospace; letter-spacing: 0.04em; word-break: break-all; }
+    .aa-iban { font-size: 11px; color: var(--gray-500); font-family: 'Courier New', monospace; word-break: break-all; }
+    .aa-bank { font-size: 12px; color: var(--gray-500); }
+    .aa-copy { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: none; background: var(--gray-100); cursor: pointer; transition: all 0.15s; flex-shrink: 0; .material-icons { font-size: 14px; color: var(--gray-600); } &:hover { background: #1E3A5F; .material-icons { color: white; } } }
+
     @media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
   `]
 })
@@ -200,6 +278,13 @@ export class MyPaymentsComponent implements OnInit {
   myJoinedCommittees = signal<any[]>([]);
   activeFilter = signal('All');
   filters = ['All', 'Approved', 'Pending', 'Rejected'];
+  // Admin (committee owner) payment accounts shown after a committee
+  // is selected, so the sub-admin knows where to send the transfer
+  // before uploading the slip.  Pulled from `payment_accounts`
+  // table — the admin manages them via their Profile page.
+  adminAccounts = signal<any[]>([]);
+  loadingAccounts = signal(false);
+  accountsError = signal(false);
 
   uploadForm = { committeeId: '', month: 1, amount: 0, date: new Date().toISOString().split('T')[0], notes: '', file: null as File | null };
 
@@ -233,11 +318,66 @@ export class MyPaymentsComponent implements OnInit {
     if (!memberRecs?.length) return;
     const ids = memberRecs.map((m: any) => m.id);
     const { data } = await this.supabase.client
-      .from('committee_members').select('member_id, committee_id, committees(name, monthly_amount)')
+      .from('committee_members').select('member_id, committee_id, committees(name, monthly_amount, created_by)')
       .in('member_id', ids);
     this.myJoinedCommittees.set((data || []).map((cm: any) => ({
-      member_id: cm.member_id, committee_id: cm.committee_id, committee_name: cm.committees?.name || '', monthly_amount: cm.committees?.monthly_amount || 0
+      member_id: cm.member_id,
+      committee_id: cm.committee_id,
+      committee_name: cm.committees?.name || '',
+      monthly_amount: cm.committees?.monthly_amount || 0,
+      admin_id: cm.committees?.created_by || null
     })));
+  }
+
+  private async loadAdminAccounts(adminUserId: string) {
+    this.adminAccounts.set([]);
+    this.accountsError.set(false);
+    if (!adminUserId) return;
+    this.loadingAccounts.set(true);
+    try {
+      const { data, error } = await this.supabase.client
+        .from('payment_accounts')
+        .select('*')
+        .eq('user_id', adminUserId)
+        .eq('is_active', true)
+        .order('is_primary', { ascending: false })
+        .order('created_at');
+
+      if (error) {
+        // Treat missing table / RLS-deny gracefully — UI will show
+        // "contact admin" hint instead of a broken page.
+        this.accountsError.set(true);
+        return;
+      }
+      this.adminAccounts.set(data || []);
+    } catch {
+      this.accountsError.set(true);
+    } finally {
+      this.loadingAccounts.set(false);
+    }
+  }
+
+  copyToClipboard(text: string) {
+    if (!text) return;
+    navigator.clipboard.writeText(text)
+      .then(() => this.toast.success('Copied to clipboard'))
+      .catch(() => this.toast.info('Copy: ' + text));
+  }
+
+  getAccountIcon(type: string): string {
+    const map: Record<string, string> = {
+      bank: 'account_balance', easypaisa: 'phone_android', jazzcash: 'phone_android',
+      nayapay: 'credit_card', sadapay: 'credit_card', other: 'payments'
+    };
+    return map[type] || 'payments';
+  }
+
+  getAccountTypeLabel(type: string): string {
+    const map: Record<string, string> = {
+      bank: 'Bank Account', easypaisa: 'EasyPaisa', jazzcash: 'JazzCash',
+      nayapay: 'NayaPay', sadapay: 'SadaPay', other: 'Other'
+    };
+    return map[type] || type;
   }
 
   filteredPayments() {
@@ -255,12 +395,24 @@ export class MyPaymentsComponent implements OnInit {
   rejectedCount() { return this.payments().filter(p => p.status === 'rejected').length; }
   totalPaid() { return this.payments().filter(p => p.status === 'approved').reduce((s, p) => s + p.amount, 0); }
 
-  openUploadModal() { this.uploadForm = { committeeId: '', month: 1, amount: 0, date: new Date().toISOString().split('T')[0], notes: '', file: null }; this.showModal.set(true); }
+  openUploadModal() {
+    this.uploadForm = { committeeId: '', month: 1, amount: 0, date: new Date().toISOString().split('T')[0], notes: '', file: null };
+    this.adminAccounts.set([]);
+    this.accountsError.set(false);
+    this.showModal.set(true);
+  }
   closeModal() { this.showModal.set(false); }
 
   onCommitteeChange() {
     const c = this.myJoinedCommittees().find(x => x.committee_id === this.uploadForm.committeeId);
-    if (c) this.uploadForm.amount = c.monthly_amount;
+    if (c) {
+      this.uploadForm.amount = c.monthly_amount;
+      // Fire-and-forget — UI shows its own loading/empty/error states.
+      this.loadAdminAccounts(c.admin_id);
+    } else {
+      this.adminAccounts.set([]);
+      this.accountsError.set(false);
+    }
   }
 
   onFileSelect(event: any) {
