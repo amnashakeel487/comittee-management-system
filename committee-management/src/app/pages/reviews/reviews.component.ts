@@ -140,17 +140,26 @@ export class ReviewsComponent implements OnInit {
       .in('committee_id', allCommitteeIds);
 
     // Build email→authId map from profiles for all member emails.
-    // Keys are lower-cased so the lookup is case-insensitive — emails sometimes
-    // differ in casing between the members table and the profiles table.
+    // Both members.email and profiles.email can have inconsistent casing,
+    // so we have to look up case-insensitively. PostgREST's `.in(...)` is a
+    // case-sensitive `=` match, which is why this used to miss profiles
+    // that were stored with mixed-case emails — the lookup returned no
+    // authId for those people, but they still showed up in the review
+    // list via a different code path, and the duplicate-review dedup
+    // check then silently passed.  We now match with `ilike` per email.
     const memberEmails = [...new Set(
       (allCMs || []).map((cm: any) => (cm.members?.email || '').toLowerCase()).filter(Boolean)
     )];
     let emailToAuthId: Record<string, string> = {};
     if (memberEmails.length > 0) {
-      const { data: profilesByEmail } = await this.supabase.client
-        .from('profiles').select('id, email').in('email', memberEmails);
-      (profilesByEmail || []).forEach((p: any) => {
-        if (p.email) emailToAuthId[p.email.toLowerCase()] = p.id;
+      const profileResults = await Promise.all(
+        memberEmails.map(e =>
+          this.supabase.client.from('profiles').select('id, email').ilike('email', e).maybeSingle()
+        )
+      );
+      profileResults.forEach(r => {
+        const p = r.data;
+        if (p?.email && p?.id) emailToAuthId[p.email.toLowerCase()] = p.id;
       });
     }
 
@@ -280,12 +289,32 @@ export class ReviewsComponent implements OnInit {
     }
 
     const reviewedAuthId = profile.id;
-    if (reviewedAuthId === this.auth.currentUser()?.id) { this.toast.error("You cannot review yourself"); return; }
+    const myId = this.auth.currentUser()?.id;
+    if (reviewedAuthId === myId) { this.toast.error("You cannot review yourself"); return; }
 
     this.submitting.set(true);
     try {
+      // Pre-check: bail out cleanly if a review for this exact
+      // (reviewer, reviewed, committee) triple already exists. Without
+      // this we'd hit the unique-constraint violation, which surfaces
+      // as a generic "duplicate key" error in the UI.
+      const { data: existing } = await this.supabase.client
+        .from('reviews')
+        .select('id')
+        .eq('reviewer_id', myId)
+        .eq('reviewed_user_id', reviewedAuthId)
+        .eq('committee_id', item.committee_id)
+        .maybeSingle();
+
+      if (existing?.id) {
+        this.toast.warning("You've already reviewed this person for this committee.");
+        this.closeReviewModal();
+        await Promise.all([this.loadReceivedReviews(), this.loadCommitteeMembers()]);
+        return;
+      }
+
       const { error } = await this.supabase.client.from("reviews").insert({
-        reviewer_id: this.auth.currentUser()?.id,
+        reviewer_id: myId,
         reviewed_user_id: reviewedAuthId,
         committee_id: item.committee_id,
         rating: this.reviewForm.rating,
@@ -295,7 +324,14 @@ export class ReviewsComponent implements OnInit {
         review_message: this.reviewForm.review_message || null,
         tags: this.reviewForm.tags.length ? this.reviewForm.tags : null
       });
-      if (error) throw new Error(error.message);
+      if (error) {
+        // Attach the Postgres error code so the catch block can do a
+        // reliable structured match (the message string is locale- and
+        // version-dependent and shouldn't be the only signal).
+        const wrapped: any = new Error(error.message);
+        wrapped.code = (error as any).code;
+        throw wrapped;
+      }
       await this.updateReputationScore(reviewedAuthId);
       await this.supabase.client.from("notifications").insert({
         user_id: reviewedAuthId,
@@ -307,15 +343,19 @@ export class ReviewsComponent implements OnInit {
       this.closeReviewModal();
       await this.loadCommitteeMembers();
     } catch (e: any) {
-      const msg = e?.message || '';
-      // Unique constraint: reviewer × reviewed × committee. Re-syncing the lists
-      // will make the now-reviewed entry disappear from the "Write Review" tab.
-      if (msg.includes('duplicate key') || msg.includes('reviews_reviewer_id_reviewed_user_id_committee_id_key')) {
+      const msg = (e?.message || '').toLowerCase();
+      const code = e?.code || '';
+      // Postgres unique_violation = 23505. We also keep the string
+      // matches as belt-and-braces in case the code field is missing.
+      const isDuplicate = code === '23505'
+        || msg.includes('duplicate key')
+        || msg.includes('reviews_reviewer_id_reviewed_user_id_committee_id_key');
+      if (isDuplicate) {
         this.toast.warning("You've already reviewed this person for this committee.");
         this.closeReviewModal();
         await Promise.all([this.loadReceivedReviews(), this.loadCommitteeMembers()]);
       } else {
-        this.toast.error("Failed: " + msg);
+        this.toast.error("Failed: " + (e?.message || 'unknown error'));
       }
     }
     finally { this.submitting.set(false); }
