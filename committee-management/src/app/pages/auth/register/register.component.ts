@@ -137,7 +137,7 @@ import { ToastService } from '../../../services/toast.service';
     .auth-brand p { font-size: .95rem; color: rgba(240,244,255,0.5); }
 
     .auth-left-content { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
-    .auth-badge-reg { display: inline-flex; align-items: center; gap: 5px; background: rgba(45,140,255,0.12); border: 1px solid rgba(45,140,255,0.35); color: #2d8cff; padding: .26rem .72rem; border-radius: 50px; font-size: .73rem; font-weight: 600; margin-bottom: 1rem; }
+    .auth-badge-reg { display: inline-flex; align-items: center; gap: 5px; background: rgba(45,140,255,0.12); border: 1px solid rgba(45,140,255,0.35); color: #2d8cff; padding: .26rem .72rem; border-radius: 50px; font-size: .78rem; font-weight: 600; margin-bottom: 1rem; width: fit-content; }
     .auth-left-title { font-size: clamp(1.7rem,3.2vw,2.5rem); font-weight: 700; line-height: 1.2; margin-bottom: .8rem; color: #f0f4ff; em { font-style: normal; color: #2d8cff; } }
     .auth-left-sub { font-size: .98rem; color: rgba(240,244,255,0.55); line-height: 1.65; margin-bottom: 1.5rem; }
     .auth-reg-feats { display: flex; flex-direction: column; gap: .7rem; }

@@ -89,7 +89,7 @@ import { ToastService } from "../../../services/toast.service";
     .auth-logo { font-weight: 700; font-size: 1.2rem; color: #f0f4ff; text-decoration: none; display: flex; align-items: center; gap: 7px; margin-bottom: 2.5rem; }
     .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #2d8cff; flex-shrink: 0; }
     .auth-left-body { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; max-width: 480px; }
-    .auth-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(45,140,255,0.12); border: 1px solid rgba(45,140,255,0.35); color: #2d8cff; padding: .26rem .72rem; border-radius: 50px; font-size: .73rem; font-weight: 600; margin-bottom: 1.2rem; }
+    .auth-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(45,140,255,0.12); border: 1px solid rgba(45,140,255,0.35); color: #2d8cff; padding: .26rem .72rem; border-radius: 50px; font-size: .78rem; font-weight: 600; margin-bottom: 1.2rem; width: fit-content; }
     h1 { font-size: clamp(2rem,4vw,3rem); font-weight: 700; line-height: 1.2; margin-bottom: .9rem; color: #f0f4ff; }
     h1 em { font-style: normal; color: #2d8cff; }
     .auth-sub { color: rgba(240,244,255,0.55); font-size: 1rem; margin-bottom: 1.8rem; line-height: 1.65; }
