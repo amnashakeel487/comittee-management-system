@@ -110,7 +110,9 @@ import { DataService } from '../../services/data.service';
       padding: 0 24px;
       position: sticky;
       top: 0;
-      z-index: 50;
+      /* Must be ABOVE .dropdown-overlay (z-index 150) — the navbar creates a stacking
+         context, so its descendant dropdowns are trapped at this z-index at the root. */
+      z-index: 200;
       box-shadow: 0 1px 4px rgba(15,23,42,0.08);
     }
 
@@ -268,9 +270,9 @@ import { DataService } from '../../services/data.service';
       text-align: left;
     }
 
-    .user-name { font-size: 13px; font-weight: 600; color: #f0f4ff; display: flex; align-items: center; gap: 4px; }
+    .user-name { font-size: 13px; font-weight: 600; color: #0F172A; display: flex; align-items: center; gap: 4px; }
     .verified-badge-nav { display: inline-flex; align-items: center; .material-icons { font-size: 14px; color: #2d8cff; } }
-    .user-role { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .user-role { font-size: 11px; color: #64748B; }
     .chevron { font-size: 18px; color: #94A3B8; }
 
     .user-dropdown { width: 200px; padding: 8px; }
