@@ -358,11 +358,11 @@
         <div class="m-disc" style="margin-bottom:1rem"><span class="material-icons" style="font-size:14px;vertical-align:middle">warning</span> By submitting, you acknowledge CommitteeHub is not responsible for financial disputes. Verify all payment details personally.</div>
         <form (ngSubmit)="submitJoin()">
           <div class="f-grid">
-            <div class="fg"><label class="flbl">Full Name *</label><input class="finp" type="text" placeholder="Your full name" required></div>
-            <div class="fg"><label class="flbl">Phone *</label><input class="finp" type="tel" placeholder="+92 3XX XXXXXXX" required></div>
-            <div class="fg"><label class="flbl">Email</label><input class="finp" type="email" placeholder="you@example.com"></div>
-            <div class="fg"><label class="flbl">CNIC *</label><input class="finp" type="text" placeholder="XXXXX-XXXXXXX-X" required></div>
-            <div class="fg full"><label class="flbl">Home Address</label><input class="finp" type="text" placeholder="Full residential address"></div>
+            <div class="fg"><label class="flbl">Full Name *</label><input class="finp" type="text" placeholder="Your full name" required [(ngModel)]="joinForm.fullName" name="fullName"></div>
+            <div class="fg"><label class="flbl">Phone *</label><input class="finp" type="tel" placeholder="+92 3XX XXXXXXX" required [(ngModel)]="joinForm.phone" name="phone"></div>
+            <div class="fg"><label class="flbl">Email</label><input class="finp" type="email" placeholder="you@example.com" [(ngModel)]="joinForm.email" name="email"></div>
+            <div class="fg"><label class="flbl">CNIC *</label><input class="finp" type="text" placeholder="XXXXX-XXXXXXX-X" required [(ngModel)]="joinForm.cnic" name="cnic"></div>
+            <div class="fg full"><label class="flbl">Home Address</label><input class="finp" type="text" placeholder="Full residential address" [(ngModel)]="joinForm.address" name="address"></div>
             <div class="fg full"><label class="flbl">Message (Optional)</label><textarea class="finp" rows="3" placeholder="Any additional info for the admin…" style="resize:vertical" [(ngModel)]="requestMessage" name="msg"></textarea></div>
           </div>
           <div class="m-acts">

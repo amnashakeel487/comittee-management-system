@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -35,6 +35,9 @@ export class LandingComponent implements OnInit {
   toastVisible = signal(false);
   toastMsg = signal('');
   requestMessage = '';
+  // Two-way bindings for the public join modal — all start empty when a
+  // new committee is opened (see openJoin()).
+  joinForm = { fullName: '', phone: '', email: '', cnic: '', address: '' };
   private toastTimer: any;
 
   filters = [
@@ -159,17 +162,64 @@ export class LandingComponent implements OnInit {
 
   openDetail(c: any) { this.selectedC.set(c); this.showDetail.set(true); }
   closeDetail() { this.showDetail.set(false); }
-  openJoin(c: any) { this.joiningC.set(c); this.requestMessage = ''; this.joinSuccess.set(false); this.showJoin.set(true); }
+  openJoin(c: any) {
+    this.joiningC.set(c);
+    this.requestMessage = '';
+    this.joinForm = { fullName: '', phone: '', email: '', cnic: '', address: '' };
+    this.joinSuccess.set(false);
+    this.showJoin.set(true);
+  }
   closeJoin() { this.showJoin.set(false); }
 
   async submitJoin() {
     if (this.joinSubmitting()) return;
+
+    const c = this.joiningC();
+    if (!c) { this.showToast('No committee selected.'); return; }
+
+    const fullName = this.joinForm.fullName.trim();
+    const phone    = this.joinForm.phone.trim();
+    const email    = this.joinForm.email.trim();
+    const cnic     = this.joinForm.cnic.trim();
+    const address  = this.joinForm.address.trim();
+    const message  = (this.requestMessage || '').trim();
+
+    if (!fullName) { this.showToast('Please enter your full name.'); return; }
+    if (!phone)    { this.showToast('Please enter your phone number.'); return; }
+    if (!cnic)     { this.showToast('Please enter your CNIC.'); return; }
+
     this.joinSubmitting.set(true);
-    await new Promise(r => setTimeout(r, 800));
-    this.joinSubmitting.set(false);
-    this.joinSuccess.set(true);
-    this.showToast('Join request submitted! The admin will review and respond within 24–48 hours.');
-    setTimeout(() => this.closeJoin(), 2200);
+    try {
+      // Anonymous visitors cannot INSERT into `members` / `join_requests`
+      // directly under normal RLS, so we go through a SECURITY DEFINER RPC
+      // that validates input and writes both tables + a notification.
+      // See scripts/migration-landing-join-request.sql.
+      const { error } = await sb.rpc('submit_landing_join_request', {
+        p_committee_id: c.id,
+        p_full_name:    fullName,
+        p_phone:        phone,
+        p_email:        email || null,
+        p_cnic:         cnic,
+        p_address:      address || null,
+        p_message:      message || null
+      });
+
+      if (error) throw new Error(error.message);
+
+      this.joinSuccess.set(true);
+      this.showToast('Join request submitted! The admin will review and respond within 24–48 hours.');
+      setTimeout(() => this.closeJoin(), 2200);
+    } catch (e: any) {
+      const msg = e?.message || 'Failed to submit join request.';
+      // If the RPC doesn't exist yet, give a clear hint instead of a cryptic error.
+      if (msg.includes('Could not find the function') || msg.includes('does not exist')) {
+        this.showToast('Setup incomplete: run scripts/migration-landing-join-request.sql in Supabase.');
+      } else {
+        this.showToast('Failed: ' + msg);
+      }
+    } finally {
+      this.joinSubmitting.set(false);
+    }
   }
 
   showToast(msg: string) {
