@@ -100,6 +100,15 @@ export class ReviewsComponent implements OnInit {
       .select('member_id, committee_id, members(id, name, email)')
       .in('committee_id', allCommitteeIds);
 
+    // Build email→authId map from profiles for all member emails
+    const memberEmails = [...new Set((allCMs || []).map((cm: any) => cm.members?.email).filter(Boolean))];
+    let emailToAuthId: Record<string, string> = {};
+    if (memberEmails.length > 0) {
+      const { data: profilesByEmail } = await this.supabase.client
+        .from('profiles').select('id, email').in('email', memberEmails);
+      (profilesByEmail || []).forEach((p: any) => { emailToAuthId[p.email] = p.id; });
+    }
+
     // Get all committee creators (other sub-admins who created committees you joined)
     const creatorIds = (allCommittees || [])
       .map((c: any) => c.created_by)
@@ -187,13 +196,35 @@ export class ReviewsComponent implements OnInit {
     if (!this.reviewForm.rating) { this.toast.error("Please give an overall rating"); return; }
     const item = this.reviewingUser();
     if (!item) return;
-    const reviewedId = item.member?.id;
-    if (!reviewedId) { this.toast.error("Cannot identify user to review"); return; }
+
+    // The member.id from committee_members is the members table ID, NOT auth user ID
+    // We need to find the auth user ID from profiles table using email
+    let reviewedAuthId = item.member?.id;
+
+    // If this is a member from the members table (not a profile), look up their auth ID by email
+    if (item.type === 'member' || item.type === 'participant') {
+      const memberEmail = item.member?.email;
+      if (memberEmail) {
+        const { data: profile } = await this.supabase.client
+          .from('profiles').select('id').eq('email', memberEmail).maybeSingle();
+        if (profile?.id) {
+          reviewedAuthId = profile.id;
+        } else {
+          // No auth account found for this member — they can't be reviewed yet
+          this.toast.error(`${item.member?.name} doesn't have an account yet and cannot be reviewed.`);
+          return;
+        }
+      }
+    }
+
+    if (!reviewedAuthId) { this.toast.error("Cannot identify user to review"); return; }
+    if (reviewedAuthId === this.auth.currentUser()?.id) { this.toast.error("You cannot review yourself"); return; }
+
     this.submitting.set(true);
     try {
       const { error } = await this.supabase.client.from("reviews").insert({
         reviewer_id: this.auth.currentUser()?.id,
-        reviewed_user_id: reviewedId,
+        reviewed_user_id: reviewedAuthId,
         committee_id: item.committee_id,
         rating: this.reviewForm.rating,
         communication_rating: this.reviewForm.communication_rating || null,
@@ -203,9 +234,9 @@ export class ReviewsComponent implements OnInit {
         tags: this.reviewForm.tags.length ? this.reviewForm.tags : null
       });
       if (error) throw new Error(error.message);
-      await this.updateReputationScore(reviewedId);
+      await this.updateReputationScore(reviewedAuthId);
       await this.supabase.client.from("notifications").insert({
-        user_id: reviewedId,
+        user_id: reviewedAuthId,
         title: "New Review Received ⭐",
         message: `${this.auth.currentUser()?.name} left you a ${this.reviewForm.rating}-star review.`,
         type: "info", read: false

@@ -156,9 +156,15 @@ export class AuthService {
     }
   }
 
+  /** Force reload profile from DB — call after verification approval */
+  async refreshCurrentUser() {
+    const { data: session } = await this.supabase.getSession();
+    if (session?.session?.user) {
+      await this.loadUserProfile(session.session.user);
+    }
+  }
   isAuthenticated(): boolean { return !!this.currentUser(); }
   isSubAdmin(): boolean { return this.currentUser()?.role === 'sub_admin'; }
   isSuperAdmin(): boolean { return this.currentUser()?.role === 'super_admin'; }
-  // Keep isAdmin as alias for backward compat with existing components
   isAdmin(): boolean { return this.isSubAdmin() || this.isSuperAdmin(); }
 }

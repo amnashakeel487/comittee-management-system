@@ -303,8 +303,29 @@ export class VerificationRequestComponent implements OnInit {
       this.form.fullName = u.name || '';
       this.form.phone = u.phone || '';
     }
+    // Force reload profile from DB to get latest verified/verification_status
+    await this.refreshProfile();
     await this.loadExistingRequest();
     this.loading.set(false);
+  }
+
+  private async refreshProfile() {
+    const userId = this.auth.currentUser()?.id;
+    if (!userId) return;
+    try {
+      const { data: profile } = await this.supabase.client
+        .from('profiles').select('verified, verification_status, name, phone, role, status')
+        .eq('id', userId).single();
+      if (profile) {
+        const current = this.auth.currentUser();
+        if (current) {
+          this.auth.currentUser.set({
+            ...current,
+            verified: profile.verified || false
+          });
+        }
+      }
+    } catch (e) { console.warn('refreshProfile error:', e); }
   }
 
   private async loadExistingRequest() {
@@ -318,9 +339,18 @@ export class VerificationRequestComponent implements OnInit {
       .limit(1)
       .maybeSingle();
     this.existingRequest.set(data);
+
+    // If profile is verified but request still shows pending, sync it
+    if (this.auth.currentUser()?.verified && data?.status === 'pending') {
+      await this.supabase.client.from('verification_requests')
+        .update({ status: 'approved' }).eq('id', data.id);
+      this.existingRequest.set({ ...data, status: 'approved' });
+    }
   }
 
   currentStatus(): string {
+    // First check if profile is already verified
+    if (this.auth.currentUser()?.verified) return 'verified';
     const req = this.existingRequest();
     if (!req) return 'unverified';
     return req.status || 'pending';
