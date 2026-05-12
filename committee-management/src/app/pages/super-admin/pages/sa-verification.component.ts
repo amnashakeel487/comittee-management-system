@@ -163,12 +163,32 @@ export class SaVerificationComponent implements OnInit {
   private async loadRequests() {
     this.loading.set(true);
     try {
-      const { data } = await this.supabase.client
+      // Fetch all requests — super admin reads all
+      const { data, error } = await this.supabase.client
         .from('verification_requests')
-        .select('*, profiles(email, name)')
+        .select('*')
         .order('created_at', { ascending: false });
-      this.requests.set((data || []).map((r: any) => ({
-        ...r, user_email: r.profiles?.email || '—'
+
+      if (error) { console.error('VR load error:', error.message); }
+
+      const requests = data || [];
+
+      // Fetch user emails/names separately
+      const userIds = [...new Set(requests.map((r: any) => r.user_id).filter(Boolean))];
+      let profileMap: Record<string, any> = {};
+
+      if (userIds.length > 0) {
+        const { data: profiles } = await this.supabase.client
+          .from('profiles')
+          .select('id, name, email')
+          .in('id', userIds);
+        (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
+      }
+
+      this.requests.set(requests.map((r: any) => ({
+        ...r,
+        user_email: profileMap[r.user_id]?.email || '—',
+        user_profile_name: profileMap[r.user_id]?.name || r.full_name
       })));
     } finally { this.loading.set(false); }
   }
