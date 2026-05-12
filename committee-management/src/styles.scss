@@ -228,9 +228,9 @@ h1, h2, h3, h4, h5, h6 {
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 
   &.btn-primary {
-    background: #2d8cff;
+    background: var(--primary);
     color: white;
-    &:hover:not(:disabled) { background: #1a6fd4; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    &:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
   }
 
   &.btn-secondary {
@@ -395,7 +395,7 @@ table.data-table {
   justify-content: center;
   font-weight: 600;
   color: white;
-  background: #2d8cff;
+  background: var(--primary);
   flex-shrink: 0;
 
   &.avatar-sm { width: 32px; height: 32px; font-size: 13px; }
