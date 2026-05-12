@@ -361,9 +361,47 @@
   </div>
 </div>
 
-<!-- JOIN MODAL -->
+<!-- AUTH GATE MODAL — shown when an unauthenticated visitor clicks
+     "Request to Join". Forces sign-in or registration before submission. -->
+<div class="overlay" [class.on]="showAuthGate()" (click)="closeAuthGate()">
+  <div class="modal" (click)="$event.stopPropagation()" style="max-width:440px">
+    <div class="m-head">
+      <div class="m-title">
+        <span class="material-icons" style="font-size:18px;vertical-align:middle;margin-right:6px">lock</span>
+        Sign in to send a join request
+      </div>
+      <button class="m-close" (click)="closeAuthGate()"><span class="material-icons" style="font-size:16px">close</span></button>
+    </div>
+    <div class="m-body">
+      <p style="font-size:.88rem;color:var(--txt2);margin-bottom:.6rem;line-height:1.5">
+        You need an account before you can request to join
+        <strong>{{ joiningC()?.name }}</strong>.
+      </p>
+      <p style="font-size:.82rem;color:var(--txt2);margin-bottom:1.25rem;line-height:1.5">
+        An account lets you track your request status, get notified when
+        the admin responds, and manage your committees in one place.
+      </p>
+      <div class="m-acts" style="flex-direction:column;gap:.6rem">
+        <button type="button" class="btn btn-primary" style="width:100%;justify-content:center" (click)="goToLogin()">
+          <span class="material-icons" style="font-size:16px;margin-right:6px">login</span>
+          Sign In
+        </button>
+        <button type="button" class="btn btn-ghost" style="width:100%;justify-content:center" (click)="goToRegister()">
+          <span class="material-icons" style="font-size:16px;margin-right:6px">person_add</span>
+          Create a Free Account
+        </button>
+      </div>
+      <p style="font-size:.75rem;color:var(--txt2);margin-top:1rem;text-align:center;line-height:1.5">
+        After signing in, return to this page and click <strong>Request to Join</strong> again to send your request.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- JOIN MODAL — slim, authenticated version. Profile data (name/email/
+     phone) is already on file, so we only ask for an optional message. -->
 <div class="overlay" [class.on]="showJoin()" (click)="closeJoin()">
-  <div class="modal" (click)="$event.stopPropagation()">
+  <div class="modal" (click)="$event.stopPropagation()" style="max-width:480px">
     <div class="m-head">
       <div class="m-title">Request to Join — {{ joiningC()?.name }}</div>
       <button class="m-close" (click)="closeJoin()"><span class="material-icons" style="font-size:16px">close</span></button>
@@ -372,23 +410,22 @@
       <div *ngIf="joinSuccess()" style="text-align:center;padding:1.5rem 0">
         <span class="material-icons" style="font-size:3rem;color:#4ade80;display:block;margin-bottom:.75rem">check_circle</span>
         <div style="font-size:1rem;font-weight:700;margin-bottom:.4rem">Request Submitted!</div>
-        <div style="font-size:.85rem;color:var(--txt2)">The admin will review and respond within 24–48 hours.</div>
+        <div style="font-size:.85rem;color:var(--txt2)">The admin will review and respond within 24–48 hours. You'll be notified in your dashboard.</div>
       </div>
       <div *ngIf="!joinSuccess()">
-        <p style="font-size:.83rem;color:var(--txt2);margin-bottom:1rem">Fill in your details. The focal person/admin will review your request and respond within 24-48 hours.</p>
+        <div style="background:rgba(45,140,255,.08);border:1px solid rgba(45,140,255,.22);border-radius:8px;padding:.7rem .85rem;margin-bottom:1rem;font-size:.82rem;color:var(--txt2);line-height:1.5">
+          <span class="material-icons" style="font-size:14px;vertical-align:middle;color:var(--accent)">check_circle</span>
+          Signed in as <strong style="color:var(--txt)">{{ currentUserEmail() }}</strong> — your profile details will be sent with the request.
+        </div>
         <div class="m-disc" style="margin-bottom:1rem"><span class="material-icons" style="font-size:14px;vertical-align:middle">warning</span> By submitting, you acknowledge CommitteeHub is not responsible for financial disputes. Verify all payment details personally.</div>
         <form (ngSubmit)="submitJoin()">
-          <div class="f-grid">
-            <div class="fg"><label class="flbl">Full Name *</label><input class="finp" type="text" placeholder="Your full name" required [(ngModel)]="joinForm.fullName" name="fullName"></div>
-            <div class="fg"><label class="flbl">Phone *</label><input class="finp" type="tel" placeholder="+92 3XX XXXXXXX" required [(ngModel)]="joinForm.phone" name="phone"></div>
-            <div class="fg"><label class="flbl">Email</label><input class="finp" type="email" placeholder="you@example.com" [(ngModel)]="joinForm.email" name="email"></div>
-            <div class="fg"><label class="flbl">CNIC *</label><input class="finp" type="text" placeholder="XXXXX-XXXXXXX-X" required [(ngModel)]="joinForm.cnic" name="cnic"></div>
-            <div class="fg full"><label class="flbl">Home Address</label><input class="finp" type="text" placeholder="Full residential address" [(ngModel)]="joinForm.address" name="address"></div>
-            <div class="fg full"><label class="flbl">Message (Optional)</label><textarea class="finp" rows="3" placeholder="Any additional info for the admin…" style="resize:vertical" [(ngModel)]="requestMessage" name="msg"></textarea></div>
+          <div class="fg full" style="margin-bottom:1rem">
+            <label class="flbl">Message (Optional)</label>
+            <textarea class="finp" rows="3" placeholder="Introduce yourself or add any info for the admin…" style="resize:vertical" [(ngModel)]="requestMessage" name="msg"></textarea>
           </div>
           <div class="m-acts">
             <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center" [disabled]="joinSubmitting()">
-              {{ joinSubmitting() ? 'Submitting...' : 'Submit Join Request' }}
+              {{ joinSubmitting() ? 'Sending...' : 'Send Request' }}
             </button>
             <button type="button" class="btn btn-ghost" (click)="closeJoin()">Cancel</button>
           </div>

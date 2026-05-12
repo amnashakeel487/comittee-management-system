@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { createClient } from '@supabase/supabase-js';
 
@@ -28,6 +28,9 @@ export class LandingComponent implements OnInit {
   activeFaq = signal(-1);
   showDetail = signal(false);
   showJoin = signal(false);
+  showAuthGate = signal(false);
+  isLoggedIn = signal(false);
+  currentUserEmail = signal<string>('');
   selectedC = signal<any>(null);
   joiningC = signal<any>(null);
   joinSubmitting = signal(false);
@@ -35,9 +38,6 @@ export class LandingComponent implements OnInit {
   toastVisible = signal(false);
   toastMsg = signal('');
   requestMessage = '';
-  // Two-way bindings for the public join modal — all start empty when a
-  // new committee is opened (see openJoin()).
-  joinForm = { fullName: '', phone: '', email: '', cnic: '', address: '' };
   private toastTimer: any;
 
   filters = [
@@ -83,13 +83,32 @@ export class LandingComponent implements OnInit {
     { q: 'How is turn selection decided?', a: 'Turns can be pre-assigned when a member joins, or decided through the spin wheel for fairness. All members can see the result in real time.' },
     { q: 'Is my payment information secure?', a: 'CommitteeHub uses CNIC-verified registration and secure data storage. Note: all financial transactions happen directly between members and admins. The platform records them but does not process payments.' },
     { q: "What if a member doesn't pay on time?", a: 'Automated reminders are sent before the due date. If payment is missed, the member is flagged and the admin is notified. Penalty rules are defined by the committee admin.' },
-    { q: 'How do I request to join a committee?', a: 'Click "Request to Join" on any open committee. Fill in your name, CNIC, phone, email, and address. The admin will approve or reject your request and you will be notified.' }
+    { q: 'How do I request to join a committee?', a: 'Click "Request to Join" on any open committee. You\'ll be asked to sign in (or create a free account first). Once signed in, your request is sent to the focal person/admin who will approve or reject it — you\'ll be notified in your dashboard.' }
   ];
 
   private colors = ['#2563eb','#7c3aed','#db2777','#059669','#d97706','#dc2626'];
 
+  constructor(private router: Router) {}
+
   async ngOnInit() {
     await this.loadData();
+    // Track auth state so the "Request to Join" button can route the user
+    // through the Auth Gate when they're not signed in.  The anon `sb`
+    // client shares localStorage session storage with the rest of the app,
+    // so getSession() correctly reflects whether the user is signed in.
+    const { data } = await sb.auth.getSession();
+    this.applySession(data?.session);
+    sb.auth.onAuthStateChange((_event, session) => this.applySession(session));
+  }
+
+  private applySession(session: any) {
+    if (session?.user?.id) {
+      this.isLoggedIn.set(true);
+      this.currentUserEmail.set(session.user.email || '');
+    } else {
+      this.isLoggedIn.set(false);
+      this.currentUserEmail.set('');
+    }
   }
 
   private async loadData() {
@@ -162,14 +181,40 @@ export class LandingComponent implements OnInit {
 
   openDetail(c: any) { this.selectedC.set(c); this.showDetail.set(true); }
   closeDetail() { this.showDetail.set(false); }
+
+  // Entry point for the "Request to Join" button on every committee card.
+  // If the visitor isn't signed in we show the Auth Gate so they can pick
+  // Sign In or Create Account — once authenticated, clicking the same
+  // button opens the simplified join modal that calls the
+  // `submit_join_request_as_self` RPC (no need to re-enter name / CNIC /
+  // phone / email — that comes from their profile).
   openJoin(c: any) {
     this.joiningC.set(c);
     this.requestMessage = '';
-    this.joinForm = { fullName: '', phone: '', email: '', cnic: '', address: '' };
     this.joinSuccess.set(false);
-    this.showJoin.set(true);
+    if (this.isLoggedIn()) {
+      this.showJoin.set(true);
+    } else {
+      // Remember which committee they wanted to join so we can deep-link
+      // back to it after sign-in.  Browse & Join in the dashboard reads
+      // this key to auto-open the join modal for the same committee.
+      try {
+        sessionStorage.setItem('pendingJoinCommitteeId', c.id);
+      } catch { /* private mode */ }
+      this.showAuthGate.set(true);
+    }
   }
   closeJoin() { this.showJoin.set(false); }
+  closeAuthGate() { this.showAuthGate.set(false); }
+
+  goToLogin() {
+    this.showAuthGate.set(false);
+    this.router.navigate(['/auth/login']);
+  }
+  goToRegister() {
+    this.showAuthGate.set(false);
+    this.router.navigate(['/auth/register']);
+  }
 
   async submitJoin() {
     if (this.joinSubmitting()) return;
@@ -177,30 +222,24 @@ export class LandingComponent implements OnInit {
     const c = this.joiningC();
     if (!c) { this.showToast('No committee selected.'); return; }
 
-    const fullName = this.joinForm.fullName.trim();
-    const phone    = this.joinForm.phone.trim();
-    const email    = this.joinForm.email.trim();
-    const cnic     = this.joinForm.cnic.trim();
-    const address  = this.joinForm.address.trim();
-    const message  = (this.requestMessage || '').trim();
+    // Defensive: re-check session right before submitting in case it
+    // expired while the modal was open.
+    if (!this.isLoggedIn()) {
+      this.closeJoin();
+      this.showAuthGate.set(true);
+      return;
+    }
 
-    if (!fullName) { this.showToast('Please enter your full name.'); return; }
-    if (!phone)    { this.showToast('Please enter your phone number.'); return; }
-    if (!cnic)     { this.showToast('Please enter your CNIC.'); return; }
+    const message = (this.requestMessage || '').trim();
 
     this.joinSubmitting.set(true);
     try {
-      // Anonymous visitors cannot INSERT into `members` / `join_requests`
-      // directly under normal RLS, so we go through a SECURITY DEFINER RPC
-      // that validates input and writes both tables + a notification.
-      // See scripts/migration-landing-join-request.sql.
-      const { error } = await sb.rpc('submit_landing_join_request', {
+      // Authenticated flow: the RPC reads auth.uid() and pulls the
+      // caller's name / email / phone from `profiles`, finds-or-creates
+      // their `members` row, upserts the join request, and notifies the
+      // committee admin.  See scripts/migration-self-join-request.sql.
+      const { error } = await sb.rpc('submit_join_request_as_self', {
         p_committee_id: c.id,
-        p_full_name:    fullName,
-        p_phone:        phone,
-        p_email:        email || null,
-        p_cnic:         cnic,
-        p_address:      address || null,
         p_message:      message || null
       });
 
@@ -211,9 +250,13 @@ export class LandingComponent implements OnInit {
       setTimeout(() => this.closeJoin(), 2200);
     } catch (e: any) {
       const msg = e?.message || 'Failed to submit join request.';
-      // If the RPC doesn't exist yet, give a clear hint instead of a cryptic error.
       if (msg.includes('Could not find the function') || msg.includes('does not exist')) {
-        this.showToast('Setup incomplete: run scripts/migration-landing-join-request.sql in Supabase.');
+        this.showToast('Setup incomplete: run scripts/migration-self-join-request.sql in Supabase.');
+      } else if (msg.toLowerCase().includes('admin of this committee')) {
+        this.showToast("You're the admin of this committee — you can't send a join request to yourself.");
+      } else if (msg.toLowerCase().includes('not signed in')) {
+        this.closeJoin();
+        this.showAuthGate.set(true);
       } else {
         this.showToast('Failed: ' + msg);
       }
