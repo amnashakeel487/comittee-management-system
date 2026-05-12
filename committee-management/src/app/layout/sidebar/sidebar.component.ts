@@ -39,7 +39,7 @@ interface NavItem {
           </a>
         </div>
 
-        <!-- MY COMMITTEES (collapsible) -->
+        <!-- MY COMMITTEES (collapsible) — things I run as an admin -->
         <div class="nav-section">
           <button *ngIf="!collapsed"
                   type="button"
@@ -58,15 +58,29 @@ interface NavItem {
               <span class="material-icons nav-icon">add_circle</span>
               <span class="nav-label" *ngIf="!collapsed">Create Committee</span>
             </a>
-            <a routerLink="/payments" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'Payments' : ''">
-              <span class="material-icons nav-icon">payments</span>
-              <span class="nav-label" *ngIf="!collapsed">Payments</span>
-              <span class="nav-badge" *ngIf="pendingPaymentsCount() > 0 && !collapsed">{{ pendingPaymentsCount() }}</span>
-            </a>
             <a routerLink="/join-requests" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Join Requests' : ''">
               <span class="material-icons nav-icon">person_add</span>
               <span class="nav-label" *ngIf="!collapsed">Join Requests</span>
               <span class="nav-badge" *ngIf="pendingRequestsCount() > 0 && !collapsed">{{ pendingRequestsCount() }}</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- FINANCE (collapsible) — money flow as an admin -->
+        <div class="nav-section">
+          <button *ngIf="!collapsed"
+                  type="button"
+                  class="nav-section-header"
+                  [class.open]="isOpen('finance')"
+                  (click)="toggleSection('finance')">
+            <span class="nav-section-label">FINANCE</span>
+            <span class="material-icons section-chevron">{{ isOpen('finance') ? 'expand_more' : 'chevron_right' }}</span>
+          </button>
+          <div class="nav-section-body" [class.open]="collapsed || isOpen('finance')">
+            <a routerLink="/payments" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'Payments' : ''">
+              <span class="material-icons nav-icon">payments</span>
+              <span class="nav-label" *ngIf="!collapsed">Payments</span>
+              <span class="nav-badge" *ngIf="pendingPaymentsCount() > 0 && !collapsed">{{ pendingPaymentsCount() }}</span>
             </a>
             <a routerLink="/payouts" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Payouts' : ''">
               <span class="material-icons nav-icon">account_balance_wallet</span>
@@ -79,7 +93,7 @@ interface NavItem {
           </div>
         </div>
 
-        <!-- PARTICIPATION (collapsible) -->
+        <!-- PARTICIPATION (collapsible) — things I do as a member -->
         <div class="nav-section">
           <button *ngIf="!collapsed"
                   type="button"
@@ -102,6 +116,24 @@ interface NavItem {
               <span class="material-icons nav-icon">receipt_long</span>
               <span class="nav-label" *ngIf="!collapsed">My Payments</span>
             </a>
+          </div>
+        </div>
+
+        <!-- ACCOUNT (collapsible) — my identity & reputation -->
+        <div class="nav-section">
+          <button *ngIf="!collapsed"
+                  type="button"
+                  class="nav-section-header"
+                  [class.open]="isOpen('account')"
+                  (click)="toggleSection('account')">
+            <span class="nav-section-label">ACCOUNT</span>
+            <span class="material-icons section-chevron">{{ isOpen('account') ? 'expand_more' : 'chevron_right' }}</span>
+          </button>
+          <div class="nav-section-body" [class.open]="collapsed || isOpen('account')">
+            <a routerLink="/profile" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Profile' : ''">
+              <span class="material-icons nav-icon">person</span>
+              <span class="nav-label" *ngIf="!collapsed">Profile</span>
+            </a>
             <a routerLink="/verification" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Get Verified' : ''">
               <span class="material-icons nav-icon">verified_user</span>
               <span class="nav-label" *ngIf="!collapsed">Get Verified</span>
@@ -114,12 +146,8 @@ interface NavItem {
           </div>
         </div>
 
-        <!-- ACCOUNT (always pinned bottom) -->
+        <!-- Logout (always pinned bottom) -->
         <div class="nav-section nav-bottom">
-          <a routerLink="/profile" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Profile' : ''">
-            <span class="material-icons nav-icon">person</span>
-            <span class="nav-label" *ngIf="!collapsed">Profile</span>
-          </a>
           <button class="nav-item nav-logout" (click)="onLogout()" [title]="collapsed ? 'Logout' : ''">
             <span class="material-icons nav-icon">logout</span>
             <span class="nav-label" *ngIf="!collapsed">Logout</span>
@@ -386,16 +414,19 @@ export class SidebarComponent implements OnInit {
   // auto-open the section that owns the current route and to persist
   // expand/collapse state in localStorage.
   private sectionRoutes: Record<string, string[]> = {
-    committees: ['/committees', '/payments', '/join-requests', '/payouts', '/reports'],
-    participation: ['/joined-committees', '/browse', '/my-payments', '/verification', '/reviews']
+    committees:    ['/committees', '/join-requests'],
+    finance:       ['/payments', '/payouts', '/reports'],
+    participation: ['/joined-committees', '/browse', '/my-payments'],
+    account:       ['/profile', '/verification', '/reviews']
   };
 
-  // Default to collapsed for both — auto-opens the active one on init.
-  // This keeps the sidebar from spilling beyond the viewport on
-  // smaller laptops.
+  // Default to collapsed for all — auto-opens the active one on init.
+  // Keeps the sidebar from spilling beyond the viewport.
   sectionsOpen = signal<Record<string, boolean>>({
     committees: false,
-    participation: false
+    finance: false,
+    participation: false,
+    account: false
   });
 
   navItems: NavItem[] = [
