@@ -52,7 +52,7 @@ interface NavItem {
             <span class="material-icons nav-icon">people</span>
             <span class="nav-label" *ngIf="!collapsed">Members</span>
           </a>
-          <a routerLink="/payments" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'Payments' : ''">
+          <a routerLink="/payments" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'Payments' : ''">
             <span class="material-icons nav-icon">payments</span>
             <span class="nav-label" *ngIf="!collapsed">Payments</span>
             <span class="nav-badge" *ngIf="pendingPaymentsCount() > 0 && !collapsed">{{ pendingPaymentsCount() }}</span>
@@ -82,9 +82,9 @@ interface NavItem {
             <span class="material-icons nav-icon">explore</span>
             <span class="nav-label" *ngIf="!collapsed">Browse & Join</span>
           </a>
-          <a routerLink="/my-payments" routerLinkActive="active" class="nav-item" [title]="collapsed ? 'My Payments' : ''">
+          <a routerLink="/my-payments" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" [title]="collapsed ? 'My Payments' : ''">
             <span class="material-icons nav-icon">receipt_long</span>
-            <span class="nav-label" *ngIf="!collapsed">My Payments</span>
+            <span class="nav-label" *ngIf="!collapsed">My Payments (Upload)</span>
           </a>
         </div>
 
