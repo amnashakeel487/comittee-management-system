@@ -20,10 +20,36 @@ export class AuthService {
   waitForAuth(): Promise<void> { return this._authReady; }
 
   private initAuth() {
-    this.supabase.getSession().then(async ({ data }) => {
-      if (data?.session?.user) await this.loadUserProfile(data.session.user);
+    // Hard safety net: guards must never wait more than 3s for auth-init.
+    // If anything below stalls (slow network, Supabase unreachable, refresh stuck),
+    // we still let the router proceed so the UI doesn't freeze.
+    const timeout = setTimeout(() => this._resolve(), 3000);
+
+    this.supabase.getSession().then(({ data }) => {
+      // Resolve readiness as soon as we know whether a session exists.
+      // We do NOT await loadUserProfile here — that would couple every guard
+      // (including the public Login page's guestGuard) to a profile network round-trip.
+      if (data?.session?.user) {
+        // Set a minimal user immediately from the session so isAuthenticated() works.
+        const u = data.session.user;
+        const metaRole = u.user_metadata?.role;
+        this.currentUser.set({
+          id: u.id,
+          name: u.user_metadata?.name || u.email?.split('@')[0] || 'User',
+          email: u.email || '',
+          role: metaRole === 'super_admin' ? 'super_admin' : 'sub_admin',
+          status: 'active',
+          trust_score: 100
+        });
+        // Hydrate full profile in the background (non-blocking).
+        this.loadUserProfile(u).catch(() => {});
+      }
+      clearTimeout(timeout);
       this._resolve();
-    }).catch(() => this._resolve());
+    }).catch(() => {
+      clearTimeout(timeout);
+      this._resolve();
+    });
 
     this.supabase.onAuthStateChange(async (event, session) => {
       if ((event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session?.user) {
